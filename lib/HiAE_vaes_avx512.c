@@ -17,6 +17,16 @@
 
 #    include <immintrin.h>
 #    include <wmmintrin.h>
+#    include <xmmintrin.h>
+
+/* Prefetch macros for x86-64 - tuned for AVX512 */
+/* locality hints: _MM_HINT_T0 = all cache levels, _MM_HINT_T1 = L2 and up, _MM_HINT_T2 = L3 and up,
+ * _MM_HINT_NTA = non-temporal */
+#    define PREFETCH_READ(addr, hint)  _mm_prefetch((const char *) (addr), (hint))
+#    define PREFETCH_WRITE(addr, hint) _mm_prefetch((const char *) (addr), (hint))
+
+/* Prefetch distance in bytes - matches ARM implementation */
+#    define PREFETCH_DISTANCE 256
 
 typedef __m128i DATA128b;
 
@@ -341,6 +351,10 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "cmpq %2, %%rax;" // Compare i and prefix
         "jge 2f;" // If i >= prefix, jump to loop end
 
+        // Prefetch next iteration data (256 bytes ahead)
+        "prefetcht0 256(%1, %%rax);" // Prefetch next chunk for reading
+        "prefetcht0 320(%1, %%rax);" // Prefetch more data (cache line boundary)
+
         // round 1
         "vmovdqu64 0(%1, %%rax), %%xmm16;" // Load M[0] into xmm16
         "vpxorq %%xmm0, %%xmm1, %%xmm24;" // C[0] = SIMD_XOR(S[0], S[1])
@@ -573,6 +587,11 @@ HiAE_enc_vaes(HiAE_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_t
         "1:;" // Loop start
         "cmpq %2, %%rax;" // Compare i and prefix
         "jge 2f;" // If i >= prefix, jump to loop end
+
+        // Prefetch next iteration data (256 bytes ahead)
+        "prefetcht0 256(%1, %%rax);" // Prefetch next chunk for reading (plaintext)
+        "prefetcht0 256(%0, %%rax);" // Prefetch next chunk for writing (ciphertext)
+        "prefetcht0 320(%1, %%rax);" // Prefetch more data (cache line boundary)
 
         // round 1
         "vmovdqu64 0(%1, %%rax), %%xmm16;" // Load M[0] into xmm16
@@ -820,6 +839,11 @@ HiAE_dec_vaes(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_t
         "1:;" // Loop start
         "cmpq %2, %%rax;" // Compare i and prefix
         "jge 2f;" // If i >= prefix, jump to loop end
+
+        // Prefetch next iteration data (256 bytes ahead)
+        "prefetcht0 256(%1, %%rax);" // Prefetch next chunk for reading (ciphertext)
+        "prefetcht0 256(%0, %%rax);" // Prefetch next chunk for writing (plaintext)
+        "prefetcht0 320(%1, %%rax);" // Prefetch more data (cache line boundary)
 
         // round 1
         "vmovdqu64 0(%1, %%rax), %%xmm24;" // Load C[0] into xmm24
