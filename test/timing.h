@@ -304,14 +304,12 @@ hiae_aligned_alloc(size_t alignment, size_t size)
 {
 #ifdef _WIN32
     return _aligned_malloc(size, alignment);
-#elif defined(__APPLE__) || defined(__FreeBSD__)
+#else
     void *ptr;
     if (posix_memalign(&ptr, alignment, size) != 0) {
         return NULL;
     }
     return ptr;
-#else
-    return aligned_alloc(alignment, size);
 #endif
 }
 
