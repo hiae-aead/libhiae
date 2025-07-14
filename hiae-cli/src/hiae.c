@@ -68,11 +68,11 @@ print_usage(const char *program_name)
     printf("  %s encrypt -i document.pdf -o document.enc -k 0123...def -n abcd...ef\n\n",
            program_name);
     printf("  # Decrypt with key file\n");
-    printf("  %s decrypt -i document.enc -o document.pdf -kf secret.key -nf nonce.bin\n\n",
+    printf("  %s decrypt -i document.enc -o document.pdf -K secret.key --noncefile nonce.bin\n\n",
            program_name);
     printf("  # Generate and use random key\n");
     printf("  %s keygen -o mykey.key\n", program_name);
-    printf("  %s encrypt -i data.csv -o data.enc -kf mykey.key -n random\n\n", program_name);
+    printf("  %s encrypt -i data.csv -o data.enc -K mykey.key -n random\n\n", program_name);
     printf("  # Compute MAC\n");
     printf("  %s mac -i document.pdf -k 0123...def\n", program_name);
 }
@@ -565,8 +565,11 @@ cmd_mac(cli_options_t *opts)
 int
 main(int argc, char *argv[])
 {
+    // Store original program name before argv manipulation
+    const char *program_name = argv[0];
+
     if (argc < 2) {
-        print_usage(argv[0]);
+        print_usage(program_name);
         return 1;
     }
 
@@ -574,12 +577,12 @@ main(int argc, char *argv[])
     command_t cmd = parse_command(argv[1]);
     if (cmd == CMD_NONE) {
         fprintf(stderr, "Error: Unknown command '%s'\n", argv[1]);
-        print_usage(argv[0]);
+        print_usage(program_name);
         return 1;
     }
 
     if (cmd == CMD_HELP) {
-        print_usage(argv[0]);
+        print_usage(program_name);
         return 0;
     }
 
@@ -602,7 +605,7 @@ main(int argc, char *argv[])
         fprintf(stderr, "Error: Invalid options\n");
         return 1;
     } else if (parse_result > 0) {
-        print_usage(argv[0]);
+        print_usage(program_name);
         return 0;
     }
 
