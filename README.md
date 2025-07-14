@@ -13,7 +13,7 @@ HiAE is a high-performance, cross-platform cryptographic library implementing an
   - Pure software fallback for universal compatibility
 - **Multiple APIs**: High-level all-at-once, streaming, and low-level block-oriented APIs
 - **No External Dependencies**: Only requires standard C library
-- **Command-Line Tool**: Included `hiae` CLI for file encryption/decryption
+- **Command-Line Tool**: Included `hiae` CLI for file encryption/decryption/authentication
 
 ## Quick Start
 
