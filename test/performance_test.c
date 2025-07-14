@@ -6,8 +6,8 @@
 #include <string.h>
 #include <time.h>
 
-#define MIN_TEST_TIME    0.1 // 100ms total test time
-#define WARMUP_TIME      0.01 // 10ms warmup
+#define MIN_TEST_TIME    1.0 // 1 second total test time
+#define WARMUP_TIME      0.1 // 100ms warmup
 #define NUM_MEASUREMENTS 5 // Number of measurement runs
 
 const int len_test_case = 9;
@@ -52,12 +52,10 @@ speed_test_ad_work(size_t len)
 
     size_t iterations = hiae_select_iterations(len, MIN_TEST_TIME);
 
-    hiae_timer_t warmup_timer;
-    hiae_timer_start(&warmup_timer);
-    while (hiae_timer_elapsed_seconds(&warmup_timer) < WARMUP_TIME) {
+    double warmup_start = hiae_get_time();
+    while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
         HiAE_mac(key, nonce, ad, len, tag);
     }
-    hiae_timer_stop(&warmup_timer);
 
     result.stats = hiae_stats_create(NUM_MEASUREMENTS);
     if (!result.stats) {
@@ -136,12 +134,10 @@ speed_test_encode_work(size_t len, int AEAD)
 
     size_t iterations = hiae_select_iterations(len, MIN_TEST_TIME);
 
-    hiae_timer_t warmup_timer;
-    hiae_timer_start(&warmup_timer);
-    while (hiae_timer_elapsed_seconds(&warmup_timer) < WARMUP_TIME) {
+    double warmup_start = hiae_get_time();
+    while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
         HiAE_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
     }
-    hiae_timer_stop(&warmup_timer);
 
     result.stats = hiae_stats_create(NUM_MEASUREMENTS);
     if (!result.stats) {
@@ -227,12 +223,10 @@ speed_test_decode_work(size_t len, int AEAD)
 
     size_t iterations = hiae_select_iterations(len, MIN_TEST_TIME);
 
-    hiae_timer_t warmup_timer;
-    hiae_timer_start(&warmup_timer);
-    while (hiae_timer_elapsed_seconds(&warmup_timer) < WARMUP_TIME) {
+    double warmup_start = hiae_get_time();
+    while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
         HiAE_decrypt(key, nonce, ct, dec, len, ad, ad_len, tag);
     }
-    hiae_timer_stop(&warmup_timer);
 
     result.stats = hiae_stats_create(NUM_MEASUREMENTS);
     if (!result.stats) {

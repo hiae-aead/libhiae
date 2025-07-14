@@ -127,8 +127,10 @@ hiae_timer_start(hiae_timer_t *timer)
     timer->has_cycles = hiae_has_cycle_counter();
     if (timer->has_cycles) {
         timer->start_cycles = hiae_read_cycles();
+        timer->end_cycles   = timer->start_cycles;
     }
     timer->start_time = hiae_get_time();
+    timer->end_time   = timer->start_time;
 }
 
 static inline void
@@ -326,24 +328,31 @@ hiae_aligned_free(void *ptr)
 static inline size_t
 hiae_select_iterations(size_t data_size, double target_time)
 {
-    // Use heuristics based on data size to avoid calibration overhead
-    // Assume ~20 GB/s throughput for estimation
-    double estimated_throughput  = 20e9; // 20 GB/s
-    double estimated_time_per_op = data_size / estimated_throughput;
-    size_t iterations            = (size_t) (target_time / estimated_time_per_op);
+    // Estimate iterations based on data size and target time
+    // Assume ~10-20 GB/s throughput for modern systems
+    double estimated_throughput = 10e9; // 10 GB/s conservative estimate
+    double time_per_op          = data_size / estimated_throughput;
+    size_t iterations           = (size_t) (target_time / time_per_op);
 
-    // Ensure reasonable bounds
+    // Ensure minimum iterations for statistical significance
     if (data_size <= 64) {
-        if (iterations < 100000)
-            iterations = 100000;
+        if (iterations < 50000)
+            iterations = 50000;
+    } else if (data_size <= 256) {
+        if (iterations < 20000)
+            iterations = 20000;
     } else if (data_size <= 1024) {
-        if (iterations < 10000)
-            iterations = 10000;
+        if (iterations < 5000)
+            iterations = 5000;
+    } else if (data_size <= 4096) {
+        if (iterations < 2000)
+            iterations = 2000;
     } else {
-        if (iterations < 1000)
-            iterations = 1000;
+        if (iterations < 500)
+            iterations = 500;
     }
 
+    // Set upper bounds to prevent excessive runtime
     if (iterations > 10000000)
         iterations = 10000000;
 
