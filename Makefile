@@ -2,12 +2,12 @@
 # High-Throughput Authenticated Encryption Algorithm
 
 # Compiler and flags
-CC = cc -Wall -Wextra
+CC = cc
 
 # Detect architecture and set appropriate flags
 ARCH := $(shell uname -m)
 
-CFLAGS = -O3 -I include
+CFLAGS = -O3 -I include -Wall -Wextra
 LDFLAGS = -lm
 
 # Source files
@@ -89,6 +89,11 @@ help:
 	@echo "  make func_test        - Build functional test only"
 	@echo "  make test_vectors     - Build test vectors validation only"
 	@echo "  make test_stream      - Build streaming API test only"
+	@echo "  make libhiae          - Build static library only"
+	@echo "  make install          - Install library and headers"
+	@echo "  make uninstall        - Remove installed files"
+	@echo "  make format           - Format code with clang-format"
+	@echo "  make format-check     - Check code formatting"
 	@echo "  make clean            - Remove all build artifacts"
 	@echo "  make help             - Show this help message"
 	@echo ""
@@ -100,5 +105,50 @@ func_test: $(BINDIR)/func_test
 test_vectors: $(BINDIR)/test_vectors
 test_stream: $(BINDIR)/test_stream
 
+# Installation
+PREFIX ?= /usr/local
+LIBDIR = $(PREFIX)/lib
+INCDIR = $(PREFIX)/include
+
+# Static library
+$(BINDIR)/libhiae.a: $(BINDIR) $(ALL_SOURCES) $(HEADERS)
+	@echo "Building static library..."
+	$(CC) $(CFLAGS) -c $(ALL_SOURCES)
+	ar rcs $@ *.o
+	@rm -f *.o
+
+# Install target
+install: $(BINDIR)/libhiae.a
+	@echo "Installing library and headers..."
+	install -d $(LIBDIR) $(INCDIR)
+	install -m 644 $(BINDIR)/libhiae.a $(LIBDIR)/
+	install -m 644 include/HiAE.h $(INCDIR)/
+
+# Uninstall target
+uninstall:
+	@echo "Uninstalling library and headers..."
+	rm -f $(LIBDIR)/libhiae.a
+	rm -f $(INCDIR)/HiAE.h
+
+# Static library shortcut
+libhiae: $(BINDIR)/libhiae.a
+
+# Code formatting targets
+format-check:
+	@echo "Checking code formatting..."
+	@if command -v clang-format >/dev/null 2>&1; then \
+		find . -name "*.c" -o -name "*.h" | grep -v build | xargs clang-format --dry-run --Werror; \
+	else \
+		echo "clang-format not found, skipping format check"; \
+	fi
+
+format:
+	@echo "Formatting code..."
+	@if command -v clang-format >/dev/null 2>&1; then \
+		find . -name "*.c" -o -name "*.h" | grep -v build | xargs clang-format -i; \
+	else \
+		echo "clang-format not found, cannot format code"; \
+	fi
+
 # Phony targets
-.PHONY: all test test-vectors benchmark clean help perf_test func_test test_vectors test_stream
+.PHONY: all test test-vectors benchmark clean help perf_test func_test test_vectors test_stream install uninstall libhiae format format-check

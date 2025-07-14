@@ -3,3 +3,14 @@ bin
 .zig-cache
 build
 draft-pham-cfrg-hiae.md
+
+# Build artifacts
+*.o
+*.exe
+*.pdb
+*.so
+*.a
+*.dylib
+
+# System files
+.DS_Store
