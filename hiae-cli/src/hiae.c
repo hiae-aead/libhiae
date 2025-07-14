@@ -2,10 +2,32 @@
 #include "file_ops.h"
 #include "key_utils.h"
 #include "platform.h"
-#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+// Windows doesn't have getopt.h, so we provide our own implementation
+extern char *optarg;
+extern int   optind, opterr, optopt;
+
+#    define no_argument       0
+#    define required_argument 1
+#    define optional_argument 2
+
+struct option {
+    const char *name;
+    int         has_arg;
+    int        *flag;
+    int         val;
+};
+
+int getopt(int argc, char *const argv[], const char *optstring);
+int getopt_long(int argc, char *const argv[], const char *optstring, const struct option *longopts,
+                int *longindex);
+#else
+#    include <getopt.h>
+#endif
 
 #define VERSION "1.0.0"
 
@@ -203,7 +225,11 @@ load_key_material(cli_options_t *opts, hiae_key_material_t *km)
 
     // Load or generate nonce
     if (opts->nonce_hex) {
+#ifdef _WIN32
+        if (_stricmp(opts->nonce_hex, "random") == 0) {
+#else
         if (strcasecmp(opts->nonce_hex, "random") == 0) {
+#endif
             if (generate_random_bytes(km->nonce, HIAE_NONCE_SIZE) != 0) {
                 fprintf(stderr, "Error: Failed to generate random nonce\n");
                 return -1;

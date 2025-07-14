@@ -9,6 +9,9 @@
 
 #ifdef _WIN32
 #    include <windows.h>
+#    ifdef _MSC_VER
+#        include <intrin.h>
+#    endif
 #elif defined(__APPLE__)
 #    include <mach/mach_time.h>
 #    include <sys/time.h>
@@ -178,7 +181,11 @@ hiae_get_cpu_frequency(void)
         // Busy wait for target time
         while ((hiae_get_time() - start) < target_time) {
             // Prevent optimization
+#ifdef _MSC_VER
+            _ReadWriteBarrier();
+#else
             __asm__ __volatile__("" ::: "memory");
+#endif
         }
 
         hiae_timer_stop(&timer);

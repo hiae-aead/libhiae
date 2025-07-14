@@ -10,8 +10,13 @@ endif()
 
 # Compiler flags
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
+if(MSVC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /O2")
+else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
+endif()
 
 # Include directories
 include_directories("include")
@@ -42,7 +47,19 @@ target_include_directories("${PROJECT_NAME}"
 
 # Platform-specific compiler flags
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64|AMD64)")
-    target_compile_options("${PROJECT_NAME}" PRIVATE -maes)
+    if(MSVC)
+        # MSVC doesn't need -maes flag and doesn't support GCC-style inline assembly
+        # Disable some MSVC warnings for cleaner output
+        target_compile_options("${PROJECT_NAME}" PRIVATE
+            /wd4555  # result of expression not used
+            /wd4710  # function not inlined
+            /wd4711  # function selected for automatic inline expansion
+            /wd4702  # unreachable code
+            /wd5045  # Spectre mitigation
+        )
+    else()
+        target_compile_options("${PROJECT_NAME}" PRIVATE -maes)
+    endif()
 endif()
 
 # Installation

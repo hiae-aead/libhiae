@@ -1,6 +1,9 @@
 # Test executables
 add_executable(perf_test performance_test.c)
-target_link_libraries(perf_test PRIVATE hiae::hiae m)
+target_link_libraries(perf_test PRIVATE hiae::hiae)
+if(NOT WIN32)
+    target_link_libraries(perf_test PRIVATE m)
+endif()
 
 add_executable(func_test function_test.c)
 target_link_libraries(func_test PRIVATE hiae::hiae)

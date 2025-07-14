@@ -79,7 +79,7 @@ aes_sub_bytes(uint8_t *state)
 static void
 aes_shift_rows(uint8_t *state)
 {
-    const uint8_t temp[16];
+    uint8_t temp[16];
     memcpy((uint8_t *) temp, state, 16);
 
     state[0]  = temp[0];
@@ -106,7 +106,7 @@ aes_shift_rows(uint8_t *state)
 static void
 aes_mix_columns(uint8_t *state)
 {
-    const uint8_t temp[16];
+    uint8_t temp[16];
     memcpy((uint8_t *) temp, state, 16);
 
     for (int col = 0; col < 4; col++) {

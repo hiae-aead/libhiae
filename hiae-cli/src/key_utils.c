@@ -6,8 +6,11 @@
 #include <string.h>
 
 #ifdef _WIN32
-#    include <bcrypt.h>
+#    define WIN32_NO_STATUS
 #    include <windows.h>
+#    undef WIN32_NO_STATUS
+#    include <bcrypt.h>
+#    include <ntstatus.h>
 #    pragma comment(lib, "bcrypt.lib")
 #else
 #    include <fcntl.h>

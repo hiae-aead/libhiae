@@ -6,6 +6,11 @@ set(HIAE_CLI_SOURCES
     src/platform.c
 )
 
+# Add Windows-specific sources
+if(WIN32)
+    list(APPEND HIAE_CLI_SOURCES src/getopt_win32.c)
+endif()
+
 set(HIAE_CLI_HEADERS
     src/key_utils.h
     src/file_ops.h

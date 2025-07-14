@@ -1,7 +1,8 @@
 #include "HiAE.h"
 #include "HiAE_internal.h"
 
-#if defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_AMD64)
+#if (defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_AMD64)) && \
+    !defined(_MSC_VER)
 
 #    ifdef __clang__
 #        if __clang_major__ >= 18

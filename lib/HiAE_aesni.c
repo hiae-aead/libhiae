@@ -13,8 +13,13 @@
 #    include <wmmintrin.h>
 
 // Prefetch macros - tuned for x86-64
-#    define PREFETCH_READ(addr, locality)  __builtin_prefetch((addr), 0, (locality))
-#    define PREFETCH_WRITE(addr, locality) __builtin_prefetch((addr), 1, (locality))
+#    ifdef _MSC_VER
+#        define PREFETCH_READ(addr, locality)  _mm_prefetch((const char *) (addr), _MM_HINT_T0)
+#        define PREFETCH_WRITE(addr, locality) _mm_prefetch((const char *) (addr), _MM_HINT_T0)
+#    else
+#        define PREFETCH_READ(addr, locality)  __builtin_prefetch((addr), 0, (locality))
+#        define PREFETCH_WRITE(addr, locality) __builtin_prefetch((addr), 1, (locality))
+#    endif
 
 // Prefetch distance in bytes - tuned for typical x86-64 cache line size (64 bytes)
 #    define PREFETCH_DISTANCE 256
