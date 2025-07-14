@@ -21,8 +21,15 @@
 
 // Prefetch macros - tuned for ARM64
 // locality: 0 = no temporal locality (streaming), 3 = high temporal locality
-#    define PREFETCH_READ(addr, locality)  __builtin_prefetch((addr), 0, (locality))
-#    define PREFETCH_WRITE(addr, locality) __builtin_prefetch((addr), 1, (locality))
+#    ifdef _MSC_VER
+// MSVC doesn't have __builtin_prefetch, use ARM64 specific intrinsics
+#        include <intrin.h>
+#        define PREFETCH_READ(addr, locality)  __prefetch((const void *)(addr))
+#        define PREFETCH_WRITE(addr, locality) __prefetch((const void *)(addr))
+#    else
+#        define PREFETCH_READ(addr, locality)  __builtin_prefetch((addr), 0, (locality))
+#        define PREFETCH_WRITE(addr, locality) __builtin_prefetch((addr), 1, (locality))
+#    endif
 
 // Prefetch distance in bytes - tuned for typical ARM64 cache line size (64-128 bytes)
 #    define PREFETCH_DISTANCE 256
