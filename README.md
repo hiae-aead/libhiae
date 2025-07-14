@@ -1,6 +1,6 @@
 # HiAE - High-Throughput Authenticated Encryption
 
-HiAE is a high-performance, cross-platform cryptographic library implementing an AES-based authenticated encryption with associated data (AEAD) cipher. It features automatic runtime CPU feature detection to select the optimal implementation for maximum performance.
+HiAE is a high-performance, cross-platform cryptographic library implementing an AES-based authenticated encryption with associated data (AEAD) cipher.
 
 ## Features
 
