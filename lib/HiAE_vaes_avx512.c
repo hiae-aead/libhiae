@@ -1175,6 +1175,10 @@ const HiAE_impl_t hiae_vaes_avx512_impl = { .name                 = "VAES+AVX512
                                             .decrypt              = HiAE_decrypt_vaes,
                                             .mac                  = HiAE_mac_vaes };
 
+#    ifdef __clang__
+#        pragma clang attribute pop
+#    endif
+
 #else
 // VAES+AVX512 not available, provide stub implementation
 const HiAE_impl_t hiae_vaes_avx512_impl = { .name                 = NULL,
