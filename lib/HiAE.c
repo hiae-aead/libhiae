@@ -109,7 +109,7 @@ typedef struct CPUFeatures {
 } CPUFeatures;
 
 static CPUFeatures  _cpu_features;
-static HiAE_impl_t *hiae_impl = NULL;
+static HiAE_impl_t *hiae_impl        = NULL;
 static const char  *forced_impl_name = NULL;
 
 #define CPUID_EBX_AVX2    0x00000020

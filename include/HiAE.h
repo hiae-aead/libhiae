@@ -252,7 +252,8 @@ const char *HiAE_get_implementation_name(void);
  * detecting the best one. Useful for testing, debugging, or when specific
  * behavior is required.
  *
- * @param impl_name Implementation name to force ("Software", "AES-NI", "VAES+AVX512", "ARM NEON", "ARM SHA3")
+ * @param impl_name Implementation name to force ("Software", "AES-NI", "VAES+AVX512", "ARM NEON",
+ * "ARM SHA3")
  *
  * @return 0 on success, -1 if implementation is not available or name is invalid
  *

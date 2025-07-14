@@ -132,45 +132,38 @@ aesl_software(data128b_software x)
     return result;
 }
 
-static data128b_software
-aesenc_software(data128b_software x, data128b_software y)
-{
-    data128b_software temp = simd_xor_software(x, y);
-    return aesl_software(temp);
-}
-
 typedef data128b_software DATA128b;
 #define SIMD_LOAD(x)     simd_load_software(x)
 #define SIMD_STORE(x, y) simd_store_software(x, y)
 #define SIMD_XOR(x, y)   simd_xor_software(x, y)
 #define SIMD_ZERO_128()  simd_zero_software()
-#define AESENC(x, y)     aesenc_software(x, y)
+#define AESL(x)          aesl_software(x)
+#define AESEMC(x, y)     aesl_software(simd_xor_software(x, y))
 
 static inline void
 update_state_offset(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)
 {
-    tmp[offset] = SIMD_XOR(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
-    tmp[offset] = AESENC(tmp[offset], M);
-    state[(0 + offset) % STATE]   = AESENC(state[(P_4 + offset) % STATE], tmp[offset]);
+    tmp[offset] = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    tmp[offset] = SIMD_XOR(tmp[offset], M);
+    state[(0 + offset) % STATE]   = SIMD_XOR(tmp[offset], AESL(state[(P_4 + offset) % STATE]));
     state[(I_1 + offset) % STATE] = SIMD_XOR(state[(I_1 + offset) % STATE], M);
     state[(I_2 + offset) % STATE] = SIMD_XOR(state[(I_2 + offset) % STATE], M);
 }
 
 static inline DATA128b
-keystream_block(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)
+keystream_block(DATA128b *state, DATA128b M, int offset)
 {
-    tmp[offset] = SIMD_XOR(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
-    M           = AESENC(tmp[offset], M);
-    M           = SIMD_XOR(M, state[(P_7 + offset) % STATE]);
+    DATA128b tmp = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    M            = SIMD_XOR(SIMD_XOR(tmp, M), state[(P_7 + offset) % STATE]);
     return M;
 }
 
 static inline DATA128b
 enc_offset(DATA128b *state, DATA128b M, int offset)
 {
-    DATA128b C = SIMD_XOR(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
-    C          = AESENC(C, M);
-    state[(0 + offset) % STATE]   = AESENC(state[(P_4 + offset) % STATE], C);
+    DATA128b C = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    C          = SIMD_XOR(C, M);
+    state[(0 + offset) % STATE]   = SIMD_XOR(C, AESL(state[(P_4 + offset) % STATE]));
     C                             = SIMD_XOR(C, state[(P_7 + offset) % STATE]);
     state[(I_1 + offset) % STATE] = SIMD_XOR(state[(I_1 + offset) % STATE], M);
     state[(I_2 + offset) % STATE] = SIMD_XOR(state[(I_2 + offset) % STATE], M);
@@ -180,10 +173,10 @@ enc_offset(DATA128b *state, DATA128b M, int offset)
 static inline DATA128b
 dec_offset(DATA128b *state, DATA128b *tmp, DATA128b C, int offset)
 {
-    tmp[offset] = SIMD_XOR(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    tmp[offset] = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     DATA128b M  = SIMD_XOR(state[(P_7 + offset) % STATE], C);
-    state[(0 + offset) % STATE]   = AESENC(state[(P_4 + offset) % STATE], M);
-    M                             = AESENC(tmp[offset], M);
+    state[(0 + offset) % STATE]   = SIMD_XOR(M, AESL(state[(P_4 + offset) % STATE]));
+    M                             = SIMD_XOR(M, tmp[offset]);
     state[(I_1 + offset) % STATE] = SIMD_XOR(state[(I_1 + offset) % STATE], M);
     state[(I_2 + offset) % STATE] = SIMD_XOR(state[(I_2 + offset) % STATE], M);
     return M;
@@ -546,7 +539,7 @@ HiAE_dec_software(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, si
         memset(mask + pad, 0x00, BLOCK_SIZE - pad);
         C[0] = SIMD_LOAD(buf);
         M[0] = SIMD_LOAD(mask);
-        C[0] = keystream_block(state, tmp, C[0], 0);
+        C[0] = keystream_block(state, C[0], 0);
         for (int j = 0; j < 16; j++) {
             C[0].bytes[j] &= M[0].bytes[j];
         }
@@ -593,7 +586,7 @@ HiAE_dec_partial_noupdate_software(HiAE_state_t  *state_opaque,
     DATA128b state[STATE];
     memcpy(state, state_opaque->opaque, sizeof(state));
 
-    DATA128b M[1], C[1], tmp[STATE];
+    DATA128b M[1], C[1];
     uint8_t  buf[BLOCK_SIZE];
     uint8_t  mask[BLOCK_SIZE];
 
@@ -602,7 +595,7 @@ HiAE_dec_partial_noupdate_software(HiAE_state_t  *state_opaque,
     memset(mask + size, 0x00, BLOCK_SIZE - size);
     C[0] = SIMD_LOAD(buf);
     M[0] = SIMD_LOAD(mask);
-    C[0] = keystream_block(state, tmp, C[0], 0);
+    C[0] = keystream_block(state, C[0], 0);
     for (int j = 0; j < 16; j++) {
         C[0].bytes[j] &= M[0].bytes[j];
     }

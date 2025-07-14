@@ -45,7 +45,7 @@ typedef struct {
 #endif
 #ifdef HIAE_FORCE_AESNI
 #    define HIAE_FORCED_IMPL "AES-NI"
-#endif  
+#endif
 #ifdef HIAE_FORCE_VAES_AVX512
 #    define HIAE_FORCED_IMPL "VAES+AVX512"
 #endif
