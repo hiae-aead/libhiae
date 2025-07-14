@@ -36,13 +36,22 @@ make clean
 ### Using CMake (Advanced)
 
 ```bash
+# For Release build (maximum performance)
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
+
+# Run tests
 make test
 ctest --output-on-failure
 ```
+
+**Build Types:**
+- `Release`: Optimized for maximum performance (-O3 optimization)
+- `Debug`: Includes debugging symbols and assertions (default if not specified)
+- `RelWithDebInfo`: Release optimizations with debug symbols
+- `MinSizeRel`: Optimized for size rather than speed
 
 ## Installation
 
@@ -55,7 +64,7 @@ sudo make install  # Optional, for system-wide installation
 
 # Using CMake
 mkdir build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
 make
 sudo make install
 ```
@@ -178,7 +187,7 @@ HiAE_init(&state, key, nonce);
 
 // Process additional data (16-byte alignment required except last chunk)
 HiAE_absorb(&state, ad_chunk1, 64);   // Must be multiple of 16
-HiAE_absorb(&state, ad_chunk2, 32);   // Must be multiple of 16  
+HiAE_absorb(&state, ad_chunk2, 32);   // Must be multiple of 16
 HiAE_absorb(&state, ad_chunk3, 7);    // Last call can be any size
 
 // Encrypt data (same alignment requirements)
@@ -217,16 +226,7 @@ See [hiae-cli/README.md](hiae-cli/README.md) for detailed CLI documentation.
 
 ## Performance
 
-HiAE achieves exceptional performance through optimized implementations:
-
-| Implementation | Throughput | CPU Requirements             |
-| -------------- | ---------- | ---------------------------- |
-| VAES+AVX512    | 200+ Gbps  | Intel Ice Lake+, AMD Zen 4+  |
-| AES-NI         | 50+ Gbps   | x86-64 with AES-NI           |
-| ARM Crypto     | 20+ Gbps   | ARM64 with crypto extensions |
-| Software       | 2+ Gbps    | Any CPU                      |
-
-Run `make benchmark` to measure performance on your system.
+Run `make benchmark` to measure performance on your system. For CMake builds, always use `-DCMAKE_BUILD_TYPE=Release` for maximum performance.
 
 ## Testing
 
