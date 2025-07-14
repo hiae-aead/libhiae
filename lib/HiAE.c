@@ -110,6 +110,7 @@ typedef struct CPUFeatures {
 
 static CPUFeatures  _cpu_features;
 static HiAE_impl_t *hiae_impl = NULL;
+static const char  *forced_impl_name = NULL;
 
 #define CPUID_EBX_AVX2    0x00000020
 #define CPUID_EBX_AVX512F 0x00010000
@@ -383,6 +384,37 @@ extern const HiAE_impl_t hiae_arm_impl;
 extern const HiAE_impl_t hiae_arm_sha3_impl;
 #endif
 
+// Helper function to get implementation by name
+static HiAE_impl_t *
+hiae_get_impl_by_name(const char *name)
+{
+    if (name == NULL) {
+        return NULL;
+    }
+
+    if (strcmp(name, "Software") == 0) {
+        return (HiAE_impl_t *) &hiae_software_impl;
+    }
+
+#if defined(__x86_64__) || defined(_M_X64)
+    if (strcmp(name, "AES-NI") == 0 && hiae_aesni_impl.init != NULL) {
+        return (HiAE_impl_t *) &hiae_aesni_impl;
+    }
+    if (strcmp(name, "VAES+AVX512") == 0 && hiae_vaes_avx512_impl.init != NULL) {
+        return (HiAE_impl_t *) &hiae_vaes_avx512_impl;
+    }
+#elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
+    if (strcmp(name, "ARM NEON") == 0 && hiae_arm_impl.init != NULL) {
+        return (HiAE_impl_t *) &hiae_arm_impl;
+    }
+    if (strcmp(name, "ARM SHA3") == 0 && hiae_arm_sha3_impl.init != NULL) {
+        return (HiAE_impl_t *) &hiae_arm_sha3_impl;
+    }
+#endif
+
+    return NULL;
+}
+
 // Initialize the dispatch table
 static void
 hiae_init_dispatch(void)
@@ -391,13 +423,31 @@ hiae_init_dispatch(void)
         return; // Already initialized
     }
 
+    // Check for compile-time forced implementation first
+#ifdef HIAE_FORCED_IMPL
+    hiae_impl = hiae_get_impl_by_name(HIAE_FORCED_IMPL);
+    if (hiae_impl != NULL) {
+        return;
+    }
+#endif
+
+    // Check for runtime forced implementation
+    if (forced_impl_name != NULL) {
+        hiae_impl = hiae_get_impl_by_name(forced_impl_name);
+        if (hiae_impl != NULL) {
+            return;
+        }
+    }
+
     // Initialize CPU features if not already done
     if (!_cpu_features.initialized) {
         hiae_runtime_get_cpu_features();
     }
 
+    // Default to software implementation
     hiae_impl = (HiAE_impl_t *) &hiae_software_impl;
 
+    // Select best available implementation based on CPU features
 #if defined(__x86_64__) || defined(_M_X64)
     if (_cpu_features.has_avx512f && _cpu_features.has_vaes && hiae_vaes_avx512_impl.init != NULL) {
         hiae_impl = (HiAE_impl_t *) &hiae_vaes_avx512_impl;
@@ -535,4 +585,27 @@ int
 HiAE_verify_tag(const uint8_t *expected_tag, const uint8_t *actual_tag)
 {
     return hiae_constant_time_compare(expected_tag, actual_tag, HIAE_MACBYTES);
+}
+
+int
+HiAE_force_implementation(const char *impl_name)
+{
+    // Reset current implementation to force re-initialization
+    hiae_impl = NULL;
+
+    if (impl_name == NULL) {
+        // Clear forced implementation - restore automatic detection
+        forced_impl_name = NULL;
+        return 0;
+    }
+
+    // Validate that the requested implementation exists
+    HiAE_impl_t *requested_impl = hiae_get_impl_by_name(impl_name);
+    if (requested_impl == NULL) {
+        return -1; // Implementation not available
+    }
+
+    // Set the forced implementation name
+    forced_impl_name = impl_name;
+    return 0;
 }

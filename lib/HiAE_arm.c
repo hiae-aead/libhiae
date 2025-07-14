@@ -68,11 +68,12 @@ enc_offset(DATA128b *state, DATA128b M, int offset)
 }
 
 static inline DATA128b
-dec_offset(DATA128b *state, DATA128b C, int offset)
+dec_offset(DATA128b *state, DATA128b *tmp, DATA128b C, int offset)
 {
-    DATA128b M                  = SIMD_XOR(C, state[(P_7 + offset) % STATE]);
-    state[(0 + offset) % STATE] = SIMD_XOR(M, AESL(state[(P_4 + offset) % STATE]));
-    M = SIMD_XOR(M, AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]));
+    tmp[offset] = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    DATA128b M  = SIMD_XOR(state[(P_7 + offset) % STATE], C);
+    state[(0 + offset) % STATE]   = SIMD_XOR(M, AESL(state[(P_4 + offset) % STATE]));
+    M                             = SIMD_XOR(M, tmp[offset]);
     state[(I_1 + offset) % STATE] = SIMD_XOR(state[(I_1 + offset) % STATE], M);
     state[(I_2 + offset) % STATE] = SIMD_XOR(state[(I_2 + offset) % STATE], M);
     return M;
@@ -231,7 +232,7 @@ encrypt_chunk(DATA128b *state, const uint8_t *mi, uint8_t *ci, size_t i)
 }
 
 static inline void
-decrypt_chunk(DATA128b *state, const uint8_t *ci, uint8_t *mi, size_t i)
+decrypt_chunk(DATA128b *state, DATA128b *tmp, const uint8_t *ci, uint8_t *mi, size_t i)
 {
     DATA128b M[16], C[16];
 
@@ -256,22 +257,22 @@ decrypt_chunk(DATA128b *state, const uint8_t *ci, uint8_t *mi, size_t i)
     LOAD_1BLOCK_offset_dec(C[13], 13);
     LOAD_1BLOCK_offset_dec(C[14], 14);
     LOAD_1BLOCK_offset_dec(C[15], 15);
-    M[0]  = dec_offset(state, C[0], 0);
-    M[1]  = dec_offset(state, C[1], 1);
-    M[2]  = dec_offset(state, C[2], 2);
-    M[3]  = dec_offset(state, C[3], 3);
-    M[4]  = dec_offset(state, C[4], 4);
-    M[5]  = dec_offset(state, C[5], 5);
-    M[6]  = dec_offset(state, C[6], 6);
-    M[7]  = dec_offset(state, C[7], 7);
-    M[8]  = dec_offset(state, C[8], 8);
-    M[9]  = dec_offset(state, C[9], 9);
-    M[10] = dec_offset(state, C[10], 10);
-    M[11] = dec_offset(state, C[11], 11);
-    M[12] = dec_offset(state, C[12], 12);
-    M[13] = dec_offset(state, C[13], 13);
-    M[14] = dec_offset(state, C[14], 14);
-    M[15] = dec_offset(state, C[15], 15);
+    M[0]  = dec_offset(state, tmp, C[0], 0);
+    M[1]  = dec_offset(state, tmp, C[1], 1);
+    M[2]  = dec_offset(state, tmp, C[2], 2);
+    M[3]  = dec_offset(state, tmp, C[3], 3);
+    M[4]  = dec_offset(state, tmp, C[4], 4);
+    M[5]  = dec_offset(state, tmp, C[5], 5);
+    M[6]  = dec_offset(state, tmp, C[6], 6);
+    M[7]  = dec_offset(state, tmp, C[7], 7);
+    M[8]  = dec_offset(state, tmp, C[8], 8);
+    M[9]  = dec_offset(state, tmp, C[9], 9);
+    M[10] = dec_offset(state, tmp, C[10], 10);
+    M[11] = dec_offset(state, tmp, C[11], 11);
+    M[12] = dec_offset(state, tmp, C[12], 12);
+    M[13] = dec_offset(state, tmp, C[13], 13);
+    M[14] = dec_offset(state, tmp, C[14], 14);
+    M[15] = dec_offset(state, tmp, C[15], 15);
     STORE_1BLOCK_offset_dec(M[0], 0);
     STORE_1BLOCK_offset_dec(M[1], 1);
     STORE_1BLOCK_offset_dec(M[2], 2);
@@ -480,14 +481,14 @@ HiAE_dec_arm(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_t 
     size_t prefix = size - rest;
     if (size == 0)
         return;
-    DATA128b M[STATE], C[STATE];
+    DATA128b M[STATE], C[STATE], tmp[STATE];
 
     // Main processing loop with prefetching
     for (size_t i = 0; i < prefix; i += UNROLL_BLOCK_SIZE) {
         // Unconditional prefetch for next iteration
         PREFETCH_READ(ci + i + UNROLL_BLOCK_SIZE, 0);
         PREFETCH_WRITE(mi + i + UNROLL_BLOCK_SIZE, 0);
-        decrypt_chunk(state, ci, mi, i);
+        decrypt_chunk(state, tmp, ci, mi, i);
     }
 
     size_t pad = rest % BLOCK_SIZE;
@@ -495,7 +496,7 @@ HiAE_dec_arm(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_t 
 
     for (size_t i = 0; i < rest; i += BLOCK_SIZE) {
         C[0] = SIMD_LOAD(ci + i + prefix);
-        M[0] = dec_offset(state, C[0], 0);
+        M[0] = dec_offset(state, tmp, C[0], 0);
         state_shift(state);
         SIMD_STORE(mi + i + prefix, M[0]);
     }

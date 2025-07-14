@@ -39,6 +39,23 @@ typedef struct {
 #define BLOCK_SIZE        16
 #define STATE             16
 
+/* Implementation forcing macros - define at compile time to force specific implementation */
+#ifdef HIAE_FORCE_SOFTWARE
+#    define HIAE_FORCED_IMPL "Software"
+#endif
+#ifdef HIAE_FORCE_AESNI
+#    define HIAE_FORCED_IMPL "AES-NI"
+#endif  
+#ifdef HIAE_FORCE_VAES_AVX512
+#    define HIAE_FORCED_IMPL "VAES+AVX512"
+#endif
+#ifdef HIAE_FORCE_ARM
+#    define HIAE_FORCED_IMPL "ARM NEON"
+#endif
+#ifdef HIAE_FORCE_ARM_SHA3
+#    define HIAE_FORCED_IMPL "ARM SHA3"
+#endif
+
 /* Internal constant arrays */
 static const uint8_t C0[16] = { 0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d,
                                 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34 };

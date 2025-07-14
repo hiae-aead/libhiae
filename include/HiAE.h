@@ -246,6 +246,34 @@ int HiAE_init_library(void);
 const char *HiAE_get_implementation_name(void);
 
 /**
+ * @brief Force a specific implementation to be used
+ *
+ * Forces the library to use a specific implementation instead of automatically
+ * detecting the best one. Useful for testing, debugging, or when specific
+ * behavior is required.
+ *
+ * @param impl_name Implementation name to force ("Software", "AES-NI", "VAES+AVX512", "ARM NEON", "ARM SHA3")
+ *
+ * @return 0 on success, -1 if implementation is not available or name is invalid
+ *
+ * @note Must be called before any other HiAE operations
+ * @note Pass NULL to restore automatic detection
+ * @note Not all implementations are available on all platforms
+ *
+ * Example:
+ * @code
+ * // Force software implementation for testing
+ * if (HiAE_force_implementation("Software") != 0) {
+ *     fprintf(stderr, "Failed to force software implementation\n");
+ * }
+ *
+ * // Restore automatic detection
+ * HiAE_force_implementation(NULL);
+ * @endcode
+ */
+int HiAE_force_implementation(const char *impl_name);
+
+/**
  * @brief Constant-time comparison of authentication tags
  *
  * Compares two authentication tags in constant time to prevent
