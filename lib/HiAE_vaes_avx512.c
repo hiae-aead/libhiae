@@ -5,14 +5,14 @@
 
 #    ifdef __clang__
 #        if __clang_major__ >= 18
-#            pragma clang attribute push(__attribute__((target("aes,vaes,avx512f,evex512"))), \
+#            pragma clang attribute push(__attribute__((target("vaes,avx512f,evex512"))), \
                                          apply_to = function)
 #        else
-#            pragma clang attribute push(__attribute__((target("aes,vaes,avx512f"))), \
+#            pragma clang attribute push(__attribute__((target("vaes,avx512f"))), \
                                          apply_to = function)
 #        endif
 #    elif defined(__GNUC__)
-#        pragma GCC target("aes,vaes,avx512f")
+#        pragma GCC target("vaes,avx512f")
 #    endif
 
 #    include <immintrin.h>
