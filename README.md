@@ -208,8 +208,18 @@ printf("Using: %s\n", impl);  // e.g., "VAES+AVX512", "AES-NI", "ARM SHA3"
 
 ## Command-Line Tool
 
-HiAE includes a user-friendly CLI for file encryption:
+HiAE includes a user-friendly CLI for file encryption. To build the CLI:
 
+```bash
+# Using CMake (CLI is built by default)
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+
+# CLI binary will be at: build/hiae-cli/hiae
+```
+
+Usage examples:
 ```bash
 # Generate a key
 hiae keygen -o secret.key

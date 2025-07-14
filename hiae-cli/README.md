@@ -15,8 +15,12 @@ A fast, portable command-line tool for encrypting and decrypting files using the
 ### Building from Source
 
 ```bash
-cd hiae-cli
+# From the main HiAE project directory
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
+
+# CLI binary will be at: build/hiae-cli/hiae
 ```
 
 To install system-wide (Unix-like systems):
@@ -26,9 +30,11 @@ sudo make install
 
 ### Windows
 
-On Windows, ensure you have a C compiler (MinGW or Visual Studio) and run:
+On Windows, ensure you have CMake and a C compiler (MinGW or Visual Studio):
 ```bash
-make
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build .
 ```
 
 ## Usage
