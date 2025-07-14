@@ -8,7 +8,7 @@ CC = cc -Wall -Wextra
 ARCH := $(shell uname -m)
 
 CFLAGS = -O3 -I include
-LDFLAGS = 
+LDFLAGS = -lm
 
 # Source files
 # Runtime dispatch builds all implementations and selects at runtime
