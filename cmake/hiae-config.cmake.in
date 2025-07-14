@@ -1,0 +1,7 @@
+get_filename_component(hiae_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+if(NOT TARGET hiae::hiae)
+  include("${hiae_CMAKE_DIR}/hiae-targets.cmake")
+endif()
+
+set(hiae_LIBRARIES hiae::hiae)
