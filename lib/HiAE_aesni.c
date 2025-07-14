@@ -12,6 +12,13 @@
 #    include <immintrin.h>
 #    include <wmmintrin.h>
 
+// Prefetch macros - tuned for x86-64
+#    define PREFETCH_READ(addr, locality)  __builtin_prefetch((addr), 0, (locality))
+#    define PREFETCH_WRITE(addr, locality) __builtin_prefetch((addr), 1, (locality))
+
+// Prefetch distance in bytes - tuned for typical x86-64 cache line size (64 bytes)
+#    define PREFETCH_DISTANCE 256
+
 typedef __m128i DATA128b;
 
 #    define SIMD_LOAD(x)     _mm_loadu_si128((const __m128i *) (x))
@@ -115,6 +122,10 @@ init_update(DATA128b *state, DATA128b *tmp, DATA128b c0)
 static inline void
 ad_update(DATA128b *state, DATA128b *tmp, DATA128b *M, const uint8_t *ad, size_t i)
 {
+    // Prefetch next chunk unconditionally - no overflow check needed
+    PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE, 0); // No temporal locality for streaming data
+    PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE + 128, 0);
+
     LOAD_1BLOCK_offset_ad(M[0], 0);
     LOAD_1BLOCK_offset_ad(M[1], 1);
     LOAD_1BLOCK_offset_ad(M[2], 2);
@@ -152,6 +163,11 @@ ad_update(DATA128b *state, DATA128b *tmp, DATA128b *M, const uint8_t *ad, size_t
 static inline void
 encrypt_chunk(DATA128b *state, DATA128b *M, DATA128b *C, const uint8_t *mi, uint8_t *ci, size_t i)
 {
+    // Prefetch next chunk for reading
+    PREFETCH_READ(mi + i + PREFETCH_DISTANCE, 0);
+    // Prefetch for writing
+    PREFETCH_WRITE(ci + i + PREFETCH_DISTANCE, 0);
+
     LOAD_1BLOCK_offset_enc(M[0], 0);
     LOAD_1BLOCK_offset_enc(M[1], 1);
     LOAD_1BLOCK_offset_enc(M[2], 2);
@@ -211,6 +227,11 @@ decrypt_chunk(DATA128b      *state,
               uint8_t       *mi,
               size_t         i)
 {
+    // Prefetch next chunk for reading
+    PREFETCH_READ(ci + i + PREFETCH_DISTANCE, 0);
+    // Prefetch for writing
+    PREFETCH_WRITE(mi + i + PREFETCH_DISTANCE, 0);
+
     LOAD_1BLOCK_offset_dec(C[0], 0);
     LOAD_1BLOCK_offset_dec(C[1], 1);
     LOAD_1BLOCK_offset_dec(C[2], 2);
@@ -364,7 +385,12 @@ HiAE_enc_aesni(HiAE_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_
         return;
     DATA128b M[STATE], C[STATE];
 
+    // Main processing loop with prefetching
     for (size_t i = 0; i < prefix; i += UNROLL_BLOCK_SIZE) {
+        // Unconditional prefetch for next iteration
+        PREFETCH_READ(mi + i + UNROLL_BLOCK_SIZE, 0);
+        PREFETCH_WRITE(ci + i + UNROLL_BLOCK_SIZE, 0);
+
         encrypt_chunk(state, M, C, mi, ci, i);
     }
 
@@ -400,7 +426,12 @@ HiAE_dec_aesni(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_
         return;
     DATA128b M[STATE], C[STATE], tmp[STATE];
 
+    // Main processing loop with prefetching
     for (size_t i = 0; i < prefix; i += UNROLL_BLOCK_SIZE) {
+        // Unconditional prefetch for next iteration
+        PREFETCH_READ(ci + i + UNROLL_BLOCK_SIZE, 0);
+        PREFETCH_WRITE(mi + i + UNROLL_BLOCK_SIZE, 0);
+
         decrypt_chunk(state, tmp, M, C, ci, mi, i);
     }
 
