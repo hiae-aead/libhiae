@@ -422,16 +422,14 @@ speed_test_streaming(void)
         size_t chunk_size = chunk_sizes[i];
         size_t chunks     = total_size / chunk_size;
 
-        hiae_stats_t *stats = hiae_stats_create(NUM_MEASUREMENTS);
-        if (!stats)
-            continue;
+        // Calculate iterations needed for streaming test
+        size_t iterations = hiae_select_iterations(total_size, MIN_TEST_TIME);
 
-        for (int run = 0; run < NUM_MEASUREMENTS; run++) {
+        // Warmup phase
+        double warmup_start = hiae_get_time();
+        while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
             HiAE_state_t state;
             HiAE_init(&state, key, nonce);
-
-            hiae_timer_t timer;
-            hiae_timer_start(&timer);
 
             for (size_t j = 0; j < chunks; j++) {
                 HiAE_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
@@ -439,11 +437,36 @@ speed_test_streaming(void)
 
             uint8_t tag[HIAE_MACBYTES];
             HiAE_finalize(&state, 0, total_size, tag);
+        }
+
+        hiae_stats_t *stats = hiae_stats_create(NUM_MEASUREMENTS);
+        if (!stats)
+            continue;
+
+        size_t batch_size = iterations / NUM_MEASUREMENTS;
+        if (batch_size < 1)
+            batch_size = 1;
+
+        for (int run = 0; run < NUM_MEASUREMENTS; run++) {
+            hiae_timer_t timer;
+            hiae_timer_start(&timer);
+
+            for (size_t iter = 0; iter < batch_size; iter++) {
+                HiAE_state_t state;
+                HiAE_init(&state, key, nonce);
+
+                for (size_t j = 0; j < chunks; j++) {
+                    HiAE_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
+                }
+
+                uint8_t tag[HIAE_MACBYTES];
+                HiAE_finalize(&state, 0, total_size, tag);
+            }
 
             hiae_timer_stop(&timer);
 
             double elapsed    = hiae_timer_elapsed_seconds(&timer);
-            double throughput = (double) total_size / elapsed;
+            double throughput = ((double) batch_size * total_size) / elapsed;
             hiae_stats_add(stats, throughput);
         }
 

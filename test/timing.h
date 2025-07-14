@@ -347,9 +347,13 @@ hiae_select_iterations(size_t data_size, double target_time)
     } else if (data_size <= 4096) {
         if (iterations < 2000)
             iterations = 2000;
+    } else if (data_size <= 65536) {
+        if (iterations < 100)
+            iterations = 100;
     } else {
-        if (iterations < 500)
-            iterations = 500;
+        // For very large sizes like 1MB streaming
+        if (iterations < 20)
+            iterations = 20;
     }
 
     // Set upper bounds to prevent excessive runtime
