@@ -203,7 +203,7 @@ load_key_material(cli_options_t *opts, hiae_key_material_t *km)
 
     // Load or generate nonce
     if (opts->nonce_hex) {
-        if (strcmp(opts->nonce_hex, "random") == 0) {
+        if (strcasecmp(opts->nonce_hex, "random") == 0) {
             if (generate_random_bytes(km->nonce, HIAE_NONCE_SIZE) != 0) {
                 fprintf(stderr, "Error: Failed to generate random nonce\n");
                 return -1;
@@ -222,8 +222,10 @@ load_key_material(cli_options_t *opts, hiae_key_material_t *km)
         } else {
             int len = parse_hex_string(opts->nonce_hex, km->nonce, HIAE_NONCE_SIZE);
             if (len != HIAE_NONCE_SIZE) {
-                fprintf(stderr, "Error: Nonce must be exactly %d bytes (got %d)\n", HIAE_NONCE_SIZE,
-                        len);
+                fprintf(
+                    stderr,
+                    "Error: Nonce must be exactly %d bytes (got %d) or use 'random' to generate\n",
+                    HIAE_NONCE_SIZE, len);
                 return -1;
             }
             km->nonce_loaded = 1;
