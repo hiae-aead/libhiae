@@ -75,10 +75,7 @@ functional_test_work(size_t plain_len, size_t ad_len)
 
     if (!(same_msg | same_tag)) {
         return 1;
-    } else {
-        return 0;
     }
-
     return 0;
 }
 

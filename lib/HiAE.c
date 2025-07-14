@@ -41,14 +41,14 @@
 /* target pragmas don't define these flags on clang-cl (an alternative clang driver for Windows) */
 #    if defined(__clang__) && defined(_MSC_BUILD) && defined(_MSC_VER) && \
         (defined(_M_IX86) || defined(_M_AMD64)) && !defined(__SSE3__)
-#        undef __SSE3__ 1
-#        undef __SSSE3__ 1
-#        undef __SSE4_1__ 1
-#        undef __AVX__ 1
-#        undef __AVX2__ 1
-#        undef __AVX512F__ 1
-#        undef __AES__ 1
-#        undef __VAES__ 1
+#        undef __SSE3__
+#        undef __SSSE3__
+#        undef __SSE4_1__
+#        undef __AVX__
+#        undef __AVX2__
+#        undef __AVX512F__
+#        undef __AES__
+#        undef __VAES__
 
 #        define __SSE3__    1
 #        define __SSSE3__   1
