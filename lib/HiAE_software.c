@@ -138,12 +138,12 @@ typedef data128b_software DATA128b;
 #define SIMD_XOR(x, y)   simd_xor_software(x, y)
 #define SIMD_ZERO_128()  simd_zero_software()
 #define AESL(x)          aesl_software(x)
-#define AESEMC(x, y)     aesl_software(simd_xor_software(x, y))
+#define XAESL(x, y)      aesl_software(simd_xor_software(x, y))
 
 static inline void
 update_state_offset(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)
 {
-    tmp[offset] = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    tmp[offset] = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     tmp[offset] = SIMD_XOR(tmp[offset], M);
     state[(0 + offset) % STATE]   = SIMD_XOR(tmp[offset], AESL(state[(P_4 + offset) % STATE]));
     state[(I_1 + offset) % STATE] = SIMD_XOR(state[(I_1 + offset) % STATE], M);
@@ -153,7 +153,7 @@ update_state_offset(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)
 static inline DATA128b
 keystream_block(DATA128b *state, DATA128b M, int offset)
 {
-    DATA128b tmp = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    DATA128b tmp = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     M            = SIMD_XOR(SIMD_XOR(tmp, M), state[(P_7 + offset) % STATE]);
     return M;
 }
@@ -161,7 +161,7 @@ keystream_block(DATA128b *state, DATA128b M, int offset)
 static inline DATA128b
 enc_offset(DATA128b *state, DATA128b M, int offset)
 {
-    DATA128b C = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    DATA128b C = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     C          = SIMD_XOR(C, M);
     state[(0 + offset) % STATE]   = SIMD_XOR(C, AESL(state[(P_4 + offset) % STATE]));
     C                             = SIMD_XOR(C, state[(P_7 + offset) % STATE]);
@@ -173,7 +173,7 @@ enc_offset(DATA128b *state, DATA128b M, int offset)
 static inline DATA128b
 dec_offset(DATA128b *state, DATA128b *tmp, DATA128b C, int offset)
 {
-    tmp[offset] = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    tmp[offset] = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     DATA128b M  = SIMD_XOR(state[(P_7 + offset) % STATE], C);
     state[(0 + offset) % STATE]   = SIMD_XOR(M, AESL(state[(P_4 + offset) % STATE]));
     M                             = SIMD_XOR(M, tmp[offset]);
