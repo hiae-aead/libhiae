@@ -78,15 +78,15 @@ This installs:
 
 ### Direct Integration (No Build System)
 
-You can also integrate HiAE directly into your project by simply compiling all files from the `lib/` directory along with your code. No special compilation flags are required:
+You can also integrate HiAE directly into your project by simply compiling all files from the `src/hiae/` directory along with your code. No special compilation flags are required:
 
 ```bash
 # Example: Compile your project with HiAE
-cc -I include/ -o myapp myapp.c lib/*.c
+cc -I include/ -o myapp myapp.c src/hiae/*.c
 
 # Or add to your existing build:
-SOURCES = main.c other.c lib/HiAE.c lib/HiAE_software.c lib/HiAE_stream.c \
-          lib/HiAE_aesni.c lib/HiAE_vaes_avx512.c lib/HiAE_arm.c lib/HiAE_arm_sha3.c
+SOURCES = main.c other.c src/hiae/HiAE.c src/hiae/HiAE_software.c src/hiae/HiAE_stream.c \
+          src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c src/hiae/HiAE_arm.c src/hiae/HiAE_arm_sha3.c
 ```
 
 This approach is ideal for:

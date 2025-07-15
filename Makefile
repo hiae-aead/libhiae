@@ -12,12 +12,12 @@ LDFLAGS = -lm
 
 # Source files
 # Runtime dispatch builds all implementations and selects at runtime
-MAIN_SOURCE = lib/HiAE.c
-HEADERS = include/HiAE.h lib/HiAE_internal.h
+MAIN_SOURCE = src/hiae/HiAE.c
+HEADERS = include/HiAE.h src/hiae/HiAE_internal.h
 
-IMPL_SOURCES = lib/HiAE_software.c lib/HiAE_stream.c
-IMPL_SOURCES += lib/HiAE_aesni.c lib/HiAE_vaes_avx512.c
-IMPL_SOURCES += lib/HiAE_arm.c lib/HiAE_arm_sha3.c
+IMPL_SOURCES = src/hiae/HiAE_software.c src/hiae/HiAE_stream.c
+IMPL_SOURCES += src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c
+IMPL_SOURCES += src/hiae/HiAE_arm.c src/hiae/HiAE_arm_sha3.c
 
 ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 

@@ -23,13 +23,13 @@ include_directories("include")
 
 # Source files for the library
 set(HIAE_SOURCES
-    lib/HiAE.c
-    lib/HiAE_software.c
-    lib/HiAE_stream.c
-    lib/HiAE_aesni.c
-    lib/HiAE_vaes_avx512.c
-    lib/HiAE_arm.c
-    lib/HiAE_arm_sha3.c
+    src/hiae/HiAE.c
+    src/hiae/HiAE_software.c
+    src/hiae/HiAE_stream.c
+    src/hiae/HiAE_aesni.c
+    src/hiae/HiAE_vaes_avx512.c
+    src/hiae/HiAE_arm.c
+    src/hiae/HiAE_arm_sha3.c
 )
 
 set(HIAE_HEADERS
