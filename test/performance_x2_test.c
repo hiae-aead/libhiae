@@ -1,4 +1,4 @@
-#include "HiAE.h"
+#include "HiAEx2.h"
 #include "timing.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -36,10 +36,10 @@ speed_test_ad_work(size_t len)
 {
     perf_result_t result = { 0 };
 
-    uint8_t key[HIAE_KEYBYTES];
-    memset(key, 1, HIAE_KEYBYTES);
-    uint8_t nonce[HIAE_NONCEBYTES];
-    memset(nonce, 1, HIAE_NONCEBYTES);
+    uint8_t key[HIAEx2_KEYBYTES];
+    memset(key, 1, HIAEx2_KEYBYTES);
+    uint8_t nonce[HIAEx2_NONCEBYTES];
+    memset(nonce, 1, HIAEx2_NONCEBYTES);
 
     uint8_t *ad = hiae_aligned_alloc(16, len);
     if (!ad) {
@@ -48,13 +48,13 @@ speed_test_ad_work(size_t len)
     }
     memset(ad, 1, len);
 
-    uint8_t tag[HIAE_MACBYTES];
+    uint8_t tag[HIAEx2_MACBYTES];
 
     // Warmup phase to estimate iterations needed for MEASUREMENT_TEST_TIME
     size_t warmup_iterations = 0;
     double warmup_start      = hiae_get_time();
     while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
-        HiAE_mac(key, nonce, ad, len, tag);
+        HiAEx2_mac(key, nonce, ad, len, tag);
         warmup_iterations++;
         if (warmup_iterations > 1000000)
             break; // Safety break
@@ -80,7 +80,7 @@ speed_test_ad_work(size_t len)
         hiae_timer_start(&timer);
 
         for (size_t iter = 0; iter < iterations_per_measurement; iter++) {
-            HiAE_mac(key, nonce, ad, len, tag);
+            HiAEx2_mac(key, nonce, ad, len, tag);
         }
 
         hiae_timer_stop(&timer);
@@ -111,10 +111,10 @@ speed_test_encode_work(size_t len, int AEAD)
 {
     perf_result_t result = { 0 };
 
-    uint8_t key[HIAE_KEYBYTES];
-    memset(key, 1, HIAE_KEYBYTES);
-    uint8_t nonce[HIAE_NONCEBYTES];
-    memset(nonce, 1, HIAE_NONCEBYTES);
+    uint8_t key[HIAEx2_KEYBYTES];
+    memset(key, 1, HIAEx2_KEYBYTES);
+    uint8_t nonce[HIAEx2_NONCEBYTES];
+    memset(nonce, 1, HIAEx2_NONCEBYTES);
 
     size_t   ad_len = AEAD ? 48 : 0;
     uint8_t *ad     = NULL;
@@ -138,13 +138,13 @@ speed_test_encode_work(size_t len, int AEAD)
     }
     memset(msg, 0x1, len);
 
-    uint8_t tag[HIAE_MACBYTES];
+    uint8_t tag[HIAEx2_MACBYTES];
 
     // Warmup phase to estimate iterations needed for MEASUREMENT_TEST_TIME
     size_t warmup_iterations = 0;
     double warmup_start      = hiae_get_time();
     while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
-        HiAE_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
+        HiAEx2_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
         warmup_iterations++;
         if (warmup_iterations > 1000000)
             break; // Safety break
@@ -172,7 +172,7 @@ speed_test_encode_work(size_t len, int AEAD)
         hiae_timer_start(&timer);
 
         for (size_t iter = 0; iter < iterations_per_measurement; iter++) {
-            HiAE_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
+            HiAEx2_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
         }
 
         hiae_timer_stop(&timer);
@@ -205,10 +205,10 @@ speed_test_decode_work(size_t len, int AEAD)
 {
     perf_result_t result = { 0 };
 
-    uint8_t key[HIAE_KEYBYTES];
-    memset(key, 1, HIAE_KEYBYTES);
-    uint8_t nonce[HIAE_NONCEBYTES];
-    memset(nonce, 1, HIAE_NONCEBYTES);
+    uint8_t key[HIAEx2_KEYBYTES];
+    memset(key, 1, HIAEx2_KEYBYTES);
+    uint8_t nonce[HIAEx2_NONCEBYTES];
+    memset(nonce, 1, HIAEx2_NONCEBYTES);
 
     size_t   ad_len = AEAD ? 48 : 0;
     uint8_t *ad     = NULL;
@@ -234,14 +234,14 @@ speed_test_decode_work(size_t len, int AEAD)
     }
     memset(msg, 0x1, len);
 
-    uint8_t tag[HIAE_MACBYTES];
-    HiAE_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
+    uint8_t tag[HIAEx2_MACBYTES];
+    HiAEx2_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
 
     // Warmup phase to estimate iterations needed for MEASUREMENT_TEST_TIME
     size_t warmup_iterations = 0;
     double warmup_start      = hiae_get_time();
     while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
-        HiAE_decrypt(key, nonce, ct, dec, len, ad, ad_len, tag);
+        HiAEx2_decrypt(key, nonce, ct, dec, len, ad, ad_len, tag);
         warmup_iterations++;
         if (warmup_iterations > 1000000)
             break; // Safety break
@@ -270,7 +270,7 @@ speed_test_decode_work(size_t len, int AEAD)
         hiae_timer_start(&timer);
 
         for (size_t iter = 0; iter < iterations_per_measurement; iter++) {
-            HiAE_decrypt(key, nonce, ct, dec, len, ad, ad_len, tag);
+            HiAEx2_decrypt(key, nonce, ct, dec, len, ad, ad_len, tag);
         }
 
         hiae_timer_stop(&timer);
@@ -427,10 +427,10 @@ speed_test_streaming(void)
     size_t       chunk_sizes[] = { 16, 64, 256, 1024, 4096, 16384, 32768, 65536 };
     const int    num_chunks    = sizeof(chunk_sizes) / sizeof(chunk_sizes[0]);
 
-    uint8_t key[HIAE_KEYBYTES];
-    memset(key, 1, HIAE_KEYBYTES);
-    uint8_t nonce[HIAE_NONCEBYTES];
-    memset(nonce, 1, HIAE_NONCEBYTES);
+    uint8_t key[HIAEx2_KEYBYTES];
+    memset(key, 1, HIAEx2_KEYBYTES);
+    uint8_t nonce[HIAEx2_NONCEBYTES];
+    memset(nonce, 1, HIAEx2_NONCEBYTES);
 
     uint8_t *data = hiae_aligned_alloc(16, total_size);
     uint8_t *out  = hiae_aligned_alloc(16, total_size);
@@ -450,15 +450,15 @@ speed_test_streaming(void)
         size_t warmup_iterations = 0;
         double warmup_start      = hiae_get_time();
         while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
-            HiAE_state_t state;
-            HiAE_init(&state, key, nonce);
+            HiAEx2_state_t state;
+            HiAEx2_init(&state, key, nonce);
 
             for (size_t j = 0; j < chunks; j++) {
-                HiAE_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
+                HiAEx2_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
             }
 
-            uint8_t tag[HIAE_MACBYTES];
-            HiAE_finalize(&state, 0, total_size, tag);
+            uint8_t tag[HIAEx2_MACBYTES];
+            HiAEx2_finalize(&state, 0, total_size, tag);
             warmup_iterations++;
             if (warmup_iterations > 1000000)
                 break; // Safety break
@@ -480,15 +480,15 @@ speed_test_streaming(void)
             hiae_timer_start(&timer);
 
             for (size_t iter = 0; iter < iterations_per_measurement; iter++) {
-                HiAE_state_t state;
-                HiAE_init(&state, key, nonce);
+                HiAEx2_state_t state;
+                HiAEx2_init(&state, key, nonce);
 
                 for (size_t j = 0; j < chunks; j++) {
-                    HiAE_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
+                    HiAEx2_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
                 }
 
-                uint8_t tag[HIAE_MACBYTES];
-                HiAE_finalize(&state, 0, total_size, tag);
+                uint8_t tag[HIAEx2_MACBYTES];
+                HiAEx2_finalize(&state, 0, total_size, tag);
             }
 
             hiae_timer_stop(&timer);
@@ -551,13 +551,13 @@ main(int argc, char *argv[])
     }
 
     if (csv_output) {
-        printf("# HiAE Performance Test\n");
-        printf("# Implementation: %s\n", HiAE_get_implementation_name());
+        printf("# HiAEx2 Performance Test\n");
+        printf("# Implementation: %s\n", HiAEx2_get_implementation_name());
     } else {
         printf("=============================================================\n");
-        printf("                    HiAE Performance Test                    \n");
+        printf("                    HiAEx2 Performance Test                    \n");
         printf("=============================================================\n");
-        printf("Implementation: %s\n", HiAE_get_implementation_name());
+        printf("Implementation: %s\n", HiAEx2_get_implementation_name());
     }
 
     double       timer_resolution = 1.0;

@@ -26,6 +26,7 @@ typedef __m128i DATA128b;
 #    define SIMD_LOAD(x)     _mm_loadu_si128((const __m128i *) (x))
 #    define SIMD_STORE(x, y) _mm_storeu_si128((__m128i *) (x), y)
 #    define SIMD_XOR(x, y)   _mm_xor_si128(x, y)
+#    define SIMD_AND(x, y)   _mm_and_si128(x, y)
 #    define SIMD_ZERO_128()  _mm_setzero_si128()
 #    define AESENC(x, y)     _mm_aesenc_si128(x, y)
 
@@ -899,7 +900,7 @@ HiAE_dec_vaes(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_t
         C[0] = SIMD_LOAD(buf);
         M[0] = SIMD_LOAD(mask);
         C[0] = keystream_block(state, tmp, C[0], 0);
-        C[0] = _mm_and_si128(C[0], M[0]);
+        C[0] = SIMD_AND(C[0], M[0]);
         update_state_offset(state, tmp, C[0], 0);
         state_shift(state);
         SIMD_STORE(buf, C[0]);
@@ -953,7 +954,7 @@ HiAE_dec_partial_noupdate_vaes(HiAE_state_t  *state_opaque,
     C[0] = SIMD_LOAD(buf);
     M[0] = SIMD_LOAD(mask);
     C[0] = keystream_block(state, tmp, C[0], 0);
-    C[0] = _mm_and_si128(C[0], M[0]);
+    C[0] = SIMD_AND(C[0], M[0]);
     SIMD_STORE(buf, C[0]);
     memcpy(mi, buf, size);
 }

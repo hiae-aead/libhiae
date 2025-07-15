@@ -12,12 +12,18 @@ LDFLAGS = -lm
 
 # Source files
 # Runtime dispatch builds all implementations and selects at runtime
-MAIN_SOURCE = src/hiae/HiAE.c
+MAIN_SOURCE = src/hiae/HiAE.c src/hiaex2/HiAEx2.c
 HEADERS = include/HiAE.h src/hiae/HiAE_internal.h
 
 IMPL_SOURCES += src/hiae/HiAE_software.c src/hiae/HiAE_stream.c
 IMPL_SOURCES += src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c
 IMPL_SOURCES += src/hiae/HiAE_arm.c src/hiae/HiAE_arm_sha3.c
+
+IMPL_SOURCES += src/hiaex2/HiAEx2_stream.c
+IMPL_SOURCES += src/hiaex2/HiAEx2_arm.c
+IMPL_SOURCES += src/hiaex2/HiAEx2_arm_sha3.c
+IMPL_SOURCES += src/hiaex2/HiAEx2_software.c
+IMPL_SOURCES += src/hiaex2/HiAEx2_vaes_avx2.c
 
 ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 
@@ -25,7 +31,7 @@ ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 BINDIR = bin
 
 # Target executables
-TARGETS = $(BINDIR)/perf_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_stream $(BINDIR)/hiae
+TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_stream $(BINDIR)/hiae
 
 # Default target
 all: $(BINDIR) $(TARGETS)
@@ -38,6 +44,11 @@ $(BINDIR):
 $(BINDIR)/perf_test: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/performance_test.c
 	@echo "Building performance test..."
 	$(CC) $(CFLAGS) $(ALL_SOURCES) test/performance_test.c -o $@ $(LDFLAGS)
+
+# Performance x2 test
+$(BINDIR)/perf_x2_test: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/performance_x2_test.c
+	@echo "Building performance x2 test..."
+	$(CC) $(CFLAGS) $(ALL_SOURCES) test/performance_x2_test.c -o $@ $(LDFLAGS)
 
 # Functional test
 $(BINDIR)/func_test: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/function_test.c
@@ -74,8 +85,9 @@ test-vectors: $(BINDIR)/test_vectors
 	@echo "Running test vector validation..."
 	./$(BINDIR)/test_vectors
 
-benchmark: $(BINDIR)/perf_test
+benchmark: $(BINDIR)/perf_test $(BINDIR)/perf_x2_test
 	@echo "Running performance benchmark..."
+	./$(BINDIR)/perf_x2_test
 	./$(BINDIR)/perf_test
 
 # Clean target
@@ -107,6 +119,7 @@ help:
 
 # Individual target shortcuts
 perf_test: $(BINDIR)/perf_test
+perf_x2_test: $(BINDIR)/perf_x2_test
 func_test: $(BINDIR)/func_test
 test_vectors: $(BINDIR)/test_vectors
 test_stream: $(BINDIR)/test_stream
@@ -158,4 +171,4 @@ format:
 	fi
 
 # Phony targets
-.PHONY: all test test-vectors benchmark clean help perf_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check
+.PHONY: all test test-vectors benchmark clean help perf_test perf_x2_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check

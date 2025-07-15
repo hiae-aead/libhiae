@@ -1,12 +1,12 @@
 /*
- * HiAE Runtime Dispatch Implementation
+ * HiAEx2 Runtime Dispatch Implementation
  *
  * This file implements runtime CPU feature detection and dispatches
  * to the appropriate optimized implementation based on available features.
  */
 
-#include "HiAE.h"
-#include "HiAE_internal.h"
+#include "HiAEx2.h"
+#include "HiAEx2_internal.h"
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -108,9 +108,9 @@ typedef struct CPUFeatures {
     int has_altivec;
 } CPUFeatures;
 
-static CPUFeatures  _cpu_features;
-static HiAE_impl_t *hiae_impl        = NULL;
-static const char  *forced_impl_name = NULL;
+static CPUFeatures    _cpu_features;
+static HiAEx2_impl_t *hiaex2_impl      = NULL;
+static const char    *forced_impl_name = NULL;
 
 #define CPUID_EBX_AVX2    0x00000020
 #define CPUID_EBX_AVX512F 0x00010000
@@ -131,13 +131,13 @@ static const char  *forced_impl_name = NULL;
 // hwcap values are not defined should not prevent features from being enabled.
 
 // Arm hwcaps.
-#define HIAE_ARM_HWCAP_NEON (1L << 12)
-#define HIAE_ARM_HWCAP2_AES (1L << 0)
+#define HIAEx2_ARM_HWCAP_NEON (1L << 12)
+#define HIAEx2_ARM_HWCAP2_AES (1L << 0)
 
 // AArch64 hwcaps.
-#define HIAE_AARCH64_HWCAP_ASIMD (1L << 1)
-#define HIAE_AARCH64_HWCAP_AES   (1L << 3)
-#define HIAE_AARCH64_HWCAP_SHA3  (1L << 17)
+#define HIAEx2_AARCH64_HWCAP_ASIMD (1L << 1)
+#define HIAEx2_AARCH64_HWCAP_AES   (1L << 3)
+#define HIAEx2_AARCH64_HWCAP_SHA3  (1L << 17)
 
 static void
 _cpuid(unsigned int cpu_info[4U], const unsigned int cpu_info_type)
@@ -308,9 +308,9 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
 #elif defined(HAVE_ANDROID_GETCPUFEATURES) && defined(ANDROID_CPU_ARM_FEATURE_NEON)
     cpu_features->has_neon = (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) != 0x0;
 #elif (defined(__aarch64__) || defined(_M_ARM64)) && defined(AT_HWCAP)
-    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAE_AARCH64_HWCAP_ASIMD);
+    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAEx2_AARCH64_HWCAP_ASIMD);
 #elif defined(__arm__) && defined(AT_HWCAP)
-    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAE_ARM_HWCAP_NEON);
+    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAEx2_ARM_HWCAP_NEON);
 #endif
 
     if (cpu_features->has_neon == 0) {
@@ -327,9 +327,9 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
 #elif defined(HAVE_ANDROID_GETCPUFEATURES) && defined(ANDROID_CPU_ARM_FEATURE_AES)
     cpu_features->has_neon_aes = (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_AES) != 0x0;
 #elif (defined(__aarch64__) || defined(_M_ARM64)) && defined(AT_HWCAP)
-    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP, HIAE_AARCH64_HWCAP_AES);
+    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP, HIAEx2_AARCH64_HWCAP_AES);
 #elif defined(__arm__) && defined(AT_HWCAP2)
-    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP2, HIAE_ARM_HWCAP2_AES);
+    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP2, HIAEx2_ARM_HWCAP2_AES);
 #endif
 
     // The FEAT_SHA3 implementation assumes that FEAT_AES is also present.
@@ -342,7 +342,7 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
 #elif defined(__APPLE__) && defined(CPU_TYPE_ARM64) && defined(CPU_SUBTYPE_ARM64E)
     cpu_features->has_neon_sha3 = _have_feature("hw.optional.arm.FEAT_SHA3");
 #elif (defined(__aarch64__) || defined(_M_ARM64)) && defined(AT_HWCAP)
-    cpu_features->has_neon_sha3 = _have_hwcap(AT_HWCAP, HIAE_AARCH64_HWCAP_SHA3);
+    cpu_features->has_neon_sha3 = _have_hwcap(AT_HWCAP, HIAEx2_AARCH64_HWCAP_SHA3);
 #endif
 
     return 0;
@@ -359,7 +359,7 @@ _runtime_powerpc_cpu_features(CPUFeatures *const cpu_features)
 }
 
 static int
-hiae_runtime_get_cpu_features(void)
+hiaex2_runtime_get_cpu_features(void)
 {
     int ret = -1;
 
@@ -374,41 +374,37 @@ hiae_runtime_get_cpu_features(void)
 }
 
 // External declarations for implementation tables
-extern const HiAE_impl_t hiae_software_impl;
+extern const HiAEx2_impl_t hiaex2_software_impl;
 #if defined(__x86_64__) || defined(_M_X64)
-extern const HiAE_impl_t hiae_aesni_impl;
-extern const HiAE_impl_t hiae_vaes_avx512_impl;
+extern const HiAEx2_impl_t hiaex2_vaes_avx2_impl;
 #endif
 #if defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
-extern const HiAE_impl_t hiae_arm_impl;
-extern const HiAE_impl_t hiae_arm_sha3_impl;
+extern const HiAEx2_impl_t hiaex2_arm_impl;
+extern const HiAEx2_impl_t hiaex2_arm_sha3_impl;
 #endif
 
 // Helper function to get implementation by name
-static HiAE_impl_t *
-hiae_get_impl_by_name(const char *name)
+static HiAEx2_impl_t *
+hiaex2_get_impl_by_name(const char *name)
 {
     if (name == NULL) {
         return NULL;
     }
 
     if (strcmp(name, "Software") == 0) {
-        return (HiAE_impl_t *) &hiae_software_impl;
+        return (HiAEx2_impl_t *) &hiaex2_software_impl;
     }
 
 #if defined(__x86_64__) || defined(_M_X64)
-    if (strcmp(name, "AES-NI") == 0 && hiae_aesni_impl.init != NULL) {
-        return (HiAE_impl_t *) &hiae_aesni_impl;
-    }
-    if (strcmp(name, "VAES+AVX512") == 0 && hiae_vaes_avx512_impl.init != NULL) {
-        return (HiAE_impl_t *) &hiae_vaes_avx512_impl;
+    if (strcmp(name, "VAES+AVX2") == 0 && hiaex2_vaes_avx2_impl.init != NULL) {
+        return (HiAEx2_impl_t *) &hiaex2_vaes_avx2_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
-    if (strcmp(name, "ARM NEON") == 0 && hiae_arm_impl.init != NULL) {
-        return (HiAE_impl_t *) &hiae_arm_impl;
+    if (strcmp(name, "ARM NEON") == 0 && hiaex2_arm_impl.init != NULL) {
+        return (HiAEx2_impl_t *) &hiaex2_arm_impl;
     }
-    if (strcmp(name, "ARM SHA3") == 0 && hiae_arm_sha3_impl.init != NULL) {
-        return (HiAE_impl_t *) &hiae_arm_sha3_impl;
+    if (strcmp(name, "ARM SHA3") == 0 && hiaex2_arm_sha3_impl.init != NULL) {
+        return (HiAEx2_impl_t *) &hiaex2_arm_sha3_impl;
     }
 #endif
 
@@ -417,181 +413,179 @@ hiae_get_impl_by_name(const char *name)
 
 // Initialize the dispatch table
 static void
-hiae_init_dispatch(void)
+hiaex2_init_dispatch(void)
 {
-    if (hiae_impl != NULL) {
+    if (hiaex2_impl != NULL) {
         return; // Already initialized
     }
 
     // Check for compile-time forced implementation first
-#ifdef HIAE_FORCED_IMPL
-    hiae_impl = hiae_get_impl_by_name(HIAE_FORCED_IMPL);
-    if (hiae_impl != NULL) {
+#ifdef HIAEx2_FORCED_IMPL
+    hiaex2_impl = hiaex2_get_impl_by_name(HIAEx2_FORCED_IMPL);
+    if (hiaex2_impl != NULL) {
         return;
     }
 #endif
 
     // Check for runtime forced implementation
     if (forced_impl_name != NULL) {
-        hiae_impl = hiae_get_impl_by_name(forced_impl_name);
-        if (hiae_impl != NULL) {
+        hiaex2_impl = hiaex2_get_impl_by_name(forced_impl_name);
+        if (hiaex2_impl != NULL) {
             return;
         }
     }
 
     // Initialize CPU features if not already done
     if (!_cpu_features.initialized) {
-        hiae_runtime_get_cpu_features();
+        hiaex2_runtime_get_cpu_features();
     }
 
     // Default to software implementation
-    hiae_impl = (HiAE_impl_t *) &hiae_software_impl;
+    hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_software_impl;
 
     // Select best available implementation based on CPU features
 #if defined(__x86_64__) || defined(_M_X64)
-    if (_cpu_features.has_avx512f && _cpu_features.has_vaes && hiae_vaes_avx512_impl.init != NULL) {
-        hiae_impl = (HiAE_impl_t *) &hiae_vaes_avx512_impl;
-    } else if (_cpu_features.has_aesni && hiae_aesni_impl.init != NULL) {
-        hiae_impl = (HiAE_impl_t *) &hiae_aesni_impl;
+    if (_cpu_features.has_avx2 && _cpu_features.has_vaes && hiaex2_vaes_avx2_impl.init != NULL) {
+        hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_vaes_avx2_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
-    if (_cpu_features.has_neon_sha3 && hiae_arm_sha3_impl.init != NULL) {
-        hiae_impl = (HiAE_impl_t *) &hiae_arm_sha3_impl;
-    } else if (_cpu_features.has_neon_aes && hiae_arm_impl.init != NULL) {
-        hiae_impl = (HiAE_impl_t *) &hiae_arm_impl;
+    if (_cpu_features.has_neon_sha3 && hiaex2_arm_sha3_impl.init != NULL) {
+        hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_arm_sha3_impl;
+    } else if (_cpu_features.has_neon_aes && hiaex2_arm_impl.init != NULL) {
+        hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_arm_impl;
     }
 #endif
 }
 
 // Public API function to initialize library
 int
-HiAE_init_library(void)
+HiAEx2_init_library(void)
 {
-    hiae_init_dispatch();
+    hiaex2_init_dispatch();
     return 0;
 }
 
 #if defined(_MSC_VER)
 #    pragma section(".CRT$XCU", read)
-static void __cdecl _do_HiAE_init_library(void);
-__declspec(allocate(".CRT$XCU")) void (*HiAE_init_library_constructor)(void) =
-    _do_HiAE_init_library;
+static void __cdecl _do_HiAEx2_init_library(void);
+__declspec(allocate(".CRT$XCU")) void (*HiAEx2_init_library_constructor)(void) =
+    _do_HiAEx2_init_library;
 #else
-static void _do_HiAE_init_library(void) __attribute__((constructor));
+static void _do_HiAEx2_init_library(void) __attribute__((constructor));
 #endif
 
 static void
-_do_HiAE_init_library(void)
+_do_HiAEx2_init_library(void)
 {
-    (void) HiAE_init_library();
+    (void) HiAEx2_init_library();
 }
 
 // Public API implementations that dispatch to the selected implementation
 void
-HiAE_init(HiAE_state_t *state, const uint8_t *key, const uint8_t *nonce)
+HiAEx2_init(HiAEx2_state_t *state, const uint8_t *key, const uint8_t *nonce)
 {
-    hiae_init_dispatch();
-    hiae_impl->init(state, key, nonce);
+    hiaex2_init_dispatch();
+    hiaex2_impl->init(state, key, nonce);
 }
 
 void
-HiAE_absorb(HiAE_state_t *state, const uint8_t *ad, size_t len)
+HiAEx2_absorb(HiAEx2_state_t *state, const uint8_t *ad, size_t len)
 {
-    hiae_init_dispatch();
-    hiae_impl->absorb(state, ad, len);
+    hiaex2_init_dispatch();
+    hiaex2_impl->absorb(state, ad, len);
 }
 
 void
-HiAE_finalize(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *tag)
+HiAEx2_finalize(HiAEx2_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *tag)
 {
-    hiae_init_dispatch();
-    hiae_impl->finalize(state, ad_len, msg_len, tag);
+    hiaex2_init_dispatch();
+    hiaex2_impl->finalize(state, ad_len, msg_len, tag);
 }
 
 void
-HiAE_enc(HiAE_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size)
+HiAEx2_enc(HiAEx2_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size)
 {
-    hiae_init_dispatch();
-    hiae_impl->enc(state, ci, mi, size);
+    hiaex2_init_dispatch();
+    hiaex2_impl->enc(state, ci, mi, size);
 }
 
 void
-HiAE_dec(HiAE_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size)
+HiAEx2_dec(HiAEx2_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size)
 {
-    hiae_init_dispatch();
-    hiae_impl->dec(state, mi, ci, size);
+    hiaex2_init_dispatch();
+    hiaex2_impl->dec(state, mi, ci, size);
 }
 
 void
-HiAE_enc_partial_noupdate(HiAE_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size)
+HiAEx2_enc_partial_noupdate(HiAEx2_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size)
 {
     assert(size < 16);
-    hiae_init_dispatch();
-    hiae_impl->enc_partial_noupdate(state, ci, mi, size);
+    hiaex2_init_dispatch();
+    hiaex2_impl->enc_partial_noupdate(state, ci, mi, size);
 }
 
 void
-HiAE_dec_partial_noupdate(HiAE_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size)
+HiAEx2_dec_partial_noupdate(HiAEx2_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size)
 {
     assert(size < 16);
-    hiae_init_dispatch();
-    hiae_impl->dec_partial_noupdate(state, mi, ci, size);
+    hiaex2_init_dispatch();
+    hiaex2_impl->dec_partial_noupdate(state, mi, ci, size);
 }
 
 int
-HiAE_encrypt(const uint8_t *key,
-             const uint8_t *nonce,
-             const uint8_t *msg,
-             uint8_t       *ct,
-             size_t         msg_len,
-             const uint8_t *ad,
-             size_t         ad_len,
-             uint8_t       *tag)
+HiAEx2_encrypt(const uint8_t *key,
+               const uint8_t *nonce,
+               const uint8_t *msg,
+               uint8_t       *ct,
+               size_t         msg_len,
+               const uint8_t *ad,
+               size_t         ad_len,
+               uint8_t       *tag)
 {
-    hiae_init_dispatch();
-    return hiae_impl->encrypt(key, nonce, msg, ct, msg_len, ad, ad_len, tag);
+    hiaex2_init_dispatch();
+    return hiaex2_impl->encrypt(key, nonce, msg, ct, msg_len, ad, ad_len, tag);
 }
 
 int
-HiAE_decrypt(const uint8_t *key,
-             const uint8_t *nonce,
-             uint8_t       *msg,
-             const uint8_t *ct,
-             size_t         ct_len,
-             const uint8_t *ad,
-             size_t         ad_len,
-             const uint8_t *tag)
+HiAEx2_decrypt(const uint8_t *key,
+               const uint8_t *nonce,
+               uint8_t       *msg,
+               const uint8_t *ct,
+               size_t         ct_len,
+               const uint8_t *ad,
+               size_t         ad_len,
+               const uint8_t *tag)
 {
-    hiae_init_dispatch();
-    return hiae_impl->decrypt(key, nonce, msg, ct, ct_len, ad, ad_len, tag);
+    hiaex2_init_dispatch();
+    return hiaex2_impl->decrypt(key, nonce, msg, ct, ct_len, ad, ad_len, tag);
 }
 
 int
-HiAE_mac(
+HiAEx2_mac(
     const uint8_t *key, const uint8_t *nonce, const uint8_t *data, size_t data_len, uint8_t *tag)
 {
-    hiae_init_dispatch();
-    return hiae_impl->mac(key, nonce, data, data_len, tag);
+    hiaex2_init_dispatch();
+    return hiaex2_impl->mac(key, nonce, data, data_len, tag);
 }
 
 const char *
-HiAE_get_implementation_name(void)
+HiAEx2_get_implementation_name(void)
 {
-    hiae_init_dispatch();
-    return hiae_impl->name;
+    hiaex2_init_dispatch();
+    return hiaex2_impl->name;
 }
 
 int
-HiAE_verify_tag(const uint8_t *expected_tag, const uint8_t *actual_tag)
+HiAEx2_verify_tag(const uint8_t *expected_tag, const uint8_t *actual_tag)
 {
-    return hiae_constant_time_compare(expected_tag, actual_tag, HIAE_MACBYTES);
+    return hiaex2_constant_time_compare(expected_tag, actual_tag, HIAEx2_MACBYTES);
 }
 
 int
-HiAE_force_implementation(const char *impl_name)
+HiAEx2_force_implementation(const char *impl_name)
 {
     // Reset current implementation to force re-initialization
-    hiae_impl = NULL;
+    hiaex2_impl = NULL;
 
     if (impl_name == NULL) {
         // Clear forced implementation - restore automatic detection
@@ -600,7 +594,7 @@ HiAE_force_implementation(const char *impl_name)
     }
 
     // Validate that the requested implementation exists
-    HiAE_impl_t *requested_impl = hiae_get_impl_by_name(impl_name);
+    HiAEx2_impl_t *requested_impl = hiaex2_get_impl_by_name(impl_name);
     if (requested_impl == NULL) {
         return -1; // Implementation not available
     }
