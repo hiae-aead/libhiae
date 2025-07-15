@@ -12,16 +12,9 @@
 #    include <immintrin.h>
 #    include <wmmintrin.h>
 
-// Prefetch macros - tuned for x86-64
-#    ifdef _MSC_VER
-#        define PREFETCH_READ(addr, locality)  _mm_prefetch((const char *) (addr), _MM_HINT_T0)
-#        define PREFETCH_WRITE(addr, locality) _mm_prefetch((const char *) (addr), _MM_HINT_T0)
-#    else
-#        define PREFETCH_READ(addr, locality)  __builtin_prefetch((addr), 0, (locality))
-#        define PREFETCH_WRITE(addr, locality) __builtin_prefetch((addr), 1, (locality))
-#    endif
-
-// Prefetch distance in bytes - tuned for typical x86-64 cache line size (64 bytes)
+#    define PREFETCH_READ(addr, locality)  _mm_prefetch((const char *) (addr), _MM_HINT_T0)
+#    define PREFETCH_WRITE(addr, locality) _mm_prefetch((const char *) (addr), _MM_HINT_T0)
+/* Prefetch distance in bytes - matches ARM implementation */
 #    define PREFETCH_DISTANCE 256
 
 typedef __m128i DATA128b;
@@ -127,8 +120,7 @@ init_update(DATA128b *state, DATA128b *tmp, DATA128b c0)
 static inline void
 ad_update(DATA128b *state, DATA128b *tmp, DATA128b *M, const uint8_t *ad, size_t i)
 {
-    // Prefetch next chunk unconditionally - no overflow check needed
-    PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE, 0); // No temporal locality for streaming data
+    PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE, 0);
     PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE + 128, 0);
 
     LOAD_1BLOCK_offset_ad(M[0], 0);
@@ -168,9 +160,7 @@ ad_update(DATA128b *state, DATA128b *tmp, DATA128b *M, const uint8_t *ad, size_t
 static inline void
 encrypt_chunk(DATA128b *state, DATA128b *M, DATA128b *C, const uint8_t *mi, uint8_t *ci, size_t i)
 {
-    // Prefetch next chunk for reading
     PREFETCH_READ(mi + i + PREFETCH_DISTANCE, 0);
-    // Prefetch for writing
     PREFETCH_WRITE(ci + i + PREFETCH_DISTANCE, 0);
 
     LOAD_1BLOCK_offset_enc(M[0], 0);
@@ -232,9 +222,7 @@ decrypt_chunk(DATA128b      *state,
               uint8_t       *mi,
               size_t         i)
 {
-    // Prefetch next chunk for reading
     PREFETCH_READ(ci + i + PREFETCH_DISTANCE, 0);
-    // Prefetch for writing
     PREFETCH_WRITE(mi + i + PREFETCH_DISTANCE, 0);
 
     LOAD_1BLOCK_offset_dec(C[0], 0);

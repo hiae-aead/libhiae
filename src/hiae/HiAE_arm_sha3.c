@@ -144,8 +144,7 @@ ad_update(DATA128b *state, DATA128b *tmp, const uint8_t *ad, size_t i)
 {
     DATA128b M[16];
 
-    // Prefetch next chunk unconditionally - no overflow check needed
-    PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE, 0); // No temporal locality for streaming data
+    PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE, 0);
     PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE + 128, 0);
 
     LOAD_1BLOCK_offset_ad(M[0], 0);

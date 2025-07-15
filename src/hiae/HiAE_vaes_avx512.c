@@ -20,15 +20,6 @@
 #    include <wmmintrin.h>
 #    include <xmmintrin.h>
 
-/* Prefetch macros for x86-64 - tuned for AVX512 */
-/* locality hints: _MM_HINT_T0 = all cache levels, _MM_HINT_T1 = L2 and up, _MM_HINT_T2 = L3 and up,
- * _MM_HINT_NTA = non-temporal */
-#    define PREFETCH_READ(addr, hint)  _mm_prefetch((const char *) (addr), (hint))
-#    define PREFETCH_WRITE(addr, hint) _mm_prefetch((const char *) (addr), (hint))
-
-/* Prefetch distance in bytes - matches ARM implementation */
-#    define PREFETCH_DISTANCE 256
-
 typedef __m128i DATA128b;
 
 /* x86-64 AES-NI specific SIMD operations */
