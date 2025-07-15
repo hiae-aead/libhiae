@@ -25,7 +25,7 @@ ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 BINDIR = bin
 
 # Target executables
-TARGETS = $(BINDIR)/perf_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_stream
+TARGETS = $(BINDIR)/perf_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_stream $(BINDIR)/hiae
 
 # Default target
 all: $(BINDIR) $(TARGETS)
@@ -53,6 +53,11 @@ $(BINDIR)/test_vectors: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_vectors_ie
 $(BINDIR)/test_stream: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_stream.c
 	@echo "Building streaming API test..."
 	$(CC) $(CFLAGS) $(ALL_SOURCES) test/test_stream.c -o $@ $(LDFLAGS)
+
+# HiAE CLI utility
+$(BINDIR)/hiae: $(BINDIR) $(ALL_SOURCES) $(HEADERS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c
+	@echo "Building hiae CLI utility..."
+	$(CC) $(CFLAGS) -I hiae-cli/src $(ALL_SOURCES) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c -o $@ $(LDFLAGS)
 
 # Test targets
 test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_stream
@@ -89,6 +94,7 @@ help:
 	@echo "  make func_test        - Build functional test only"
 	@echo "  make test_vectors     - Build test vectors validation only"
 	@echo "  make test_stream      - Build streaming API test only"
+	@echo "  make hiae             - Build hiae CLI utility only"
 	@echo "  make libhiae          - Build static library only"
 	@echo "  make install          - Install library and headers"
 	@echo "  make uninstall        - Remove installed files"
@@ -104,6 +110,7 @@ perf_test: $(BINDIR)/perf_test
 func_test: $(BINDIR)/func_test
 test_vectors: $(BINDIR)/test_vectors
 test_stream: $(BINDIR)/test_stream
+hiae: $(BINDIR)/hiae
 
 # Installation
 PREFIX ?= /usr/local
@@ -151,4 +158,4 @@ format:
 	fi
 
 # Phony targets
-.PHONY: all test test-vectors benchmark clean help perf_test func_test test_vectors test_stream install uninstall libhiae format format-check
+.PHONY: all test test-vectors benchmark clean help perf_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check
