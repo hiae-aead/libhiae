@@ -45,7 +45,7 @@ typedef uint8x16_t DATA128b;
 #    define SIMD_XOR3(a, b, c) veor3q_u8(a, b, c)
 #    define SIMD_ZERO_128()    vmovq_n_u8(0)
 #    define XAESL(x, y)        vaesmcq_u8(vaeseq_u8(x, y))
-#    define AESL(x)            XAESL(SIMD_ZERO_128(), x)
+#    define AESL(x)            XAESL(x, SIMD_ZERO_128())
 
 static inline void
 update_state_offset(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)
