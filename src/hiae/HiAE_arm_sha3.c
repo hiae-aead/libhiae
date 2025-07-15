@@ -42,6 +42,7 @@ typedef uint8x16_t DATA128b;
 #    define SIMD_LOAD(x)       vld1q_u8(x)
 #    define SIMD_STORE(dst, x) vst1q_u8(dst, x)
 #    define SIMD_XOR(a, b)     veorq_u8(a, b)
+#    define SIMD_AND(a, b)     vandq_u8(a, b)
 #    define SIMD_XOR3(a, b, c) veor3q_u8(a, b, c)
 #    define SIMD_ZERO_128()    vmovq_n_u8(0)
 #    define XAESL(x, y)        vaesmcq_u8(vaeseq_u8(x, y))
@@ -480,7 +481,7 @@ HiAE_dec_arm_sha3(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, si
         C[0] = SIMD_LOAD(buf);
         M[0] = SIMD_LOAD(mask);
         C[0] = keystream_block(state, C[0], 0);
-        C[0] = vandq_u8(C[0], M[0]);
+        C[0] = SIMD_AND(C[0], M[0]);
         update_state_offset(state, tmp, C[0], 0);
         state_shift(state);
         SIMD_STORE(buf, C[0]);
@@ -534,7 +535,7 @@ HiAE_dec_partial_noupdate_arm_sha3(HiAE_state_t  *state_opaque,
     C[0] = SIMD_LOAD(buf);
     M[0] = SIMD_LOAD(mask);
     C[0] = keystream_block(state, C[0], 0);
-    C[0] = vandq_u8(C[0], M[0]);
+    C[0] = SIMD_AND(C[0], M[0]);
     SIMD_STORE(buf, C[0]);
     memcpy(mi, buf, size);
 }
