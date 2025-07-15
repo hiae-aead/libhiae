@@ -510,6 +510,7 @@ cmd_keygen(cli_options_t *opts)
 static int
 cmd_mac(cli_options_t *opts)
 {
+    opts->quiet = 1;
     hiae_key_material_t km;
     uint8_t             tag[HIAE_MACBYTES];
     int                 ret = -1;
