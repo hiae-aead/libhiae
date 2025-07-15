@@ -25,6 +25,7 @@ target_link_libraries(hiae-cli PRIVATE hiae::hiae)
 
 # Set include directories
 target_include_directories(hiae-cli PRIVATE src)
+include_directories(../include)
 
 # Platform-specific settings
 if(WIN32)
