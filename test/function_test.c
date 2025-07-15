@@ -84,10 +84,10 @@ functional_test(void)
 {
     int result = 0;
     srand(time(NULL));
-    int    size_group = 4;
+    int    size_group = 6;
     double avg_ad = 0, avg_len = 0;
     int    max_len = 0, min_len = 1 << 30, max_ad = 0, min_ad = 1 << 30;
-    int    size_L[5] = { 1, 256, 1024, 8192, 16384 };
+    int    size_L[7] = { 1, 256, 1024, 8192, 16384, 32768, 65536 };
     for (int i = 0; i < size_group; i++) {
         int T = REPEAT;
         while (T--) {

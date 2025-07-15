@@ -10,8 +10,8 @@
 #define WARMUP_TIME      0.1 // 100ms warmup
 #define NUM_MEASUREMENTS 5 // Number of measurement runs
 
-const int len_test_case = 9;
-size_t    test_case[9]  = { 16, 64, 256, 512, 1024, 2048, 4096, 8192, 16384 };
+const int len_test_case = 11;
+size_t    test_case[11] = { 16, 64, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 };
 
 static int csv_output = 0;
 
@@ -400,7 +400,7 @@ speed_test_streaming(void)
     }
 
     const size_t total_size    = 1024 * 1024;
-    size_t       chunk_sizes[] = { 16, 64, 256, 1024, 4096, 16384 };
+    size_t       chunk_sizes[] = { 16, 64, 256, 1024, 4096, 16384, 32768, 65536 };
     const int    num_chunks    = sizeof(chunk_sizes) / sizeof(chunk_sizes[0]);
 
     uint8_t key[HIAE_KEYBYTES];
