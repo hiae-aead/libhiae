@@ -73,7 +73,7 @@ hiae_constant_time_compare(const uint8_t *a, const uint8_t *b, size_t len)
 #if defined(__GNUC__) || defined(__clang__)
     __asm__("" : "+r"(result) :);
 #endif
-    return result;
+    return -(result != 0);
 }
 
 #endif /* HIAE_INTERNAL_H */
