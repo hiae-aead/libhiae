@@ -27,8 +27,8 @@
 #    ifdef _MSC_VER
 // MSVC doesn't have __builtin_prefetch, use ARM64 specific intrinsics
 #        include <intrin.h>
-#        define PREFETCH_READ(addr, locality)  __prefetch((const void *)(addr))
-#        define PREFETCH_WRITE(addr, locality) __prefetch((const void *)(addr))
+#        define PREFETCH_READ(addr, locality)  __prefetch((const void *) (addr))
+#        define PREFETCH_WRITE(addr, locality) __prefetch((const void *) (addr))
 #    else
 #        define PREFETCH_READ(addr, locality)  __builtin_prefetch((addr), 0, (locality))
 #        define PREFETCH_WRITE(addr, locality) __builtin_prefetch((addr), 1, (locality))
@@ -44,14 +44,13 @@ typedef uint8x16_t DATA128b;
 #    define SIMD_XOR(a, b)     veorq_u8(a, b)
 #    define SIMD_XOR3(a, b, c) veor3q_u8(a, b, c)
 #    define SIMD_ZERO_128()    vmovq_n_u8(0)
-#    define AESEMC(x, y)       vaesmcq_u8(vaeseq_u8(x, y))
-#    define AESL(x)            AESEMC(x, SIMD_ZERO_128())
-#    define AESENC(x, y)       SIMD_XOR(AESEMC(SIMD_ZERO_128(), x), y)
+#    define XAESL(x, y)        vaesmcq_u8(vaeseq_u8(x, y))
+#    define AESL(x)            XAESL(SIMD_ZERO_128(), x)
 
 static inline void
 update_state_offset(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)
 {
-    tmp[offset] = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    tmp[offset] = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     tmp[offset] = SIMD_XOR(tmp[offset], M);
     state[(0 + offset) % STATE]   = SIMD_XOR(tmp[offset], AESL(state[(P_4 + offset) % STATE]));
     state[(I_1 + offset) % STATE] = SIMD_XOR(state[(I_1 + offset) % STATE], M);
@@ -61,7 +60,7 @@ update_state_offset(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)
 static inline DATA128b
 keystream_block(DATA128b *state, DATA128b M, int offset)
 {
-    DATA128b tmp = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    DATA128b tmp = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     M            = SIMD_XOR3(tmp, M, state[(P_7 + offset) % STATE]);
     return M;
 }
@@ -69,7 +68,7 @@ keystream_block(DATA128b *state, DATA128b M, int offset)
 static inline DATA128b
 enc_offset(DATA128b *state, DATA128b M, int offset)
 {
-    DATA128b C = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    DATA128b C = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     C          = SIMD_XOR(C, M);
     state[(0 + offset) % STATE]   = SIMD_XOR(C, AESL(state[(P_4 + offset) % STATE]));
     C                             = SIMD_XOR(C, state[(P_7 + offset) % STATE]);
@@ -81,7 +80,7 @@ enc_offset(DATA128b *state, DATA128b M, int offset)
 static inline DATA128b
 dec_offset(DATA128b *state, DATA128b *tmp, DATA128b C, int offset)
 {
-    tmp[offset] = AESEMC(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
+    tmp[offset] = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     DATA128b M  = SIMD_XOR(state[(P_7 + offset) % STATE], C);
     state[(0 + offset) % STATE]   = SIMD_XOR(M, AESL(state[(P_4 + offset) % STATE]));
     M                             = SIMD_XOR(M, tmp[offset]);
