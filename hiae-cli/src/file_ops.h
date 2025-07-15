@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define CHUNK_SIZE 4096 // Process files in 4KB chunks
+#define CHUNK_SIZE 1 * 1024 * 1024 // Process files in 1MB chunks
 
 // Progress callback function type
 typedef void (*progress_callback_t)(size_t current, size_t total);
