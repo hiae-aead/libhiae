@@ -124,34 +124,44 @@ ad_update(DATA128b *state, DATA128b *tmp, DATA128b *M, const uint8_t *ad, size_t
     PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE, 0);
     PREFETCH_READ(ad + i + UNROLL_BLOCK_SIZE + 128, 0);
 
+    // Process in groups of 4 blocks to reduce register pressure
+    // This allows GCC to better manage register allocation
+
+    // Group 1: blocks 0-3
     LOAD_1BLOCK_offset_ad(M[0], 0);
     LOAD_1BLOCK_offset_ad(M[1], 1);
     LOAD_1BLOCK_offset_ad(M[2], 2);
     LOAD_1BLOCK_offset_ad(M[3], 3);
-    LOAD_1BLOCK_offset_ad(M[4], 4);
-    LOAD_1BLOCK_offset_ad(M[5], 5);
-    LOAD_1BLOCK_offset_ad(M[6], 6);
-    LOAD_1BLOCK_offset_ad(M[7], 7);
-    LOAD_1BLOCK_offset_ad(M[8], 8);
-    LOAD_1BLOCK_offset_ad(M[9], 9);
-    LOAD_1BLOCK_offset_ad(M[10], 10);
-    LOAD_1BLOCK_offset_ad(M[11], 11);
-    LOAD_1BLOCK_offset_ad(M[12], 12);
-    LOAD_1BLOCK_offset_ad(M[13], 13);
-    LOAD_1BLOCK_offset_ad(M[14], 14);
-    LOAD_1BLOCK_offset_ad(M[15], 15);
     update_state_offset(state, tmp, M[0], 0);
     update_state_offset(state, tmp, M[1], 1);
     update_state_offset(state, tmp, M[2], 2);
     update_state_offset(state, tmp, M[3], 3);
+
+    // Group 2: blocks 4-7
+    LOAD_1BLOCK_offset_ad(M[4], 4);
+    LOAD_1BLOCK_offset_ad(M[5], 5);
+    LOAD_1BLOCK_offset_ad(M[6], 6);
+    LOAD_1BLOCK_offset_ad(M[7], 7);
     update_state_offset(state, tmp, M[4], 4);
     update_state_offset(state, tmp, M[5], 5);
     update_state_offset(state, tmp, M[6], 6);
     update_state_offset(state, tmp, M[7], 7);
+
+    // Group 3: blocks 8-11
+    LOAD_1BLOCK_offset_ad(M[8], 8);
+    LOAD_1BLOCK_offset_ad(M[9], 9);
+    LOAD_1BLOCK_offset_ad(M[10], 10);
+    LOAD_1BLOCK_offset_ad(M[11], 11);
     update_state_offset(state, tmp, M[8], 8);
     update_state_offset(state, tmp, M[9], 9);
     update_state_offset(state, tmp, M[10], 10);
     update_state_offset(state, tmp, M[11], 11);
+
+    // Group 4: blocks 12-15
+    LOAD_1BLOCK_offset_ad(M[12], 12);
+    LOAD_1BLOCK_offset_ad(M[13], 13);
+    LOAD_1BLOCK_offset_ad(M[14], 14);
+    LOAD_1BLOCK_offset_ad(M[15], 15);
     update_state_offset(state, tmp, M[12], 12);
     update_state_offset(state, tmp, M[13], 13);
     update_state_offset(state, tmp, M[14], 14);
@@ -164,50 +174,60 @@ encrypt_chunk(DATA128b *state, DATA128b *M, DATA128b *C, const uint8_t *mi, uint
     PREFETCH_READ(mi + i + PREFETCH_DISTANCE, 0);
     PREFETCH_WRITE(ci + i + PREFETCH_DISTANCE, 0);
 
+    // Process blocks in groups of 4 to reduce register pressure
+    // This prevents GCC from trying to keep all 16 M[] and C[] values in registers
+
+    // Group 1: blocks 0-3
     LOAD_1BLOCK_offset_enc(M[0], 0);
     LOAD_1BLOCK_offset_enc(M[1], 1);
     LOAD_1BLOCK_offset_enc(M[2], 2);
     LOAD_1BLOCK_offset_enc(M[3], 3);
-    LOAD_1BLOCK_offset_enc(M[4], 4);
-    LOAD_1BLOCK_offset_enc(M[5], 5);
-    LOAD_1BLOCK_offset_enc(M[6], 6);
-    LOAD_1BLOCK_offset_enc(M[7], 7);
-    LOAD_1BLOCK_offset_enc(M[8], 8);
-    LOAD_1BLOCK_offset_enc(M[9], 9);
-    LOAD_1BLOCK_offset_enc(M[10], 10);
-    LOAD_1BLOCK_offset_enc(M[11], 11);
-    LOAD_1BLOCK_offset_enc(M[12], 12);
-    LOAD_1BLOCK_offset_enc(M[13], 13);
-    LOAD_1BLOCK_offset_enc(M[14], 14);
-    LOAD_1BLOCK_offset_enc(M[15], 15);
-    C[0]  = enc_offset(state, M[0], 0);
-    C[1]  = enc_offset(state, M[1], 1);
-    C[2]  = enc_offset(state, M[2], 2);
-    C[3]  = enc_offset(state, M[3], 3);
-    C[4]  = enc_offset(state, M[4], 4);
-    C[5]  = enc_offset(state, M[5], 5);
-    C[6]  = enc_offset(state, M[6], 6);
-    C[7]  = enc_offset(state, M[7], 7);
-    C[8]  = enc_offset(state, M[8], 8);
-    C[9]  = enc_offset(state, M[9], 9);
-    C[10] = enc_offset(state, M[10], 10);
-    C[11] = enc_offset(state, M[11], 11);
-    C[12] = enc_offset(state, M[12], 12);
-    C[13] = enc_offset(state, M[13], 13);
-    C[14] = enc_offset(state, M[14], 14);
-    C[15] = enc_offset(state, M[15], 15);
+    C[0] = enc_offset(state, M[0], 0);
+    C[1] = enc_offset(state, M[1], 1);
+    C[2] = enc_offset(state, M[2], 2);
+    C[3] = enc_offset(state, M[3], 3);
     STORE_1BLOCK_offset_enc(C[0], 0);
     STORE_1BLOCK_offset_enc(C[1], 1);
     STORE_1BLOCK_offset_enc(C[2], 2);
     STORE_1BLOCK_offset_enc(C[3], 3);
+
+    // Group 2: blocks 4-7
+    LOAD_1BLOCK_offset_enc(M[4], 4);
+    LOAD_1BLOCK_offset_enc(M[5], 5);
+    LOAD_1BLOCK_offset_enc(M[6], 6);
+    LOAD_1BLOCK_offset_enc(M[7], 7);
+    C[4] = enc_offset(state, M[4], 4);
+    C[5] = enc_offset(state, M[5], 5);
+    C[6] = enc_offset(state, M[6], 6);
+    C[7] = enc_offset(state, M[7], 7);
     STORE_1BLOCK_offset_enc(C[4], 4);
     STORE_1BLOCK_offset_enc(C[5], 5);
     STORE_1BLOCK_offset_enc(C[6], 6);
     STORE_1BLOCK_offset_enc(C[7], 7);
+
+    // Group 3: blocks 8-11
+    LOAD_1BLOCK_offset_enc(M[8], 8);
+    LOAD_1BLOCK_offset_enc(M[9], 9);
+    LOAD_1BLOCK_offset_enc(M[10], 10);
+    LOAD_1BLOCK_offset_enc(M[11], 11);
+    C[8]  = enc_offset(state, M[8], 8);
+    C[9]  = enc_offset(state, M[9], 9);
+    C[10] = enc_offset(state, M[10], 10);
+    C[11] = enc_offset(state, M[11], 11);
     STORE_1BLOCK_offset_enc(C[8], 8);
     STORE_1BLOCK_offset_enc(C[9], 9);
     STORE_1BLOCK_offset_enc(C[10], 10);
     STORE_1BLOCK_offset_enc(C[11], 11);
+
+    // Group 4: blocks 12-15
+    LOAD_1BLOCK_offset_enc(M[12], 12);
+    LOAD_1BLOCK_offset_enc(M[13], 13);
+    LOAD_1BLOCK_offset_enc(M[14], 14);
+    LOAD_1BLOCK_offset_enc(M[15], 15);
+    C[12] = enc_offset(state, M[12], 12);
+    C[13] = enc_offset(state, M[13], 13);
+    C[14] = enc_offset(state, M[14], 14);
+    C[15] = enc_offset(state, M[15], 15);
     STORE_1BLOCK_offset_enc(C[12], 12);
     STORE_1BLOCK_offset_enc(C[13], 13);
     STORE_1BLOCK_offset_enc(C[14], 14);
@@ -226,50 +246,57 @@ decrypt_chunk(DATA128b      *state,
     PREFETCH_READ(ci + i + PREFETCH_DISTANCE, 0);
     PREFETCH_WRITE(mi + i + PREFETCH_DISTANCE, 0);
 
+    // Group 1: blocks 0-3
     LOAD_1BLOCK_offset_dec(C[0], 0);
     LOAD_1BLOCK_offset_dec(C[1], 1);
     LOAD_1BLOCK_offset_dec(C[2], 2);
     LOAD_1BLOCK_offset_dec(C[3], 3);
-    LOAD_1BLOCK_offset_dec(C[4], 4);
-    LOAD_1BLOCK_offset_dec(C[5], 5);
-    LOAD_1BLOCK_offset_dec(C[6], 6);
-    LOAD_1BLOCK_offset_dec(C[7], 7);
-    LOAD_1BLOCK_offset_dec(C[8], 8);
-    LOAD_1BLOCK_offset_dec(C[9], 9);
-    LOAD_1BLOCK_offset_dec(C[10], 10);
-    LOAD_1BLOCK_offset_dec(C[11], 11);
-    LOAD_1BLOCK_offset_dec(C[12], 12);
-    LOAD_1BLOCK_offset_dec(C[13], 13);
-    LOAD_1BLOCK_offset_dec(C[14], 14);
-    LOAD_1BLOCK_offset_dec(C[15], 15);
-    M[0]  = dec_offset(state, tmp, C[0], 0);
-    M[1]  = dec_offset(state, tmp, C[1], 1);
-    M[2]  = dec_offset(state, tmp, C[2], 2);
-    M[3]  = dec_offset(state, tmp, C[3], 3);
-    M[4]  = dec_offset(state, tmp, C[4], 4);
-    M[5]  = dec_offset(state, tmp, C[5], 5);
-    M[6]  = dec_offset(state, tmp, C[6], 6);
-    M[7]  = dec_offset(state, tmp, C[7], 7);
-    M[8]  = dec_offset(state, tmp, C[8], 8);
-    M[9]  = dec_offset(state, tmp, C[9], 9);
-    M[10] = dec_offset(state, tmp, C[10], 10);
-    M[11] = dec_offset(state, tmp, C[11], 11);
-    M[12] = dec_offset(state, tmp, C[12], 12);
-    M[13] = dec_offset(state, tmp, C[13], 13);
-    M[14] = dec_offset(state, tmp, C[14], 14);
-    M[15] = dec_offset(state, tmp, C[15], 15);
+    M[0] = dec_offset(state, tmp, C[0], 0);
+    M[1] = dec_offset(state, tmp, C[1], 1);
+    M[2] = dec_offset(state, tmp, C[2], 2);
+    M[3] = dec_offset(state, tmp, C[3], 3);
     STORE_1BLOCK_offset_dec(M[0], 0);
     STORE_1BLOCK_offset_dec(M[1], 1);
     STORE_1BLOCK_offset_dec(M[2], 2);
     STORE_1BLOCK_offset_dec(M[3], 3);
+
+    // Group 2: blocks 4-7
+    LOAD_1BLOCK_offset_dec(C[4], 4);
+    LOAD_1BLOCK_offset_dec(C[5], 5);
+    LOAD_1BLOCK_offset_dec(C[6], 6);
+    LOAD_1BLOCK_offset_dec(C[7], 7);
+    M[4] = dec_offset(state, tmp, C[4], 4);
+    M[5] = dec_offset(state, tmp, C[5], 5);
+    M[6] = dec_offset(state, tmp, C[6], 6);
+    M[7] = dec_offset(state, tmp, C[7], 7);
     STORE_1BLOCK_offset_dec(M[4], 4);
     STORE_1BLOCK_offset_dec(M[5], 5);
     STORE_1BLOCK_offset_dec(M[6], 6);
     STORE_1BLOCK_offset_dec(M[7], 7);
+
+    // Group 3: blocks 8-11
+    LOAD_1BLOCK_offset_dec(C[8], 8);
+    LOAD_1BLOCK_offset_dec(C[9], 9);
+    LOAD_1BLOCK_offset_dec(C[10], 10);
+    LOAD_1BLOCK_offset_dec(C[11], 11);
+    M[8]  = dec_offset(state, tmp, C[8], 8);
+    M[9]  = dec_offset(state, tmp, C[9], 9);
+    M[10] = dec_offset(state, tmp, C[10], 10);
+    M[11] = dec_offset(state, tmp, C[11], 11);
     STORE_1BLOCK_offset_dec(M[8], 8);
     STORE_1BLOCK_offset_dec(M[9], 9);
     STORE_1BLOCK_offset_dec(M[10], 10);
     STORE_1BLOCK_offset_dec(M[11], 11);
+
+    // Group 4: blocks 12-15
+    LOAD_1BLOCK_offset_dec(C[12], 12);
+    LOAD_1BLOCK_offset_dec(C[13], 13);
+    LOAD_1BLOCK_offset_dec(C[14], 14);
+    LOAD_1BLOCK_offset_dec(C[15], 15);
+    M[12] = dec_offset(state, tmp, C[12], 12);
+    M[13] = dec_offset(state, tmp, C[13], 13);
+    M[14] = dec_offset(state, tmp, C[14], 14);
+    M[15] = dec_offset(state, tmp, C[15], 15);
     STORE_1BLOCK_offset_dec(M[12], 12);
     STORE_1BLOCK_offset_dec(M[13], 13);
     STORE_1BLOCK_offset_dec(M[14], 14);
