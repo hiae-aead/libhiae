@@ -6,12 +6,13 @@
 #include <string.h>
 #include <time.h>
 
-#define MEASUREMENT_TEST_TIME 1.0 // 1 second per measurement
-#define WARMUP_TIME           0.01 // 10ms warmup
-#define NUM_MEASUREMENTS      5 // Number of measurement runs
+#define BASE_ITERATIONS  10000 // Base iterations for size 16
+#define WARMUP_TIME      0.5 // 0.5s warmup
+#define COMPUTATION_TIME 1.0 // 1s computation time for measurements
+#define NUM_MEASUREMENTS 5 // Number of measurement runs
 
 const int len_test_case = 11;
-size_t    test_case[11] = { 16, 64, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 };
+size_t    test_case[11] = { 65536, 32768, 16384, 8192, 4096, 2048, 1024, 512, 256, 64, 16 };
 
 static int csv_output = 0;
 
@@ -30,6 +31,26 @@ typedef struct {
     double        cycles_per_byte;
     hiae_stats_t *stats;
 } perf_result_t;
+
+static size_t
+calculate_iterations(double warmup_time, size_t warmup_iterations)
+{
+    // Calculate iterations needed for COMPUTATION_TIME based on warmup performance
+    if (warmup_time <= 0 || warmup_iterations == 0) {
+        return 100; // Fallback if warmup failed
+    }
+
+    double iterations_per_second = (double) warmup_iterations / warmup_time;
+    size_t target_iterations     = (size_t) (iterations_per_second * COMPUTATION_TIME);
+
+    // Apply reasonable bounds
+    if (target_iterations < 10)
+        target_iterations = 10; // Minimum 10 iterations
+    if (target_iterations > 100000)
+        target_iterations = 100000; // Maximum 100k iterations
+
+    return target_iterations;
+}
 
 perf_result_t
 speed_test_ad_work(size_t len)
@@ -50,24 +71,20 @@ speed_test_ad_work(size_t len)
 
     uint8_t tag[HIAEx2_MACBYTES];
 
-    // Warmup phase to estimate iterations needed for MEASUREMENT_TEST_TIME
+    // Warmup phase - run for specified time
+    hiae_timer_t warmup_timer;
+    hiae_timer_start(&warmup_timer);
     size_t warmup_iterations = 0;
-    double warmup_start      = hiae_get_time();
-    while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
+
+    do {
         HiAEx2_mac(key, nonce, ad, len, tag);
         warmup_iterations++;
-        if (warmup_iterations > 1000000)
-            break; // Safety break
-    }
-    double warmup_elapsed = hiae_get_time() - warmup_start;
+        hiae_timer_stop(&warmup_timer);
+    } while (hiae_timer_elapsed_seconds(&warmup_timer) < WARMUP_TIME);
 
-    // Calculate iterations needed for each measurement
-    size_t iterations_per_measurement =
-        (size_t) ((double) warmup_iterations * MEASUREMENT_TEST_TIME / warmup_elapsed);
-    if (iterations_per_measurement < 1)
-        iterations_per_measurement = 1;
-    if (iterations_per_measurement > 10000000)
-        iterations_per_measurement = 10000000; // Cap at 10M iterations
+    // Calculate iterations based on warmup performance
+    double warmup_time                = hiae_timer_elapsed_seconds(&warmup_timer);
+    size_t iterations_per_measurement = calculate_iterations(warmup_time, warmup_iterations);
 
     result.stats = hiae_stats_create(NUM_MEASUREMENTS);
     if (!result.stats) {
@@ -140,24 +157,20 @@ speed_test_encode_work(size_t len, int AEAD)
 
     uint8_t tag[HIAEx2_MACBYTES];
 
-    // Warmup phase to estimate iterations needed for MEASUREMENT_TEST_TIME
+    // Warmup phase - run for specified time
+    hiae_timer_t warmup_timer;
+    hiae_timer_start(&warmup_timer);
     size_t warmup_iterations = 0;
-    double warmup_start      = hiae_get_time();
-    while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
+
+    do {
         HiAEx2_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
         warmup_iterations++;
-        if (warmup_iterations > 1000000)
-            break; // Safety break
-    }
-    double warmup_elapsed = hiae_get_time() - warmup_start;
+        hiae_timer_stop(&warmup_timer);
+    } while (hiae_timer_elapsed_seconds(&warmup_timer) < WARMUP_TIME);
 
-    // Calculate iterations needed for each measurement
-    size_t iterations_per_measurement =
-        (size_t) ((double) warmup_iterations * MEASUREMENT_TEST_TIME / warmup_elapsed);
-    if (iterations_per_measurement < 1)
-        iterations_per_measurement = 1;
-    if (iterations_per_measurement > 10000000)
-        iterations_per_measurement = 10000000; // Cap at 10M iterations
+    // Calculate iterations based on warmup performance
+    double warmup_time                = hiae_timer_elapsed_seconds(&warmup_timer);
+    size_t iterations_per_measurement = calculate_iterations(warmup_time, warmup_iterations);
 
     result.stats = hiae_stats_create(NUM_MEASUREMENTS);
     if (!result.stats) {
@@ -237,24 +250,20 @@ speed_test_decode_work(size_t len, int AEAD)
     uint8_t tag[HIAEx2_MACBYTES];
     HiAEx2_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
 
-    // Warmup phase to estimate iterations needed for MEASUREMENT_TEST_TIME
+    // Warmup phase - run for specified time
+    hiae_timer_t warmup_timer;
+    hiae_timer_start(&warmup_timer);
     size_t warmup_iterations = 0;
-    double warmup_start      = hiae_get_time();
-    while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
+
+    do {
         HiAEx2_decrypt(key, nonce, ct, dec, len, ad, ad_len, tag);
         warmup_iterations++;
-        if (warmup_iterations > 1000000)
-            break; // Safety break
-    }
-    double warmup_elapsed = hiae_get_time() - warmup_start;
+        hiae_timer_stop(&warmup_timer);
+    } while (hiae_timer_elapsed_seconds(&warmup_timer) < WARMUP_TIME);
 
-    // Calculate iterations needed for each measurement
-    size_t iterations_per_measurement =
-        (size_t) ((double) warmup_iterations * MEASUREMENT_TEST_TIME / warmup_elapsed);
-    if (iterations_per_measurement < 1)
-        iterations_per_measurement = 1;
-    if (iterations_per_measurement > 10000000)
-        iterations_per_measurement = 10000000; // Cap at 10M iterations
+    // Calculate iterations based on warmup performance
+    double warmup_time                = hiae_timer_elapsed_seconds(&warmup_timer);
+    size_t iterations_per_measurement = calculate_iterations(warmup_time, warmup_iterations);
 
     result.stats = hiae_stats_create(NUM_MEASUREMENTS);
     if (!result.stats) {
@@ -446,10 +455,12 @@ speed_test_streaming(void)
         size_t chunk_size = chunk_sizes[i];
         size_t chunks     = total_size / chunk_size;
 
-        // Warmup phase to estimate iterations needed for MEASUREMENT_TEST_TIME
+        // Warmup phase - run for specified time
+        hiae_timer_t warmup_timer;
+        hiae_timer_start(&warmup_timer);
         size_t warmup_iterations = 0;
-        double warmup_start      = hiae_get_time();
-        while ((hiae_get_time() - warmup_start) < WARMUP_TIME) {
+
+        do {
             HiAEx2_state_t state;
             HiAEx2_init(&state, key, nonce);
 
@@ -460,16 +471,12 @@ speed_test_streaming(void)
             uint8_t tag[HIAEx2_MACBYTES];
             HiAEx2_finalize(&state, 0, total_size, tag);
             warmup_iterations++;
-            if (warmup_iterations > 1000000)
-                break; // Safety break
-        }
-        double warmup_elapsed = hiae_get_time() - warmup_start;
+            hiae_timer_stop(&warmup_timer);
+        } while (hiae_timer_elapsed_seconds(&warmup_timer) < WARMUP_TIME);
 
-        // Calculate iterations needed for each measurement
-        size_t iterations_per_measurement =
-            (size_t) ((double) warmup_iterations * MEASUREMENT_TEST_TIME / warmup_elapsed);
-        if (iterations_per_measurement < 1)
-            iterations_per_measurement = 1;
+        // Calculate iterations based on warmup performance
+        double warmup_time                = hiae_timer_elapsed_seconds(&warmup_timer);
+        size_t iterations_per_measurement = calculate_iterations(warmup_time, warmup_iterations);
 
         hiae_stats_t *stats = hiae_stats_create(NUM_MEASUREMENTS);
         if (!stats)
