@@ -451,7 +451,7 @@ hiae_init_dispatch(void)
 #if defined(__x86_64__) || defined(_M_X64)
     if (_cpu_features.has_avx512f && _cpu_features.has_vaes && hiae_vaes_avx512_impl.init != NULL) {
         hiae_impl = (HiAE_impl_t *) &hiae_vaes_avx512_impl;
-    } else if (_cpu_features.has_aesni && hiae_aesni_impl.init != NULL) {
+    } else if (_cpu_features.has_aesni && _cpu_features.has_avx && hiae_aesni_impl.init != NULL) {
         hiae_impl = (HiAE_impl_t *) &hiae_aesni_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
