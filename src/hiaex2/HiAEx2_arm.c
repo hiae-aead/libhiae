@@ -450,7 +450,7 @@ HiAEx2_finalize_arm(HiAEx2_state_t *state_opaque, uint64_t ad_len, uint64_t msg_
     lens[0] = ad_len * 8;
     lens[1] = msg_len * 8;
     DATA256b temp;
-    temp = SIMD_LOAD((uint8_t *) lens);
+    temp = SIMD_LOADx2((uint8_t *) lens);
     init_update(state, temp);
     init_update(state, temp);
     temp = state[0];

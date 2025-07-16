@@ -429,7 +429,7 @@ HiAEx2_finalize_software(HiAEx2_state_t *state_opaque,
     lens[0] = ad_len * 8;
     lens[1] = msg_len * 8;
     DATA256b temp, tmp[STATE];
-    temp = SIMD_LOAD((uint8_t *) lens);
+    temp = SIMD_LOADx2((uint8_t *) lens);
     init_update(state, tmp, temp);
     init_update(state, tmp, temp);
     temp = state[0];
