@@ -183,8 +183,6 @@ int HiAE_decrypt(const uint8_t *key, const uint8_t *nonce, uint8_t *msg, const u
  * Generates an authentication tag for data without performing encryption.
  * Useful for authenticating data that doesn't need confidentiality.
  *
- * ONLY FOR BENCHMARKING OR TESTING - INSECURE - NOT FOR PRODUCTION USE!
- *
  * @param key       Authentication key (must be HIAE_KEYBYTES bytes)
  * @param nonce     Unique nonce for this operation
  * @param data      Data to authenticate
