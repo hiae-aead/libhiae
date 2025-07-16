@@ -1,14 +1,13 @@
 # HiAE Makefile
 # High-Throughput Authenticated Encryption Algorithm
 
-# Compiler and flags
-CC = cc
+CC ?= cc
+AR ?= ar
+CFLAGS ?= -O3 -I include -Wall
+LDFLAGS ?= -lm
 
 # Detect architecture and set appropriate flags
 ARCH := $(shell uname -m)
-
-CFLAGS = -O3 -I include -Wall -Wextra
-LDFLAGS = -lm
 
 # Source files
 # Runtime dispatch builds all implementations and selects at runtime
@@ -134,7 +133,7 @@ INCDIR = $(PREFIX)/include
 $(BINDIR)/libhiae.a: $(BINDIR) $(ALL_SOURCES) $(HEADERS)
 	@echo "Building static library..."
 	$(CC) $(CFLAGS) -c $(ALL_SOURCES)
-	ar rcs $@ *.o
+	$(AR) rcs $@ *.o
 	@rm -f *.o
 
 # Install target
