@@ -580,7 +580,6 @@ const HiAEx2_impl_t hiaex2_vaes_avx2_impl = { .name     = "VAES-AVX2",
 #    endif
 
 #else
-// AES-NI not available, provide stub implementation
 const HiAEx2_impl_t hiaex2_vaes_avx2_impl = { .name                 = NULL,
                                               .init                 = NULL,
                                               .absorb               = NULL,
