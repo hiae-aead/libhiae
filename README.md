@@ -89,6 +89,8 @@ SOURCES = main.c other.c src/hiae/HiAE.c src/hiae/HiAE_software.c src/hiae/HiAE_
           src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c src/hiae/HiAE_arm.c src/hiae/HiAE_arm_sha3.c
 ```
 
+**Compiler Recommendation:** For best performance, we highly recommend using **clang** or **zig cc** instead of gcc. These compilers produce significantly better optimized code for HiAE, especially for the vectorized implementations (VAES, AES-NI, ARM Crypto). If you must use gcc, ensure you're using a recent version (GCC 14+ recommended).
+
 This approach is ideal for:
 
 - Embedding HiAE into existing projects
