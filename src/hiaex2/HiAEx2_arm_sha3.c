@@ -658,13 +658,13 @@ HiAEx2_decrypt_arm_sha3(const uint8_t *key,
                         const uint8_t *tag)
 {
     HiAEx2_state_t state;
-    uint8_t        computed_tag[HiAEx2_MACBYTES];
+    uint8_t        computed_tag[HIAEX2_MACBYTES];
     HiAEx2_init_arm_sha3(&state, key, nonce);
     HiAEx2_absorb_arm_sha3(&state, ad, ad_len);
     HiAEx2_dec_arm_sha3(&state, msg, ct, ct_len);
     HiAEx2_finalize_arm_sha3(&state, ad_len, ct_len, computed_tag);
 
-    return hiaex2_constant_time_compare(computed_tag, tag, HiAEx2_MACBYTES);
+    return hiaex2_constant_time_compare(computed_tag, tag, HIAEX2_MACBYTES);
 }
 
 static int

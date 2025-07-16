@@ -44,7 +44,7 @@ extern "C" {
  * HiAEx2 uses 256-bit (32-byte) keys for all operations.
  * Keys should be generated using a cryptographically secure random number generator.
  */
-#define HIAEx2_KEYBYTES 32
+#define HIAEX2_KEYBYTES 32
 
 /** @brief Nonce/IV size in bytes (128 bits)
  *
@@ -52,7 +52,7 @@ extern "C" {
  * Each nonce must be unique for a given key to maintain security.
  * Reusing a nonce with the same key compromises the encryption.
  */
-#define HIAEx2_NONCEBYTES 16
+#define HIAEX2_NONCEBYTES 16
 
 /** @brief Authentication tag size in bytes (128 bits)
  *
@@ -60,7 +60,7 @@ extern "C" {
  * The tag provides integrity and authenticity verification for both
  * the ciphertext and any associated data.
  */
-#define HIAEx2_MACBYTES 16
+#define HIAEX2_MACBYTES 16
 
 /** @} */
 
@@ -102,14 +102,14 @@ typedef struct {
  * Encrypts a plaintext message and generates an authentication tag that
  * protects both the ciphertext and optional associated data.
  *
- * @param key       Encryption key (must be HiAEx2_KEYBYTES bytes)
- * @param nonce     Unique nonce/IV for this message (must be HiAEx2_NONCEBYTES bytes)
+ * @param key       Encryption key (must be HIAEX2_KEYBYTES bytes)
+ * @param nonce     Unique nonce/IV for this message (must be HIAEX2_NONCEBYTES bytes)
  * @param msg       Plaintext message to encrypt
  * @param ct        Output buffer for ciphertext (same size as msg)
  * @param msg_len   Length of the message in bytes
  * @param ad        Optional associated data to authenticate (can be NULL)
  * @param ad_len    Length of associated data (0 if ad is NULL)
- * @param tag       Output buffer for authentication tag (must be HiAEx2_MACBYTES bytes)
+ * @param tag       Output buffer for authentication tag (must be HIAEX2_MACBYTES bytes)
  *
  * @return 0 on success, non-zero on error
  *
@@ -119,11 +119,11 @@ typedef struct {
  *
  * Example:
  * @code
- * uint8_t key[HiAEx2_KEYBYTES];
- * uint8_t nonce[HiAEx2_NONCEBYTES];
+ * uint8_t key[HIAEX2_KEYBYTES];
+ * uint8_t nonce[HIAEX2_NONCEBYTES];
  * uint8_t plaintext[] = "Secret message";
  * uint8_t ciphertext[sizeof(plaintext)];
- * uint8_t tag[HiAEx2_MACBYTES];
+ * uint8_t tag[HIAEX2_MACBYTES];
  * uint8_t ad[] = "metadata";
  *
  * // Generate random key and nonce (use proper CSPRNG)
@@ -185,7 +185,7 @@ int HiAEx2_decrypt(const uint8_t *key, const uint8_t *nonce, uint8_t *msg, const
  *
  * ONLY FOR BENCHMARKING OR TESTING - INSECURE - NOT FOR PRODUCTION USE!
  *
- * @param key       Authentication key (must be HiAEx2_KEYBYTES bytes)
+ * @param key       Authentication key (must be HIAEX2_KEYBYTES bytes)
  * @param nonce     Unique nonce for this operation
  * @param data      Data to authenticate
  * @param data_len  Length of data in bytes
@@ -198,7 +198,7 @@ int HiAEx2_decrypt(const uint8_t *key, const uint8_t *nonce, uint8_t *msg, const
  *
  * Example:
  * @code
- * uint8_t tag[HiAEx2_MACBYTES];
+ * uint8_t tag[HIAEX2_MACBYTES];
  * uint8_t metadata[] = "file-metadata-v1.0";
  *
  * int ret = HiAEx2_mac(key, nonce, metadata, sizeof(metadata), tag);
@@ -282,12 +282,12 @@ int HiAEx2_force_implementation(const char *impl_name);
  * Compares two authentication tags in constant time to prevent
  * timing side-channel attacks.
  *
- * @param expected_tag  The expected tag (HiAEx2_MACBYTES bytes)
- * @param actual_tag    The tag to verify (HiAEx2_MACBYTES bytes)
+ * @param expected_tag  The expected tag (HIAEX2_MACBYTES bytes)
+ * @param actual_tag    The tag to verify (HIAEX2_MACBYTES bytes)
  *
  * @return 0 if tags match, non-zero if different
  *
- * @note Always compares exactly HiAEx2_MACBYTES bytes
+ * @note Always compares exactly HIAEX2_MACBYTES bytes
  * @note Execution time is independent of tag contents
  *
  * Example:
@@ -363,8 +363,8 @@ typedef struct {
  * encrypt or decrypt message data.
  *
  * @param stream  Stream state to initialize
- * @param key     Encryption/decryption key (HiAEx2_KEYBYTES bytes)
- * @param nonce   Unique nonce for this operation (HiAEx2_NONCEBYTES bytes)
+ * @param key     Encryption/decryption key (HIAEX2_KEYBYTES bytes)
+ * @param nonce   Unique nonce for this operation (HIAEX2_NONCEBYTES bytes)
  *
  * @note Must be called before any other streaming operations
  * @note The same state cannot be reused - create a new state for each operation
@@ -452,14 +452,14 @@ void HiAEx2_stream_decrypt(HiAEx2_stream_state_t *stream, uint8_t *pt, const uin
  * Must be called after all data has been encrypted.
  *
  * @param stream  Stream state
- * @param tag     Output buffer for authentication tag (HiAEx2_MACBYTES bytes)
+ * @param tag     Output buffer for authentication tag (HIAEX2_MACBYTES bytes)
  *
  * @note Stream cannot be used after finalization
  * @note For decryption, use HiAEx2_stream_verify() instead
  *
  * Example:
  * @code
- * uint8_t tag[HiAEx2_MACBYTES];
+ * uint8_t tag[HIAEX2_MACBYTES];
  * HiAEx2_stream_finalize(&stream, tag);
  * // Save or transmit tag with ciphertext
  * @endcode
@@ -510,8 +510,8 @@ int HiAEx2_stream_verify(HiAEx2_stream_state_t *stream, const uint8_t *expected_
  * Prepares the state for incremental encryption/decryption operations.
  *
  * @param state   State structure to initialize
- * @param key     Encryption/decryption key (HiAEx2_KEYBYTES bytes)
- * @param nonce   Unique nonce for this operation (HiAEx2_NONCEBYTES bytes)
+ * @param key     Encryption/decryption key (HIAEX2_KEYBYTES bytes)
+ * @param nonce   Unique nonce for this operation (HIAEX2_NONCEBYTES bytes)
  *
  * @note State must not be reused - initialize fresh state for each operation
  */
@@ -546,7 +546,7 @@ void HiAEx2_absorb(HiAEx2_state_t *state, const uint8_t *ad, size_t len);
  * @param state    Current state
  * @param ad_len   Total bytes of associated data processed
  * @param msg_len  Total bytes of message data processed
- * @param tag      Output buffer for tag (HiAEx2_MACBYTES bytes)
+ * @param tag      Output buffer for tag (HIAEX2_MACBYTES bytes)
  *
  * @note The total lengths must match actual data processed
  * @note State cannot be used after finalization

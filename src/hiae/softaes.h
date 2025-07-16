@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 
 #ifndef CRYPTO_ALIGN
 #    if defined(__INTEL_COMPILER) || defined(_MSC_VER)

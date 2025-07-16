@@ -57,10 +57,10 @@ speed_test_ad_work(size_t len)
 {
     perf_result_t result = { 0 };
 
-    uint8_t key[HIAEx2_KEYBYTES];
-    memset(key, 1, HIAEx2_KEYBYTES);
-    uint8_t nonce[HIAEx2_NONCEBYTES];
-    memset(nonce, 1, HIAEx2_NONCEBYTES);
+    uint8_t key[HIAEX2_KEYBYTES];
+    memset(key, 1, HIAEX2_KEYBYTES);
+    uint8_t nonce[HIAEX2_NONCEBYTES];
+    memset(nonce, 1, HIAEX2_NONCEBYTES);
 
     uint8_t *ad = hiae_aligned_alloc(16, len);
     if (!ad) {
@@ -69,7 +69,7 @@ speed_test_ad_work(size_t len)
     }
     memset(ad, 1, len);
 
-    uint8_t tag[HIAEx2_MACBYTES];
+    uint8_t tag[HIAEX2_MACBYTES];
 
     // Warmup phase - run for specified time
     hiae_timer_t warmup_timer;
@@ -128,10 +128,10 @@ speed_test_encode_work(size_t len, int AEAD)
 {
     perf_result_t result = { 0 };
 
-    uint8_t key[HIAEx2_KEYBYTES];
-    memset(key, 1, HIAEx2_KEYBYTES);
-    uint8_t nonce[HIAEx2_NONCEBYTES];
-    memset(nonce, 1, HIAEx2_NONCEBYTES);
+    uint8_t key[HIAEX2_KEYBYTES];
+    memset(key, 1, HIAEX2_KEYBYTES);
+    uint8_t nonce[HIAEX2_NONCEBYTES];
+    memset(nonce, 1, HIAEX2_NONCEBYTES);
 
     size_t   ad_len = AEAD ? 48 : 0;
     uint8_t *ad     = NULL;
@@ -155,7 +155,7 @@ speed_test_encode_work(size_t len, int AEAD)
     }
     memset(msg, 0x1, len);
 
-    uint8_t tag[HIAEx2_MACBYTES];
+    uint8_t tag[HIAEX2_MACBYTES];
 
     // Warmup phase - run for specified time
     hiae_timer_t warmup_timer;
@@ -218,10 +218,10 @@ speed_test_decode_work(size_t len, int AEAD)
 {
     perf_result_t result = { 0 };
 
-    uint8_t key[HIAEx2_KEYBYTES];
-    memset(key, 1, HIAEx2_KEYBYTES);
-    uint8_t nonce[HIAEx2_NONCEBYTES];
-    memset(nonce, 1, HIAEx2_NONCEBYTES);
+    uint8_t key[HIAEX2_KEYBYTES];
+    memset(key, 1, HIAEX2_KEYBYTES);
+    uint8_t nonce[HIAEX2_NONCEBYTES];
+    memset(nonce, 1, HIAEX2_NONCEBYTES);
 
     size_t   ad_len = AEAD ? 48 : 0;
     uint8_t *ad     = NULL;
@@ -247,7 +247,7 @@ speed_test_decode_work(size_t len, int AEAD)
     }
     memset(msg, 0x1, len);
 
-    uint8_t tag[HIAEx2_MACBYTES];
+    uint8_t tag[HIAEX2_MACBYTES];
     HiAEx2_encrypt(key, nonce, msg, ct, len, ad, ad_len, tag);
 
     // Warmup phase - run for specified time
@@ -436,10 +436,10 @@ speed_test_streaming(void)
     size_t       chunk_sizes[] = { 16, 64, 256, 1024, 4096, 16384, 32768, 65536 };
     const int    num_chunks    = sizeof(chunk_sizes) / sizeof(chunk_sizes[0]);
 
-    uint8_t key[HIAEx2_KEYBYTES];
-    memset(key, 1, HIAEx2_KEYBYTES);
-    uint8_t nonce[HIAEx2_NONCEBYTES];
-    memset(nonce, 1, HIAEx2_NONCEBYTES);
+    uint8_t key[HIAEX2_KEYBYTES];
+    memset(key, 1, HIAEX2_KEYBYTES);
+    uint8_t nonce[HIAEX2_NONCEBYTES];
+    memset(nonce, 1, HIAEX2_NONCEBYTES);
 
     uint8_t *data = hiae_aligned_alloc(16, total_size);
     uint8_t *out  = hiae_aligned_alloc(16, total_size);
@@ -468,7 +468,7 @@ speed_test_streaming(void)
                 HiAEx2_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
             }
 
-            uint8_t tag[HIAEx2_MACBYTES];
+            uint8_t tag[HIAEX2_MACBYTES];
             HiAEx2_finalize(&state, 0, total_size, tag);
             warmup_iterations++;
             hiae_timer_stop(&warmup_timer);
@@ -494,7 +494,7 @@ speed_test_streaming(void)
                     HiAEx2_enc(&state, out + j * chunk_size, data + j * chunk_size, chunk_size);
                 }
 
-                uint8_t tag[HIAEx2_MACBYTES];
+                uint8_t tag[HIAEX2_MACBYTES];
                 HiAEx2_finalize(&state, 0, total_size, tag);
             }
 

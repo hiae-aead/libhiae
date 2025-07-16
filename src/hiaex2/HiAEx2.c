@@ -131,13 +131,13 @@ static const char    *forced_impl_name = NULL;
 // hwcap values are not defined should not prevent features from being enabled.
 
 // Arm hwcaps.
-#define HIAEx2_ARM_HWCAP_NEON (1L << 12)
-#define HIAEx2_ARM_HWCAP2_AES (1L << 0)
+#define HIAEX2_ARM_HWCAP_NEON (1L << 12)
+#define HIAEX2_ARM_HWCAP2_AES (1L << 0)
 
 // AArch64 hwcaps.
-#define HIAEx2_AARCH64_HWCAP_ASIMD (1L << 1)
-#define HIAEx2_AARCH64_HWCAP_AES   (1L << 3)
-#define HIAEx2_AARCH64_HWCAP_SHA3  (1L << 17)
+#define HIAEX2_AARCH64_HWCAP_ASIMD (1L << 1)
+#define HIAEX2_AARCH64_HWCAP_AES   (1L << 3)
+#define HIAEX2_AARCH64_HWCAP_SHA3  (1L << 17)
 
 static void
 _cpuid(unsigned int cpu_info[4U], const unsigned int cpu_info_type)
@@ -308,9 +308,9 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
 #elif defined(HAVE_ANDROID_GETCPUFEATURES) && defined(ANDROID_CPU_ARM_FEATURE_NEON)
     cpu_features->has_neon = (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) != 0x0;
 #elif (defined(__aarch64__) || defined(_M_ARM64)) && defined(AT_HWCAP)
-    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAEx2_AARCH64_HWCAP_ASIMD);
+    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAEX2_AARCH64_HWCAP_ASIMD);
 #elif defined(__arm__) && defined(AT_HWCAP)
-    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAEx2_ARM_HWCAP_NEON);
+    cpu_features->has_neon = _have_hwcap(AT_HWCAP, HIAEX2_ARM_HWCAP_NEON);
 #endif
 
     if (cpu_features->has_neon == 0) {
@@ -327,9 +327,9 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
 #elif defined(HAVE_ANDROID_GETCPUFEATURES) && defined(ANDROID_CPU_ARM_FEATURE_AES)
     cpu_features->has_neon_aes = (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_AES) != 0x0;
 #elif (defined(__aarch64__) || defined(_M_ARM64)) && defined(AT_HWCAP)
-    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP, HIAEx2_AARCH64_HWCAP_AES);
+    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP, HIAEX2_AARCH64_HWCAP_AES);
 #elif defined(__arm__) && defined(AT_HWCAP2)
-    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP2, HIAEx2_ARM_HWCAP2_AES);
+    cpu_features->has_neon_aes = _have_hwcap(AT_HWCAP2, HIAEX2_ARM_HWCAP2_AES);
 #endif
 
     // The FEAT_SHA3 implementation assumes that FEAT_AES is also present.
@@ -342,7 +342,7 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
 #elif defined(__APPLE__) && defined(CPU_TYPE_ARM64) && defined(CPU_SUBTYPE_ARM64E)
     cpu_features->has_neon_sha3 = _have_feature("hw.optional.arm.FEAT_SHA3");
 #elif (defined(__aarch64__) || defined(_M_ARM64)) && defined(AT_HWCAP)
-    cpu_features->has_neon_sha3 = _have_hwcap(AT_HWCAP, HIAEx2_AARCH64_HWCAP_SHA3);
+    cpu_features->has_neon_sha3 = _have_hwcap(AT_HWCAP, HIAEX2_AARCH64_HWCAP_SHA3);
 #endif
 
     return 0;
@@ -396,7 +396,7 @@ hiaex2_get_impl_by_name(const char *name)
     }
 
 #if defined(__x86_64__) || defined(_M_X64)
-    if (strcmp(name, "VAES+AVX2") == 0 && hiaex2_vaes_avx2_impl.init != NULL) {
+    if (strcmp(name, "VAES-AVX2") == 0 && hiaex2_vaes_avx2_impl.init != NULL) {
         return (HiAEx2_impl_t *) &hiaex2_vaes_avx2_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
@@ -420,8 +420,8 @@ hiaex2_init_dispatch(void)
     }
 
     // Check for compile-time forced implementation first
-#ifdef HIAEx2_FORCED_IMPL
-    hiaex2_impl = hiaex2_get_impl_by_name(HIAEx2_FORCED_IMPL);
+#ifdef HIAEX2_FORCED_IMPL
+    hiaex2_impl = hiaex2_get_impl_by_name(HIAEX2_FORCED_IMPL);
     if (hiaex2_impl != NULL) {
         return;
     }
@@ -578,7 +578,7 @@ HiAEx2_get_implementation_name(void)
 int
 HiAEx2_verify_tag(const uint8_t *expected_tag, const uint8_t *actual_tag)
 {
-    return hiaex2_constant_time_compare(expected_tag, actual_tag, HIAEx2_MACBYTES);
+    return hiaex2_constant_time_compare(expected_tag, actual_tag, HIAEX2_MACBYTES);
 }
 
 int

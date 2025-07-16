@@ -25,9 +25,9 @@ typedef struct {
 } HiAEx2_impl_t;
 
 /* Cryptographic parameter sizes */
-#define HiAEx2_KEYBYTES   32 /* 256-bit key */
-#define HiAEx2_NONCEBYTES 16 /* 128-bit nonce */
-#define HiAEx2_MACBYTES   16 /* 128-bit authentication tag */
+#define HIAEX2_KEYBYTES   32 /* 256-bit key */
+#define HIAEX2_NONCEBYTES 16 /* 128-bit nonce */
+#define HIAEX2_MACBYTES   16 /* 128-bit authentication tag */
 
 /* Internal constants */
 #define P_0 0
@@ -42,20 +42,17 @@ typedef struct {
 #define STATE             16
 
 /* Implementation forcing macros - define at compile time to force specific implementation */
-#ifdef HiAEx2_FORCE_SOFTWARE
-#    define HiAEx2_FORCED_IMPL "Software"
+#ifdef HIAEX2_FORCE_SOFTWARE
+#    define HIAEX2_FORCED_IMPL "Software"
 #endif
-#ifdef HiAEx2_FORCE_AESNI
-#    define HiAEx2_FORCED_IMPL "AES-NI"
+#ifdef HIAEX2_FORCE_VAES_AVX2
+#    define HIAEX2_FORCED_IMPL "VAES-AVX2"
 #endif
-#ifdef HiAEx2_FORCE_VAES_AVX512
-#    define HiAEx2_FORCED_IMPL "VAES+AVX512"
+#ifdef HIAEX2_FORCE_ARM
+#    define HIAEX2_FORCED_IMPL "ARM NEON"
 #endif
-#ifdef HiAEx2_FORCE_ARM
-#    define HiAEx2_FORCED_IMPL "ARM NEON"
-#endif
-#ifdef HiAEx2_FORCE_ARM_SHA3
-#    define HiAEx2_FORCED_IMPL "ARM SHA3"
+#ifdef HIAEX2_FORCE_ARM_SHA3
+#    define HIAEX2_FORCED_IMPL "ARM SHA3"
 #endif
 
 /* Internal constant arrays */

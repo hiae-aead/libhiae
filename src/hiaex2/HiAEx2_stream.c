@@ -220,9 +220,9 @@ HiAEx2_stream_verify(HiAEx2_stream_state_t *stream, const uint8_t *expected_tag)
         stream->offset = 0;
     }
 
-    uint8_t computed_tag[HiAEx2_MACBYTES];
+    uint8_t computed_tag[HIAEX2_MACBYTES];
     HiAEx2_finalize(&stream->state, stream->ad_len, stream->msg_len, computed_tag);
     stream->phase = HiAEx2_STREAM_FINAL;
 
-    return hiaex2_constant_time_compare(expected_tag, computed_tag, HiAEx2_MACBYTES);
+    return hiaex2_constant_time_compare(expected_tag, computed_tag, HIAEX2_MACBYTES);
 }
