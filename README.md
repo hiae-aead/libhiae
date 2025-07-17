@@ -252,10 +252,12 @@ HiAEx2_init(&state, key, nonce);  // 32-byte alignment for multi-block calls
 HiAEx4_init(&state, key, nonce);  // 64-byte alignment for multi-block calls
 ```
 
+When used as a MAC, unique nonces is currently required with these variants.
+
 **Benchmarking Characteristics:**
 
-- **HiAEx4**: Maximum throughput on latest processors with full AVX512 support
 - **HiAE**: Standard implementation (use this for production)
+- **HiAEx4**: Maximum throughput on latest processors with full AVX512 support
 - **HiAEx2**: Broader compatibility for processors with AVX2 but no AVX512
 
 ## Command-Line Tool
