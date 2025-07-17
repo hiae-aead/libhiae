@@ -28,7 +28,7 @@
 #        define HAVE_AVX_ASM
 #    endif
 #    define HAVE_AVXINTRIN_H
-#    define HAVE_AVX4INTRIN_H
+#    define HAVE_AVX2INTRIN_H
 #    define HAVE_AVX512FINTRIN_H
 #    define HAVE_TMMINTRIN_H
 #    define HAVE_WMMINTRIN_H
@@ -45,7 +45,7 @@
 #        undef __SSSE3__
 #        undef __SSE4_1__
 #        undef __AVX__
-#        undef __AVX4__
+#        undef __AVX2__
 #        undef __AVX512F__
 #        undef __AES__
 #        undef __VAES__
@@ -54,7 +54,7 @@
 #        define __SSSE3__   1
 #        define __SSE4_1__  1
 #        define __AVX__     1
-#        define __AVX4__    1
+#        define __AVX2__    1
 #        define __AVX512F__ 1
 #        define __AES__     1
 #        define __VAES__    1
@@ -62,9 +62,9 @@
 
 #endif
 
-#ifdef DISABLE_AVX4
+#ifdef DISABLE_AVX2
 #    undef HAVE_AVXINTRIN_H
-#    undef HAVE_AVX4INTRIN_H
+#    undef HAVE_AVX2INTRIN_H
 #    undef HAVE_AVX512FINTRIN_H
 #    undef HAVE_VAESINTRIN_H
 #endif
@@ -112,7 +112,7 @@ static CPUFeatures    _cpu_features;
 static HiAEx4_impl_t *hiaex4_impl      = NULL;
 static const char    *forced_impl_name = NULL;
 
-#define CPUID_EBX_AVX4    0x00000020
+#define CPUID_EBX_AVX2    0x00000020
 #define CPUID_EBX_AVX512F 0x00010000
 
 #define CPUID_ECX_AESNI   0x02000000
@@ -155,8 +155,8 @@ _cpuid(unsigned int cpu_info[4U], const unsigned int cpu_info_type)
         "pushl %0; "
         "popfl; pushfl; popl %0; popfl"
         : "=&r"(cpu_info[0]), "=&r"(cpu_info[1])
-        : "i"(0x400000));
-    if (((cpu_info[0] ^ cpu_info[1]) & 0x400000) == 0x0) {
+        : "i"(0x200000));
+    if (((cpu_info[0] ^ cpu_info[1]) & 0x200000) == 0x0) {
         return; /* LCOV_EXCL_LINE */
     }
 #    endif
@@ -235,12 +235,12 @@ _runtime_intel_cpu_features(CPUFeatures *const cpu_features)
     cpu_features->has_aesni = ((cpu_info[2] & CPUID_ECX_AESNI) != 0x0);
 #endif
 
-#ifdef HAVE_AVX4INTRIN_H
+#ifdef HAVE_AVX2INTRIN_H
     if (cpu_features->has_avx) {
         unsigned int cpu_info7[4];
 
         _cpuid(cpu_info7, 0x00000007);
-        cpu_features->has_avx2 = ((cpu_info7[1] & CPUID_EBX_AVX4) != 0x0);
+        cpu_features->has_avx2 = ((cpu_info7[1] & CPUID_EBX_AVX2) != 0x0);
         cpu_features->has_vaes =
             cpu_features->has_aesni && ((cpu_info7[2] & CPUID_ECX_VAES) != 0x0);
     }
@@ -402,7 +402,7 @@ hiaex4_get_impl_by_name(const char *name)
 #endif
 
 #if defined(__x86_64__) || defined(_M_X64)
-    if (strcmp(name, "VAES-AVX4") == 0 && hiaex4_vaes_avx512_impl.init != NULL) {
+    if (strcmp(name, "VAES+AVX512") == 0 && hiaex4_vaes_avx512_impl.init != NULL) {
         return (HiAEx4_impl_t *) &hiaex4_vaes_avx512_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
