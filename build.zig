@@ -83,6 +83,22 @@ pub fn build(b: *std.Build) void {
     test_vectors_test.addIncludePath(b.path("include"));
     test_vectors_test.linkLibrary(lib);
 
+    const test_vectors_hiaex2_test_source_files = &.{
+        "test/test_vectors_hiaex2.c",
+    };
+    const test_vectors_hiaex2_test = b.addExecutable(.{
+        .name = "test_vectors_hiaex2",
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+            .strip = false,
+        }),
+    });
+    test_vectors_hiaex2_test.addCSourceFiles(.{ .files = test_vectors_hiaex2_test_source_files });
+    test_vectors_hiaex2_test.linkLibC();
+    test_vectors_hiaex2_test.addIncludePath(b.path("include"));
+    test_vectors_hiaex2_test.linkLibrary(lib);
+
     const stream_test_source_files = &.{
         "test/test_stream.c",
     };
@@ -117,6 +133,7 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(functions_test);
     b.installArtifact(test_vectors_test);
+    b.installArtifact(test_vectors_hiaex2_test);
     b.installArtifact(stream_test);
     b.installArtifact(performance_test);
 

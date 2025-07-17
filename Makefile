@@ -30,7 +30,7 @@ ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 BINDIR = bin
 
 # Target executables
-TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_stream $(BINDIR)/hiae
+TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream $(BINDIR)/hiae
 
 # Default target
 all: $(BINDIR) $(TARGETS)
@@ -59,6 +59,11 @@ $(BINDIR)/test_vectors: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_vectors_ie
 	@echo "Building test vectors validation..."
 	$(CC) $(CFLAGS) $(ALL_SOURCES) test/test_vectors_ietf.c -o $@ $(LDFLAGS)
 
+# HiAEx2 test vectors validation
+$(BINDIR)/test_vectors_hiaex2: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_vectors_hiaex2.c
+	@echo "Building HiAEx2 test vectors validation..."
+	$(CC) $(CFLAGS) $(ALL_SOURCES) test/test_vectors_hiaex2.c -o $@ $(LDFLAGS)
+
 # Streaming API test
 $(BINDIR)/test_stream: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_stream.c
 	@echo "Building streaming API test..."
@@ -70,12 +75,15 @@ $(BINDIR)/hiae: $(BINDIR) $(ALL_SOURCES) $(HEADERS) hiae-cli/src/hiae.c hiae-cli
 	$(CC) $(CFLAGS) -I hiae-cli/src $(ALL_SOURCES) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c -o $@ $(LDFLAGS)
 
 # Test targets
-test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_stream
+test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream
 	@echo "Running functional tests..."
 	./$(BINDIR)/func_test
 	@echo ""
 	@echo "Running test vector validation..."
 	./$(BINDIR)/test_vectors
+	@echo ""
+	@echo "Running HiAEx2 test vectors..."
+	./$(BINDIR)/test_vectors_hiaex2
 	@echo ""
 	@echo "Running streaming API tests..."
 	./$(BINDIR)/test_stream
