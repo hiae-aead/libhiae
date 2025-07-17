@@ -374,7 +374,9 @@ hiae_runtime_get_cpu_features(void)
 }
 
 // External declarations for implementation tables
+#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
 extern const HiAE_impl_t hiae_software_impl;
+#endif
 #if defined(__x86_64__) || defined(_M_X64)
 extern const HiAE_impl_t hiae_aesni_impl;
 extern const HiAE_impl_t hiae_vaes_avx512_impl;
@@ -392,9 +394,11 @@ hiae_get_impl_by_name(const char *name)
         return NULL;
     }
 
+#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
     if (strcmp(name, "Software") == 0) {
         return (HiAE_impl_t *) &hiae_software_impl;
     }
+#endif
 
 #if defined(__x86_64__) || defined(_M_X64)
     if (strcmp(name, "AES-NI") == 0 && hiae_aesni_impl.init != NULL) {
@@ -444,8 +448,10 @@ hiae_init_dispatch(void)
         hiae_runtime_get_cpu_features();
     }
 
-    // Default to software implementation
+#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
+    // Default to software implementation when hardware AES is not available
     hiae_impl = (HiAE_impl_t *) &hiae_software_impl;
+#endif
 
     // Select best available implementation based on CPU features
 #if defined(__x86_64__) || defined(_M_X64)
@@ -459,6 +465,23 @@ hiae_init_dispatch(void)
         hiae_impl = (HiAE_impl_t *) &hiae_arm_sha3_impl;
     } else if (_cpu_features.has_neon_aes && hiae_arm_impl.init != NULL) {
         hiae_impl = (HiAE_impl_t *) &hiae_arm_impl;
+    }
+#endif
+
+#if defined(__AES__) || defined(__ARM_FEATURE_CRYPTO)
+    // When hardware AES is available, ensure we have a valid implementation
+    if (hiae_impl == NULL) {
+#    if defined(__x86_64__) || defined(_M_X64)
+        // Fallback to AES-NI on x86-64 if available
+        if (hiae_aesni_impl.init != NULL) {
+            hiae_impl = (HiAE_impl_t *) &hiae_aesni_impl;
+        }
+#    elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
+        // Fallback to ARM NEON on ARM64 if available
+        if (hiae_arm_impl.init != NULL) {
+            hiae_impl = (HiAE_impl_t *) &hiae_arm_impl;
+        }
+#    endif
     }
 #endif
 }

@@ -374,7 +374,9 @@ hiaex2_runtime_get_cpu_features(void)
 }
 
 // External declarations for implementation tables
+#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
 extern const HiAEx2_impl_t hiaex2_software_impl;
+#endif
 #if defined(__x86_64__) || defined(_M_X64)
 extern const HiAEx2_impl_t hiaex2_vaes_avx2_impl;
 #endif
@@ -391,9 +393,11 @@ hiaex2_get_impl_by_name(const char *name)
         return NULL;
     }
 
+#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
     if (strcmp(name, "Software") == 0) {
         return (HiAEx2_impl_t *) &hiaex2_software_impl;
     }
+#endif
 
 #if defined(__x86_64__) || defined(_M_X64)
     if (strcmp(name, "VAES-AVX2") == 0 && hiaex2_vaes_avx2_impl.init != NULL) {
@@ -440,8 +444,10 @@ hiaex2_init_dispatch(void)
         hiaex2_runtime_get_cpu_features();
     }
 
-    // Default to software implementation
+#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
+    // Default to software implementation when hardware AES is not available
     hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_software_impl;
+#endif
 
     // Select best available implementation based on CPU features
 #if defined(__x86_64__) || defined(_M_X64)
@@ -453,6 +459,23 @@ hiaex2_init_dispatch(void)
         hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_arm_sha3_impl;
     } else if (_cpu_features.has_neon_aes && hiaex2_arm_impl.init != NULL) {
         hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_arm_impl;
+    }
+#endif
+
+#if defined(__AES__) || defined(__ARM_FEATURE_CRYPTO)
+    // When hardware AES is available, ensure we have a valid implementation
+    if (hiaex2_impl == NULL) {
+#    if defined(__x86_64__) || defined(_M_X64)
+        // Fallback to VAES-AVX2 on x86-64 if available
+        if (hiaex2_vaes_avx2_impl.init != NULL) {
+            hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_vaes_avx2_impl;
+        }
+#    elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
+        // Fallback to ARM NEON on ARM64 if available
+        if (hiaex2_arm_impl.init != NULL) {
+            hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_arm_impl;
+        }
+#    endif
     }
 #endif
 }

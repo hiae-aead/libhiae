@@ -1,8 +1,11 @@
 #include "HiAEx2.h"
 #include "HiAEx2_internal.h"
 
-#define FAVOR_PERFORMANCE
-#include "softaes.h"
+// Only compile software implementation if hardware AES is not available
+#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
+
+#    define FAVOR_PERFORMANCE
+#    include "softaes.h"
 
 typedef SoftAesBlock DATA128b;
 
@@ -136,11 +139,11 @@ dec_offset(DATA256b *state, DATA256b *tmp, DATA256b C, int offset)
     return M;
 }
 
-#define LOAD_1BLOCK_offset_enc(M, offset)  (M) = SIMD_LOAD(mi + i + 0 + BLOCK_SIZE * offset);
-#define LOAD_1BLOCK_offset_dec(C, offset)  (C) = SIMD_LOAD(ci + i + 0 + BLOCK_SIZE * offset);
-#define LOAD_1BLOCK_offset_ad(M, offset)   (M) = SIMD_LOAD(ad + i + 0 + BLOCK_SIZE * offset);
-#define STORE_1BLOCK_offset_enc(C, offset) SIMD_STORE(ci + i + 0 + BLOCK_SIZE * offset, (C));
-#define STORE_1BLOCK_offset_dec(M, offset) SIMD_STORE(mi + i + 0 + BLOCK_SIZE * offset, (M));
+#    define LOAD_1BLOCK_offset_enc(M, offset)  (M) = SIMD_LOAD(mi + i + 0 + BLOCK_SIZE * offset);
+#    define LOAD_1BLOCK_offset_dec(C, offset)  (C) = SIMD_LOAD(ci + i + 0 + BLOCK_SIZE * offset);
+#    define LOAD_1BLOCK_offset_ad(M, offset)   (M) = SIMD_LOAD(ad + i + 0 + BLOCK_SIZE * offset);
+#    define STORE_1BLOCK_offset_enc(C, offset) SIMD_STORE(ci + i + 0 + BLOCK_SIZE * offset, (C));
+#    define STORE_1BLOCK_offset_dec(M, offset) SIMD_STORE(mi + i + 0 + BLOCK_SIZE * offset, (M));
 
 static inline void
 state_shift(DATA256b *state, DATA256b *tmp)
@@ -632,3 +635,5 @@ const HiAEx2_impl_t hiaex2_software_impl = { .name     = "Software",
                                              .encrypt = HiAEx2_encrypt_software,
                                              .decrypt = HiAEx2_decrypt_software,
                                              .mac     = HiAEx2_mac_software };
+
+#endif // !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
