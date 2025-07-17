@@ -3,7 +3,7 @@
 
 CC ?= cc
 AR ?= ar
-CFLAGS ?= -O3 -I include -Wall
+CFLAGS ?= -O3 -mtune=native -I include -Wall
 LDFLAGS ?= -lm
 
 # Detect architecture and set appropriate flags
