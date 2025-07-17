@@ -14,8 +14,8 @@
 
 #    define PREFETCH_READ(addr, locality)  _mm_prefetch((const char *) (addr), _MM_HINT_T0)
 #    define PREFETCH_WRITE(addr, locality) _mm_prefetch((const char *) (addr), _MM_HINT_T0)
-/* Prefetch distance in bytes - matches ARM implementation */
-#    define PREFETCH_DISTANCE 256
+/* Prefetch distance in bytes - optimized for x86 streaming workloads */
+#    define PREFETCH_DISTANCE 512
 
 typedef __m128i DATA128b;
 

@@ -198,9 +198,9 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "cmpq %2, %%rax;" // Compare i and prefix
         "jge 2f;" // If i >= prefix, jump to loop end
 
-        // Prefetch next iteration data (256 bytes ahead)
-        "prefetcht0 256(%1, %%rax);" // Prefetch next chunk for reading
-        "prefetcht0 320(%1, %%rax);" // Prefetch more data (cache line boundary)
+        // Prefetch next iteration data (512 bytes ahead)
+        "prefetcht0 512(%1, %%rax);" // Prefetch next chunk for reading
+        "prefetcht0 576(%1, %%rax);" // Prefetch more data (cache line boundary)
 
         // round 1
         "vmovdqu64 0(%1, %%rax), %%xmm16;" // Load M[0] into xmm16
@@ -435,10 +435,10 @@ HiAE_enc_vaes(HiAE_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_t
         "cmpq %2, %%rax;" // Compare i and prefix
         "jge 2f;" // If i >= prefix, jump to loop end
 
-        // Prefetch next iteration data (256 bytes ahead)
-        "prefetcht0 256(%1, %%rax);" // Prefetch next chunk for reading (plaintext)
-        "prefetcht0 256(%0, %%rax);" // Prefetch next chunk for writing (ciphertext)
-        "prefetcht0 320(%1, %%rax);" // Prefetch more data (cache line boundary)
+        // Prefetch next iteration data (512 bytes ahead)
+        "prefetcht0 512(%1, %%rax);" // Prefetch next chunk for reading (plaintext)
+        "prefetcht0 512(%0, %%rax);" // Prefetch next chunk for writing (ciphertext)
+        "prefetcht0 576(%1, %%rax);" // Prefetch more data (cache line boundary)
 
         // round 1
         "vmovdqu64 0(%1, %%rax), %%xmm16;" // Load M[0] into xmm16
@@ -687,10 +687,10 @@ HiAE_dec_vaes(HiAE_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_t
         "cmpq %2, %%rax;" // Compare i and prefix
         "jge 2f;" // If i >= prefix, jump to loop end
 
-        // Prefetch next iteration data (256 bytes ahead)
-        "prefetcht0 256(%1, %%rax);" // Prefetch next chunk for reading (ciphertext)
-        "prefetcht0 256(%0, %%rax);" // Prefetch next chunk for writing (plaintext)
-        "prefetcht0 320(%1, %%rax);" // Prefetch more data (cache line boundary)
+        // Prefetch next iteration data (512 bytes ahead)
+        "prefetcht0 512(%1, %%rax);" // Prefetch next chunk for reading (ciphertext)
+        "prefetcht0 512(%0, %%rax);" // Prefetch next chunk for writing (plaintext)
+        "prefetcht0 576(%1, %%rax);" // Prefetch more data (cache line boundary)
 
         // round 1
         "vmovdqu64 0(%1, %%rax), %%xmm24;" // Load C[0] into xmm24
