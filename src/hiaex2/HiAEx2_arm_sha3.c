@@ -35,7 +35,7 @@
 #    endif
 
 // Prefetch distance in bytes - tuned for typical ARM64 cache line size (64-128 bytes)
-#    define PREFETCH_DISTANCE 2 * 256
+#    define PREFETCH_DISTANCE (2 * 256)
 
 typedef uint8x16_t DATA128b;
 

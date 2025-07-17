@@ -11,8 +11,7 @@ ARCH := $(shell uname -m)
 
 # Source files
 # Runtime dispatch builds all implementations and selects at runtime
-MAIN_SOURCE = src/hiae/HiAE.c src/hiaex2/HiAEx2.c
-HEADERS = include/HiAE.h src/hiae/HiAE_internal.h
+MAIN_SOURCE = src/hiae/HiAE.c src/hiaex2/HiAEx2.c src/hiaex4/HiAEx4.c
 
 IMPL_SOURCES += src/hiae/HiAE_software.c src/hiae/HiAE_stream.c
 IMPL_SOURCES += src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c
@@ -24,55 +23,91 @@ IMPL_SOURCES += src/hiaex2/HiAEx2_arm_sha3.c
 IMPL_SOURCES += src/hiaex2/HiAEx2_software.c
 IMPL_SOURCES += src/hiaex2/HiAEx2_vaes_avx2.c
 
+IMPL_SOURCES += src/hiaex4/HiAEx4_stream.c
+IMPL_SOURCES += src/hiaex4/HiAEx4_arm.c
+IMPL_SOURCES += src/hiaex4/HiAEx4_arm_sha3.c
+IMPL_SOURCES += src/hiaex4/HiAEx4_software.c
+IMPL_SOURCES += src/hiaex4/HiAEx4_vaes_avx2.c
+
 ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
+
+# Header dependencies
+HIAE_HEADERS = include/HiAE.h src/hiae/HiAE_internal.h src/hiae/softaes.h
+HIAEX2_HEADERS = include/HiAEx2.h src/hiaex2/HiAEx2_internal.h src/hiaex2/softaes.h
+HIAEX4_HEADERS = include/HiAEx4.h src/hiaex4/HiAEx4_internal.h src/hiaex4/softaes.h
+CLI_HEADERS = hiae-cli/src/platform.h hiae-cli/src/key_utils.h hiae-cli/src/file_ops.h
+TEST_HEADERS = test/timing.h
+
+# Object files
+MAIN_OBJECTS = $(MAIN_SOURCE:%.c=$(BINDIR)/%.o)
+IMPL_OBJECTS = $(IMPL_SOURCES:%.c=$(BINDIR)/%.o)
+ALL_OBJECTS = $(MAIN_OBJECTS) $(IMPL_OBJECTS)
 
 # Output directory for binaries
 BINDIR = bin
 
 # Target executables
-TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream $(BINDIR)/hiae
+TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream $(BINDIR)/hiae
 
 # Default target
 all: $(BINDIR) $(TARGETS)
 
-# Create bin directory
+# Create bin directory and subdirectories for object files
 $(BINDIR):
 	@mkdir -p $(BINDIR)
+	@mkdir -p $(BINDIR)/src/hiae
+	@mkdir -p $(BINDIR)/src/hiaex2
+	@mkdir -p $(BINDIR)/src/hiaex4
+
+# Object file rules with proper header dependencies
+$(BINDIR)/src/hiae/%.o: src/hiae/%.c $(HIAE_HEADERS) | $(BINDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BINDIR)/src/hiaex2/%.o: src/hiaex2/%.c $(HIAEX2_HEADERS) | $(BINDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BINDIR)/src/hiaex4/%.o: src/hiaex4/%.c $(HIAEX4_HEADERS) | $(BINDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Performance test
-$(BINDIR)/perf_test: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/performance_test.c
+$(BINDIR)/perf_test: $(ALL_OBJECTS) test/performance_test.c $(TEST_HEADERS)
 	@echo "Building performance test..."
-	$(CC) $(CFLAGS) $(ALL_SOURCES) test/performance_test.c -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/performance_test.c -o $@ $(LDFLAGS)
 
 # Performance x2 test
-$(BINDIR)/perf_x2_test: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/performance_x2_test.c
+$(BINDIR)/perf_x2_test: $(ALL_OBJECTS) test/performance_x2_test.c $(TEST_HEADERS)
 	@echo "Building performance x2 test..."
-	$(CC) $(CFLAGS) $(ALL_SOURCES) test/performance_x2_test.c -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/performance_x2_test.c -o $@ $(LDFLAGS)
+
+# Performance x4 test
+$(BINDIR)/perf_x4_test: $(ALL_OBJECTS) test/performance_x4_test.c $(TEST_HEADERS)
+	@echo "Building performance x4 test..."
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/performance_x4_test.c -o $@ $(LDFLAGS)
 
 # Functional test
-$(BINDIR)/func_test: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/function_test.c
+$(BINDIR)/func_test: $(ALL_OBJECTS) test/function_test.c $(TEST_HEADERS)
 	@echo "Building functional test..."
-	$(CC) $(CFLAGS) $(ALL_SOURCES) test/function_test.c -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/function_test.c -o $@ $(LDFLAGS)
 
 # Test vectors validation
-$(BINDIR)/test_vectors: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_vectors_ietf.c
+$(BINDIR)/test_vectors: $(ALL_OBJECTS) test/test_vectors_ietf.c $(TEST_HEADERS)
 	@echo "Building test vectors validation..."
-	$(CC) $(CFLAGS) $(ALL_SOURCES) test/test_vectors_ietf.c -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/test_vectors_ietf.c -o $@ $(LDFLAGS)
 
 # HiAEx2 test vectors validation
-$(BINDIR)/test_vectors_hiaex2: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_vectors_hiaex2.c
+$(BINDIR)/test_vectors_hiaex2: $(ALL_OBJECTS) test/test_vectors_hiaex2.c $(TEST_HEADERS)
 	@echo "Building HiAEx2 test vectors validation..."
-	$(CC) $(CFLAGS) $(ALL_SOURCES) test/test_vectors_hiaex2.c -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/test_vectors_hiaex2.c -o $@ $(LDFLAGS)
 
 # Streaming API test
-$(BINDIR)/test_stream: $(BINDIR) $(ALL_SOURCES) $(HEADERS) test/test_stream.c
+$(BINDIR)/test_stream: $(ALL_OBJECTS) test/test_stream.c $(TEST_HEADERS)
 	@echo "Building streaming API test..."
-	$(CC) $(CFLAGS) $(ALL_SOURCES) test/test_stream.c -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/test_stream.c -o $@ $(LDFLAGS)
 
 # HiAE CLI utility
-$(BINDIR)/hiae: $(BINDIR) $(ALL_SOURCES) $(HEADERS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c
+$(BINDIR)/hiae: $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c $(CLI_HEADERS)
 	@echo "Building hiae CLI utility..."
-	$(CC) $(CFLAGS) -I hiae-cli/src $(ALL_SOURCES) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) -I hiae-cli/src $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c -o $@ $(LDFLAGS)
 
 # Test targets
 test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream
@@ -92,8 +127,9 @@ test-vectors: $(BINDIR)/test_vectors
 	@echo "Running test vector validation..."
 	./$(BINDIR)/test_vectors
 
-benchmark: $(BINDIR)/perf_test $(BINDIR)/perf_x2_test
+benchmark: $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test
 	@echo "Running performance benchmark..."
+	./$(BINDIR)/perf_x4_test
 	./$(BINDIR)/perf_x2_test
 	./$(BINDIR)/perf_test
 
@@ -110,6 +146,8 @@ help:
 	@echo "  make test-vectors     - Build and run test vector validation"
 	@echo "  make benchmark        - Build and run performance benchmark"
 	@echo "  make perf_test        - Build performance test only"
+	@echo "  make perf_x2_test     - Build HiAEx2 performance test only"
+	@echo "  make perf_x4_test     - Build HiAEx4 performance test only"
 	@echo "  make func_test        - Build functional test only"
 	@echo "  make test_vectors     - Build test vectors validation only"
 	@echo "  make test_stream      - Build streaming API test only"
@@ -127,6 +165,7 @@ help:
 # Individual target shortcuts
 perf_test: $(BINDIR)/perf_test
 perf_x2_test: $(BINDIR)/perf_x2_test
+perf_x4_test: $(BINDIR)/perf_x4_test
 func_test: $(BINDIR)/func_test
 test_vectors: $(BINDIR)/test_vectors
 test_stream: $(BINDIR)/test_stream
@@ -138,11 +177,9 @@ LIBDIR = $(PREFIX)/lib
 INCDIR = $(PREFIX)/include
 
 # Static library
-$(BINDIR)/libhiae.a: $(BINDIR) $(ALL_SOURCES) $(HEADERS)
+$(BINDIR)/libhiae.a: $(ALL_OBJECTS)
 	@echo "Building static library..."
-	$(CC) $(CFLAGS) -c $(ALL_SOURCES)
-	$(AR) rcs $@ *.o
-	@rm -f *.o
+	$(AR) rcs $@ $(ALL_OBJECTS)
 
 # Install target
 install: $(BINDIR)/libhiae.a
@@ -178,4 +215,4 @@ format:
 	fi
 
 # Phony targets
-.PHONY: all test test-vectors benchmark clean help perf_test perf_x2_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check
+.PHONY: all test test-vectors benchmark clean help perf_test perf_x2_test perf_x4_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check

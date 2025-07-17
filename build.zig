@@ -36,6 +36,13 @@ pub fn build(b: *std.Build) void {
         "src/hiaex2/HiAEx2_vaes_avx2.c",
         "src/hiaex2/HiAEx2_stream.c",
         "src/hiaex2/HiAEx2.c",
+
+        "src/hiaex4/HiAEx4_arm.c",
+        "src/hiaex4/HiAEx4_arm_sha3.c",
+        "src/hiaex4/HiAEx4_software.c",
+        "src/hiaex4/HiAEx4_vaes_avx512.c",
+        "src/hiaex4/HiAEx4_stream.c",
+        "src/hiaex4/HiAEx4.c",
     };
 
     lib.addCSourceFiles(.{ .files = source_files });
@@ -153,9 +160,26 @@ pub fn build(b: *std.Build) void {
     performance_x2_test.addIncludePath(b.path("include"));
     performance_x2_test.linkLibrary(lib);
 
+    const performance_x4_test_source_files = &.{
+        "test/performance_x4_test.c",
+    };
+    const performance_x4_test = b.addExecutable(.{
+        .name = "perf_x4_test",
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+            .strip = false,
+        }),
+    });
+    performance_x4_test.addCSourceFiles(.{ .files = performance_x4_test_source_files });
+    performance_x4_test.linkLibC();
+    performance_x4_test.addIncludePath(b.path("include"));
+    performance_x4_test.linkLibrary(lib);
+
     b.installArtifact(functions_test);
     b.installArtifact(test_vectors_test);
     b.installArtifact(stream_test);
     b.installArtifact(performance_test);
     b.installArtifact(performance_x2_test);
+    b.installArtifact(performance_x4_test);
 }

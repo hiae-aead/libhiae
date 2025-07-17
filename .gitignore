@@ -2,6 +2,7 @@ bin
 *~
 .zig-cache
 build
+zig-out
 draft-pham-cfrg-hiae.md
 
 # Build artifacts
