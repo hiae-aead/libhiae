@@ -422,6 +422,66 @@ HiAEx4_finalize_aesni(HiAEx4_state_t *state_opaque, uint64_t ad_len, uint64_t ms
     memcpy(state_opaque->opaque, state, sizeof(state));
 }
 
+/* Enhanced MAC finalization with proper domain separation for multi-parallel implementations */
+static void
+HiAEx4_finalize_mac_aesni(HiAEx4_state_t *state_opaque, uint64_t data_len, uint8_t *tag)
+{
+    DATA512b state[STATE];
+    memcpy(state, state_opaque->opaque, sizeof(state));
+    DATA512b      tmp[STATE];
+    const uint8_t degree = 4;
+
+    /* Step 1: Initial diffusion with data_len and HIAEX4_MACBYTES */
+    uint64_t lens[2];
+    lens[0]       = data_len * 8;
+    lens[1]       = HIAEX4_MACBYTES * 8;
+    DATA512b temp = SIMD_LOADx4((uint8_t *) lens);
+    init_update(state, tmp, temp);
+    init_update(state, tmp, temp);
+
+    /* Step 2: XOR all states together to get tag_multi */
+    temp = state[0];
+    for (size_t i = 1; i < STATE; ++i) {
+        temp = SIMD_XOR(temp, state[i]);
+    }
+
+    /* Step 3: Extract MAC from each lane and absorb it */
+    uint8_t tag_multi_bytes[BLOCK_SIZE];
+    SIMD_STORE(tag_multi_bytes, temp);
+
+    /* Absorb MACs from lanes 1, 2, 3 (skip lane 0) */
+    for (size_t d = 1; d < degree; d++) {
+        uint8_t v_block[BLOCK_SIZE];
+        memset(v_block, 0, BLOCK_SIZE);
+
+        /* Extract MAC from lane d */
+        memcpy(v_block, tag_multi_bytes + d * HIAEX4_MACBYTES, HIAEX4_MACBYTES);
+
+        /* Absorb the MAC */
+        DATA512b v = SIMD_LOAD(v_block);
+        update_state_offset(state, tmp, v, 0);
+        state_shift(state);
+    }
+
+    /* Step 4: Additional diffusion if degree > 1 */
+    if (degree > 1) {
+        uint64_t degree_lens[2];
+        degree_lens[0]       = degree;
+        degree_lens[1]       = HIAEX4_MACBYTES * 8;
+        DATA512b degree_temp = SIMD_LOADx4((uint8_t *) degree_lens);
+        init_update(state, tmp, degree_temp);
+        init_update(state, tmp, degree_temp);
+    }
+
+    /* Step 5: Final MAC extraction */
+    temp = state[0];
+    for (size_t i = 1; i < STATE; ++i) {
+        temp = SIMD_XOR(temp, state[i]);
+    }
+    SIMD_STORE128(tag, SIMD_FOLD(temp, temp));
+    memcpy(state_opaque->opaque, state, sizeof(state));
+}
+
 static void
 HiAEx4_enc_aesni(HiAEx4_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_t size)
 {
@@ -606,17 +666,18 @@ HiAEx4_mac_aesni(
     HiAEx4_state_t state;
     HiAEx4_init_aesni(&state, key, nonce);
     HiAEx4_absorb_aesni(&state, data, data_len);
-    HiAEx4_finalize_aesni(&state, data_len, 0, tag);
+    HiAEx4_finalize_mac_aesni(&state, data_len, tag);
 
     return 0;
 }
 
-const HiAEx4_impl_t hiaex4_vaes_avx512_impl = { .name     = "VAES-AVX512",
-                                                .init     = HiAEx4_init_aesni,
-                                                .absorb   = HiAEx4_absorb_aesni,
-                                                .finalize = HiAEx4_finalize_aesni,
-                                                .enc      = HiAEx4_enc_aesni,
-                                                .dec      = HiAEx4_dec_aesni,
+const HiAEx4_impl_t hiaex4_vaes_avx512_impl = { .name         = "VAES-AVX512",
+                                                .init         = HiAEx4_init_aesni,
+                                                .absorb       = HiAEx4_absorb_aesni,
+                                                .finalize     = HiAEx4_finalize_aesni,
+                                                .finalize_mac = HiAEx4_finalize_mac_aesni,
+                                                .enc          = HiAEx4_enc_aesni,
+                                                .dec          = HiAEx4_dec_aesni,
                                                 .enc_partial_noupdate =
                                                     HiAEx4_enc_partial_noupdate_aesni,
                                                 .dec_partial_noupdate =
@@ -634,6 +695,7 @@ const HiAEx4_impl_t hiaex4_vaes_avx4_impl = { .name                 = NULL,
                                               .init                 = NULL,
                                               .absorb               = NULL,
                                               .finalize             = NULL,
+                                              .finalize_mac         = NULL,
                                               .enc                  = NULL,
                                               .dec                  = NULL,
                                               .enc_partial_noupdate = NULL,

@@ -526,6 +526,13 @@ HiAEx2_finalize(HiAEx2_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_
 }
 
 void
+HiAEx2_finalize_mac(HiAEx2_state_t *state, uint64_t data_len, uint8_t *tag)
+{
+    hiaex2_init_dispatch();
+    hiaex2_impl->finalize_mac(state, data_len, tag);
+}
+
+void
 HiAEx2_enc(HiAEx2_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size)
 {
     hiaex2_init_dispatch();

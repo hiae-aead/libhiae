@@ -10,6 +10,7 @@ typedef struct {
     void (*init)(HiAEx4_state_t *state, const uint8_t *key, const uint8_t *nonce);
     void (*absorb)(HiAEx4_state_t *state, const uint8_t *ad, size_t len);
     void (*finalize)(HiAEx4_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *tag);
+    void (*finalize_mac)(HiAEx4_state_t *state, uint64_t data_len, uint8_t *tag);
     void (*enc)(HiAEx4_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size);
     void (*dec)(HiAEx4_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size);
     void (*enc_partial_noupdate)(HiAEx4_state_t *state, uint8_t *ci, const uint8_t *mi,

@@ -443,6 +443,64 @@ HiAEx2_finalize_software(HiAEx2_state_t *state_opaque,
     memcpy(state_opaque->opaque, state, sizeof(state));
 }
 
+/* MAC finalization following the Zig reference implementation */
+static void
+HiAEx2_finalize_mac_software(HiAEx2_state_t *state_opaque, uint64_t data_len, uint8_t *tag)
+{
+    DATA256b state[STATE];
+    memcpy(state, state_opaque->opaque, sizeof(state));
+    DATA256b tmp[STATE];
+
+    /* Step 1: Initial diffusion with data_len and tag_length */
+    uint64_t lens[2];
+    lens[0]       = data_len * 8;
+    lens[1]       = HIAEX2_MACBYTES * 8;
+    DATA256b temp = SIMD_LOADx2((uint8_t *) lens);
+    init_update(state, tmp, temp);
+    init_update(state, tmp, temp);
+
+    /* Step 2: Compute MAC of all lanes (XOR all states together) */
+    DATA256b tag_multi = state[0];
+    for (size_t i = 1; i < STATE; ++i) {
+        tag_multi = SIMD_XOR(tag_multi, state[i]);
+    }
+
+    /* Step 3: Absorb MACs from each lane (degree = 2) */
+    const uint8_t degree = 2;
+    uint8_t       tag_multi_bytes[32];
+    SIMD_STORE(tag_multi_bytes, tag_multi);
+
+    /* For each lane d from 1 to degree-1, absorb the MAC from that lane */
+    for (size_t d = 1; d < degree; d++) {
+        uint8_t v[BLOCK_SIZE];
+        memset(v, 0, sizeof(v));
+        memcpy(v, &tag_multi_bytes[d * HIAEX2_MACBYTES], HIAEX2_MACBYTES);
+
+        DATA256b v_block = SIMD_LOAD(v);
+        update_state_offset(state, tmp, v_block, 0);
+        state_shift(state, tmp);
+    }
+
+    /* Step 4: Additional diffusion if degree > 1 */
+    if (degree > 1) {
+        uint64_t degree_lens[2];
+        degree_lens[0]       = degree;
+        degree_lens[1]       = HIAEX2_MACBYTES * 8;
+        DATA256b degree_temp = SIMD_LOADx2((uint8_t *) degree_lens);
+        init_update(state, tmp, degree_temp);
+        init_update(state, tmp, degree_temp);
+    }
+
+    /* Step 5: Final MAC extraction (XOR all states and extract first tag_length bytes) */
+    tag_multi = state[0];
+    for (size_t i = 1; i < STATE; ++i) {
+        tag_multi = SIMD_XOR(tag_multi, state[i]);
+    }
+    SIMD_STORE128(tag, SIMD_FOLD(tag_multi));
+
+    memcpy(state_opaque->opaque, state, sizeof(state));
+}
+
 static void
 HiAEx2_enc_software(HiAEx2_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_t size)
 {
@@ -617,17 +675,18 @@ HiAEx2_mac_software(
     HiAEx2_state_t state;
     HiAEx2_init_software(&state, key, nonce);
     HiAEx2_absorb_software(&state, data, data_len);
-    HiAEx2_finalize_software(&state, data_len, 0, tag);
+    HiAEx2_finalize_mac_software(&state, data_len, tag);
 
     return 0;
 }
 
-const HiAEx2_impl_t hiaex2_software_impl = { .name     = "Software",
-                                             .init     = HiAEx2_init_software,
-                                             .absorb   = HiAEx2_absorb_software,
-                                             .finalize = HiAEx2_finalize_software,
-                                             .enc      = HiAEx2_enc_software,
-                                             .dec      = HiAEx2_dec_software,
+const HiAEx2_impl_t hiaex2_software_impl = { .name         = "Software",
+                                             .init         = HiAEx2_init_software,
+                                             .absorb       = HiAEx2_absorb_software,
+                                             .finalize     = HiAEx2_finalize_software,
+                                             .finalize_mac = HiAEx2_finalize_mac_software,
+                                             .enc          = HiAEx2_enc_software,
+                                             .dec          = HiAEx2_dec_software,
                                              .enc_partial_noupdate =
                                                  HiAEx2_enc_partial_noupdate_software,
                                              .dec_partial_noupdate =

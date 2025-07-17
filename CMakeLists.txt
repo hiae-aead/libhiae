@@ -76,6 +76,15 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64|AMD64)")
     endif()
 endif()
 
+# Check for -mtune=native support
+include(CheckCCompilerFlag)
+if(NOT MSVC)
+    check_c_compiler_flag("-mtune=native" COMPILER_SUPPORTS_MTUNE_NATIVE)
+    if(COMPILER_SUPPORTS_MTUNE_NATIVE)
+        target_compile_options("${PROJECT_NAME}" PRIVATE -mtune=native)
+    endif()
+endif()
+
 # Installation
 set(TARGETS_EXPORT_NAME "${PROJECT_NAME}-targets")
 

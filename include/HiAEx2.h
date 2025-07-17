@@ -554,6 +554,22 @@ void HiAEx2_absorb(HiAEx2_state_t *state, const uint8_t *ad, size_t len);
 void HiAEx2_finalize(HiAEx2_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *tag);
 
 /**
+ * @brief Finalize MAC computation with enhanced security
+ *
+ * Finalizes the MAC computation using enhanced security measures for multi-parallel
+ * implementations. This function provides improved domain separation and additional
+ * security measures compared to the standard finalize function.
+ *
+ * @param state    Current state (will be modified)
+ * @param data_len Total length of authenticated data in bytes
+ * @param tag      Output buffer for authentication tag (16 bytes)
+ *
+ * @note This function is specifically designed for MAC operations
+ * @note State cannot be used after finalization
+ */
+void HiAEx2_finalize_mac(HiAEx2_state_t *state, uint64_t data_len, uint8_t *tag);
+
+/**
  * @brief Encrypt data incrementally
  *
  * Encrypts plaintext and updates the internal state.

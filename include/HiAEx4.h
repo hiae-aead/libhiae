@@ -557,6 +557,22 @@ void HiAEx4_absorb(HiAEx4_state_t *state, const uint8_t *ad, size_t len);
 void HiAEx4_finalize(HiAEx4_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *tag);
 
 /**
+ * @brief Finalize MAC operation and generate authentication tag
+ *
+ * Completes the MAC operation and produces the authentication tag.
+ * This is specifically for MAC-only operations (like HiAEx4_mac).
+ *
+ * @param state    Current state
+ * @param data_len Total bytes of data processed
+ * @param tag      Output buffer for tag (HIAEX4_MACBYTES bytes)
+ *
+ * @note The total length must match actual data processed
+ * @note State cannot be used after finalization
+ * @note This function uses enhanced security measures for MAC operations
+ */
+void HiAEx4_finalize_mac(HiAEx4_state_t *state, uint64_t data_len, uint8_t *tag);
+
+/**
  * @brief Encrypt data incrementally
  *
  * Encrypts plaintext and updates the internal state.
