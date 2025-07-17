@@ -27,7 +27,7 @@ IMPL_SOURCES += src/hiaex4/HiAEx4_stream.c
 IMPL_SOURCES += src/hiaex4/HiAEx4_arm.c
 IMPL_SOURCES += src/hiaex4/HiAEx4_arm_sha3.c
 IMPL_SOURCES += src/hiaex4/HiAEx4_software.c
-IMPL_SOURCES += src/hiaex4/HiAEx4_vaes_avx2.c
+IMPL_SOURCES += src/hiaex4/HiAEx4_vaes_avx512.c
 
 ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 
