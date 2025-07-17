@@ -364,7 +364,7 @@ HiAEx2_init_software(HiAEx2_state_t *state_opaque, const uint8_t *key, const uin
     const uint8_t degree                = 2;
     uint8_t       ctx_bytes[BLOCK_SIZE] = { 0 };
     for (size_t i = 0; i < degree; i++) {
-        ctx_bytes[i + 16 + 0] = (uint8_t) i;
+        ctx_bytes[i * 16 + 0] = (uint8_t) i;
         ctx_bytes[i * 16 + 1] = degree - 1;
     }
     const DATA256b ctx = SIMD_LOAD(ctx_bytes);
