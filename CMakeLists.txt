@@ -30,10 +30,24 @@ set(HIAE_SOURCES
     src/hiae/HiAE_vaes_avx512.c
     src/hiae/HiAE_arm.c
     src/hiae/HiAE_arm_sha3.c
+    src/hiaex2/HiAEx2.c
+    src/hiaex2/HiAEx2_software.c
+    src/hiaex2/HiAEx2_stream.c
+    src/hiaex2/HiAEx2_vaes_avx2.c
+    src/hiaex2/HiAEx2_arm.c
+    src/hiaex2/HiAEx2_arm_sha3.c
+    src/hiaex4/HiAEx4.c
+    src/hiaex4/HiAEx4_software.c
+    src/hiaex4/HiAEx4_stream.c
+    src/hiaex4/HiAEx4_vaes_avx512.c
+    src/hiaex4/HiAEx4_arm.c
+    src/hiaex4/HiAEx4_arm_sha3.c
 )
 
 set(HIAE_HEADERS
     include/HiAE.h
+    include/HiAEx2.h
+    include/HiAEx4.h
 )
 
 # Create the library

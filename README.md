@@ -1,10 +1,14 @@
 # HiAE - High-Throughput Authenticated Encryption
 
-HiAE is a high-performance, cross-platform cryptographic library implementing an AES-based authenticated encryption with associated data (AEAD) cipher.
+HiAE is a high-performance, cross-platform cryptographic library implementing an AES-based authenticated encryption with associated data (AEAD) cipher. The library also includes experimental variants HiAEx2 and HiAEx4 for benchmarking purposes.
 
 ## Features
 
 - **High Performance**: Achieves over 200 Gbps throughput on modern CPUs, including ARM CPUs
+- **Main Cipher**: HiAE with VAES+AVX512 support (16 parallel states, 256-byte unroll)
+- **Experimental Variants**:
+  - **HiAEx2**: Benchmarking variant with VAES+AVX2 support (32-byte blocks, 512-byte unroll)
+  - **HiAEx4**: Benchmarking variant optimized for AVX512 (64 parallel states, 1024-byte unroll)
 - **Cross-Platform**: Supports x86-64, ARM64, and other architectures
 - **Runtime Optimization**: Automatically selects the best implementation based on CPU capabilities:
   - VAES+AVX512 for latest Intel/AMD processors
@@ -48,6 +52,7 @@ ctest --output-on-failure
 ```
 
 **Build Types:**
+
 - `Release`: Optimized for maximum performance (-O3 optimization)
 - `Debug`: Includes debugging symbols and assertions (default if not specified)
 - `RelWithDebInfo`: Release optimizations with debug symbols
@@ -72,7 +77,7 @@ sudo make install
 This installs:
 
 - Library: `libhiae.a` or `libhiae.so`
-- Headers: `HiAE.h`
+- Headers: `HiAE.h`, `HiAEx2.h`, `HiAEx4.h`
 - CLI tool: `hiae` (if built)
 - CMake package files for `find_package(hiae)`
 
@@ -81,12 +86,23 @@ This installs:
 You can also integrate HiAE directly into your project by simply compiling all files from the `src/hiae/` directory along with your code. No special compilation flags are required:
 
 ```bash
-# Example: Compile your project with HiAE
+# Example: Compile your project with HiAE only (recommended for production)
 cc -I include/ -o myapp myapp.c src/hiae/*.c
 
-# Or add to your existing build:
+# Or include experimental variants for benchmarking:
+cc -I include/ -o myapp myapp.c src/hiae/*.c src/hiaex2/*.c src/hiaex4/*.c
+
+# Or add to your existing build (HiAE only):
 SOURCES = main.c other.c src/hiae/HiAE.c src/hiae/HiAE_software.c src/hiae/HiAE_stream.c \
           src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c src/hiae/HiAE_arm.c src/hiae/HiAE_arm_sha3.c
+
+# Or with experimental variants:
+SOURCES = main.c other.c src/hiae/HiAE.c src/hiae/HiAE_software.c src/hiae/HiAE_stream.c \
+          src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c src/hiae/HiAE_arm.c src/hiae/HiAE_arm_sha3.c \
+          src/hiaex2/HiAEx2.c src/hiaex2/HiAEx2_software.c src/hiaex2/HiAEx2_stream.c \
+          src/hiaex2/HiAEx2_vaes_avx2.c src/hiaex2/HiAEx2_arm.c src/hiaex2/HiAEx2_arm_sha3.c \
+          src/hiaex4/HiAEx4.c src/hiaex4/HiAEx4_software.c src/hiaex4/HiAEx4_stream.c \
+          src/hiaex4/HiAEx4_vaes_avx512.c src/hiaex4/HiAEx4_arm.c src/hiaex4/HiAEx4_arm_sha3.c
 ```
 
 **Compiler Recommendation:** For best performance, we highly recommend using **clang** or **zig cc** instead of gcc. These compilers produce significantly better optimized code for HiAE, especially for the vectorized implementations (VAES, AES-NI, ARM Crypto). If you must use gcc, ensure you're using a recent version (GCC 14+ recommended).
@@ -208,6 +224,40 @@ const char *impl = HiAE_get_implementation_name();
 printf("Using: %s\n", impl);  // e.g., "VAES+AVX512", "AES-NI", "ARM SHA3"
 ```
 
+### Experimental Variants (HiAEx2 and HiAEx4)
+
+**Note**: HiAEx2 and HiAEx4 are experimental variants for benchmarking purposes only and are not part of the official specification.
+
+These variants provide identical APIs to HiAE but with different performance characteristics:
+
+```c
+#include <HiAEx2.h>
+#include <HiAEx4.h>
+
+// HiAEx2 example (experimental benchmarking variant)
+HiAEx2_encrypt(key, nonce, plaintext, ciphertext, 1024, ad, 64, tag);
+HiAEx2_decrypt(key, nonce, decrypted, ciphertext, 1024, ad, 64, tag);
+
+// HiAEx4 example (experimental benchmarking variant)
+HiAEx4_encrypt(key, nonce, plaintext, ciphertext, 1024, ad, 64, tag);
+HiAEx4_decrypt(key, nonce, decrypted, ciphertext, 1024, ad, 64, tag);
+
+// Streaming APIs also available
+HiAEx2_stream_init(&stream, key, nonce);
+HiAEx4_stream_init(&stream, key, nonce);
+
+// Low-level APIs with different block size requirements:
+// HiAE: 16-byte blocks, HiAEx2: 32-byte blocks, HiAEx4: 64-byte blocks
+HiAEx2_init(&state, key, nonce);  // 32-byte alignment for multi-block calls
+HiAEx4_init(&state, key, nonce);  // 64-byte alignment for multi-block calls
+```
+
+**Benchmarking Characteristics:**
+
+- **HiAEx4**: Maximum throughput on latest processors with full AVX512 support
+- **HiAE**: Standard implementation (use this for production)
+- **HiAEx2**: Broader compatibility for processors with AVX2 but no AVX512
+
 ## Command-Line Tool
 
 HiAE includes a user-friendly CLI for file encryption. To build the CLI:
@@ -222,6 +272,7 @@ make
 ```
 
 Usage examples:
+
 ```bash
 # Generate a key
 hiae keygen -o secret.key
@@ -248,13 +299,15 @@ make test
 
 # Run specific tests
 make test-vectors     # IETF test vectors
-make benchmark        # Performance benchmarks
+make benchmark        # Performance benchmarks (all variants)
 
 # Individual test binaries (after building)
 ./bin/func_test       # Functional tests
 ./bin/test_vectors    # IETF test vectors
 ./bin/test_stream     # Streaming API tests
-./bin/perf_test       # Performance measurements
+./bin/perf_test       # HiAE performance measurements
+./bin/perf_x2_test    # HiAEx2 performance measurements
+./bin/perf_x4_test    # HiAEx4 performance measurements
 ```
 
 ## CMake Integration
