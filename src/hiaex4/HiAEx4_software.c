@@ -1,8 +1,9 @@
 #include "HiAEx4.h"
 #include "HiAEx4_internal.h"
 
-// Only compile software implementation if hardware AES is not available
-#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
+// Only compile software implementation if hardware AES+VAES+AVX512 is not available
+#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || \
+      defined(__ARM_FEATURE_CRYPTO))
 
 #    define FAVOR_PERFORMANCE
 #    include "softaes.h"

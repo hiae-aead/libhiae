@@ -374,7 +374,8 @@ hiaex4_runtime_get_cpu_features(void)
 }
 
 // External declarations for implementation tables
-#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
+#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || \
+      defined(__ARM_FEATURE_CRYPTO))
 extern const HiAEx4_impl_t hiaex4_software_impl;
 #endif
 #if defined(__x86_64__) || defined(_M_X64)
@@ -393,7 +394,8 @@ hiaex4_get_impl_by_name(const char *name)
         return NULL;
     }
 
-#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
+#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || \
+      defined(__ARM_FEATURE_CRYPTO))
     if (strcmp(name, "Software") == 0) {
         return (HiAEx4_impl_t *) &hiaex4_software_impl;
     }
@@ -444,8 +446,9 @@ hiaex4_init_dispatch(void)
         hiaex4_runtime_get_cpu_features();
     }
 
-#if !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
-    // Default to software implementation when hardware AES is not available
+#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || \
+      defined(__ARM_FEATURE_CRYPTO))
+    // Default to software implementation when hardware AES+VAES+AVX512 is not available
     hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_software_impl;
 #endif
 
@@ -463,8 +466,8 @@ hiaex4_init_dispatch(void)
     }
 #endif
 
-#if defined(__AES__) || defined(__ARM_FEATURE_CRYPTO)
-    // When hardware AES is available, ensure we have a valid implementation
+#if (defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || defined(__ARM_FEATURE_CRYPTO)
+    // When hardware AES+VAES+AVX512 is available, ensure we have a valid implementation
     if (hiaex4_impl == NULL) {
 #    if defined(__x86_64__) || defined(_M_X64)
         // Fallback to VAES-AVX512 on x86-64 if available
