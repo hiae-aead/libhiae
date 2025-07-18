@@ -291,15 +291,78 @@ See [hiae-cli/README.md](hiae-cli/README.md) for detailed CLI documentation.
 
 ## Performance
 
-HiAE achieves exceptional performance on modern processors. The following benchmarks were measured on an AMD Zen 4 CPU (~3.79 GHz) with VAES and AVX512 support.
+HiAE achieves exceptional performance on modern processors. Benchmarks have been measured on both x86-64 and ARM64 architectures.
 
 ### Performance Highlights
 
-- **HiAE**: Up to 251 Gbps AEAD encryption throughput (30 GB/s)
-- **HiAEx2**: Up to 413 Gbps AEAD encryption throughput (49 GB/s)
-- **HiAEx4**: Up to 429 Gbps AEAD encryption throughput (51 GB/s)
+- **ARM64 (Apple Silicon M4)**: Up to 261 Gbps AEAD encryption throughput (31 GB/s) with HiAE
+- **x86-64 (AMD Zen 4)**: Up to 429 Gbps AEAD encryption throughput (51 GB/s) with HiAEx4
+- Excellent performance across different processor architectures
 
-### HiAE Performance (VAES+AVX512)
+### HiAE Performance on ARM64 (Apple Silicon M4, ARM SHA3)
+
+#### AEAD Performance
+
+| Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
+| ------------ | -------------- | -------------- |
+| 65536        | 252.43         | 164.06         |
+| 32768        | 260.32         | 167.28         |
+| 16384        | 252.21         | 163.11         |
+| 8192         | 238.00         | 156.08         |
+| 4096         | 212.72         | 142.92         |
+| 2048         | 176.91         | 120.70         |
+| 1024         | 130.94         | 95.34          |
+| 512          | 88.88          | 67.23          |
+| 256          | 54.01          | 41.65          |
+| 64           | 15.84          | 12.09          |
+| 16           | 4.15           | 3.01           |
+
+#### Encryption-Only Performance
+
+| Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
+| ------------ | -------------- | -------------- |
+| 65536        | 259.96         | 165.61         |
+| 32768        | 261.61         | 168.76         |
+| 16384        | 255.11         | 163.91         |
+| 8192         | 243.14         | 155.73         |
+| 4096         | 222.74         | 141.97         |
+| 2048         | 190.63         | 121.60         |
+| 1024         | 148.15         | 97.72          |
+| 512          | 103.18         | 66.64          |
+| 256          | 62.58          | 42.94          |
+| 64           | 19.80          | 14.13          |
+| 16           | 5.24           | 3.63           |
+
+#### MAC-Only Performance
+
+| Size (bytes) | Throughput (Gbps) |
+| ------------ | ----------------- |
+| 65536        | 241.60            |
+| 32768        | 239.60            |
+| 16384        | 235.11            |
+| 8192         | 227.03            |
+| 4096         | 212.03            |
+| 2048         | 187.61            |
+| 1024         | 152.41            |
+| 512          | 106.97            |
+| 256          | 66.33             |
+| 64           | 20.83             |
+| 16           | 5.47              |
+
+### Streaming API Performance on ARM64 (1MB total)
+
+| Chunk Size | HiAE (Gbps) |
+| ---------- | ----------- |
+| 65536      | 257.09      |
+| 32768      | 256.35      |
+| 16384      | 254.48      |
+| 4096       | 245.59      |
+| 1024       | 215.96      |
+| 256        | 133.88      |
+| 64         | 64.40       |
+| 16         | 18.04       |
+
+### HiAE Performance on x86-64 (AMD Zen 4, VAES+AVX512)
 
 #### AEAD Performance
 
@@ -325,7 +388,7 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 | 8192         | 265.85            |
 | 4096         | 224.36            |
 
-### HiAEx2 Performance (VAES-AVX2)
+### HiAEx2 Performance on x86-64 (AMD Zen 4, VAES-AVX2)
 
 #### AEAD Performance
 
@@ -351,7 +414,7 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 | 8192         | 464.27            |
 | 4096         | 357.46            |
 
-### HiAEx4 Performance (VAES-AVX512)
+### HiAEx4 Performance on x86-64 (AMD Zen 4, VAES-AVX512)
 
 #### AEAD Performance
 
@@ -377,7 +440,7 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 | 8192         | 369.09            |
 | 4096         | 242.67            |
 
-### Streaming API Performance (1MB total)
+### Streaming API Performance on x86-64 (1MB total)
 
 | Chunk Size | HiAE (Gbps) | HiAEx2 (Gbps) | HiAEx4 (Gbps) |
 | ---------- | ----------- | ------------- | ------------- |
@@ -398,6 +461,7 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 - All implementations automatically select the best available instruction set at runtime
 - Decryption is generally slower than encryption due to the algorithm design
 - Performance scales well with larger data sizes
+- Both x86-64 and ARM64 architectures show excellent performance characteristics
 
 Run `make benchmark` to measure performance on your system. For CMake builds, always use `-DCMAKE_BUILD_TYPE=Release` for maximum performance.
 
