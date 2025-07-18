@@ -319,7 +319,7 @@ decrypt_chunk(DATA512b      *state,
 }
 
 static void
-HiAEx4_init_aesni(HiAEx4_state_t *state_opaque, const uint8_t *key, const uint8_t *nonce)
+HiAEx4_init_vaes_avx512(HiAEx4_state_t *state_opaque, const uint8_t *key, const uint8_t *nonce)
 {
     DATA512b state[STATE];
     memset(&state, 0, sizeof state);
@@ -369,7 +369,7 @@ HiAEx4_init_aesni(HiAEx4_state_t *state_opaque, const uint8_t *key, const uint8_
 }
 
 static void
-HiAEx4_absorb_aesni(HiAEx4_state_t *state_opaque, const uint8_t *ad, size_t len)
+HiAEx4_absorb_vaes_avx512(HiAEx4_state_t *state_opaque, const uint8_t *ad, size_t len)
 {
     DATA512b state[STATE];
     memcpy(state, state_opaque->opaque, sizeof(state));
@@ -403,7 +403,10 @@ HiAEx4_absorb_aesni(HiAEx4_state_t *state_opaque, const uint8_t *ad, size_t len)
 }
 
 static void
-HiAEx4_finalize_aesni(HiAEx4_state_t *state_opaque, uint64_t ad_len, uint64_t msg_len, uint8_t *tag)
+HiAEx4_finalize_vaes_avx512(HiAEx4_state_t *state_opaque,
+                            uint64_t        ad_len,
+                            uint64_t        msg_len,
+                            uint8_t        *tag)
 {
     DATA512b state[STATE];
     memcpy(state, state_opaque->opaque, sizeof(state));
@@ -424,7 +427,7 @@ HiAEx4_finalize_aesni(HiAEx4_state_t *state_opaque, uint64_t ad_len, uint64_t ms
 
 /* Enhanced MAC finalization with proper domain separation for multi-parallel implementations */
 static void
-HiAEx4_finalize_mac_aesni(HiAEx4_state_t *state_opaque, uint64_t data_len, uint8_t *tag)
+HiAEx4_finalize_mac_vaes_avx512(HiAEx4_state_t *state_opaque, uint64_t data_len, uint8_t *tag)
 {
     DATA512b state[STATE];
     memcpy(state, state_opaque->opaque, sizeof(state));
@@ -483,7 +486,7 @@ HiAEx4_finalize_mac_aesni(HiAEx4_state_t *state_opaque, uint64_t data_len, uint8
 }
 
 static void
-HiAEx4_enc_aesni(HiAEx4_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_t size)
+HiAEx4_enc_vaes_avx512(HiAEx4_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_t size)
 {
     DATA512b state[STATE];
     memcpy(state, state_opaque->opaque, sizeof(state));
@@ -524,7 +527,7 @@ HiAEx4_enc_aesni(HiAEx4_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, s
 }
 
 static void
-HiAEx4_dec_aesni(HiAEx4_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_t size)
+HiAEx4_dec_vaes_avx512(HiAEx4_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, size_t size)
 {
     DATA512b state[STATE];
     memcpy(state, state_opaque->opaque, sizeof(state));
@@ -571,10 +574,10 @@ HiAEx4_dec_aesni(HiAEx4_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, s
 }
 
 static void
-HiAEx4_enc_partial_noupdate_aesni(HiAEx4_state_t *state_opaque,
-                                  uint8_t        *ci,
-                                  const uint8_t  *mi,
-                                  size_t          size)
+HiAEx4_enc_partial_noupdate_vaes_avx512(HiAEx4_state_t *state_opaque,
+                                        uint8_t        *ci,
+                                        const uint8_t  *mi,
+                                        size_t          size)
 {
     if (size == 0)
         return;
@@ -594,10 +597,10 @@ HiAEx4_enc_partial_noupdate_aesni(HiAEx4_state_t *state_opaque,
 }
 
 static void
-HiAEx4_dec_partial_noupdate_aesni(HiAEx4_state_t *state_opaque,
-                                  uint8_t        *mi,
-                                  const uint8_t  *ci,
-                                  size_t          size)
+HiAEx4_dec_partial_noupdate_vaes_avx512(HiAEx4_state_t *state_opaque,
+                                        uint8_t        *mi,
+                                        const uint8_t  *ci,
+                                        size_t          size)
 {
     if (size == 0)
         return;
@@ -621,70 +624,70 @@ HiAEx4_dec_partial_noupdate_aesni(HiAEx4_state_t *state_opaque,
 }
 
 static int
-HiAEx4_encrypt_aesni(const uint8_t *key,
-                     const uint8_t *nonce,
-                     const uint8_t *msg,
-                     uint8_t       *ct,
-                     size_t         msg_len,
-                     const uint8_t *ad,
-                     size_t         ad_len,
-                     uint8_t       *tag)
+HiAEx4_encrypt_vaes_avx512(const uint8_t *key,
+                           const uint8_t *nonce,
+                           const uint8_t *msg,
+                           uint8_t       *ct,
+                           size_t         msg_len,
+                           const uint8_t *ad,
+                           size_t         ad_len,
+                           uint8_t       *tag)
 {
     HiAEx4_state_t state;
-    HiAEx4_init_aesni(&state, key, nonce);
-    HiAEx4_absorb_aesni(&state, ad, ad_len);
-    HiAEx4_enc_aesni(&state, ct, msg, msg_len);
-    HiAEx4_finalize_aesni(&state, ad_len, msg_len, tag);
+    HiAEx4_init_vaes_avx512(&state, key, nonce);
+    HiAEx4_absorb_vaes_avx512(&state, ad, ad_len);
+    HiAEx4_enc_vaes_avx512(&state, ct, msg, msg_len);
+    HiAEx4_finalize_vaes_avx512(&state, ad_len, msg_len, tag);
 
     return 0;
 }
 
 static int
-HiAEx4_decrypt_aesni(const uint8_t *key,
-                     const uint8_t *nonce,
-                     uint8_t       *msg,
-                     const uint8_t *ct,
-                     size_t         ct_len,
-                     const uint8_t *ad,
-                     size_t         ad_len,
-                     const uint8_t *tag)
+HiAEx4_decrypt_vaes_avx512(const uint8_t *key,
+                           const uint8_t *nonce,
+                           uint8_t       *msg,
+                           const uint8_t *ct,
+                           size_t         ct_len,
+                           const uint8_t *ad,
+                           size_t         ad_len,
+                           const uint8_t *tag)
 {
     HiAEx4_state_t state;
     uint8_t        computed_tag[HIAEX4_MACBYTES];
-    HiAEx4_init_aesni(&state, key, nonce);
-    HiAEx4_absorb_aesni(&state, ad, ad_len);
-    HiAEx4_dec_aesni(&state, msg, ct, ct_len);
-    HiAEx4_finalize_aesni(&state, ad_len, ct_len, computed_tag);
+    HiAEx4_init_vaes_avx512(&state, key, nonce);
+    HiAEx4_absorb_vaes_avx512(&state, ad, ad_len);
+    HiAEx4_dec_vaes_avx512(&state, msg, ct, ct_len);
+    HiAEx4_finalize_vaes_avx512(&state, ad_len, ct_len, computed_tag);
 
     return hiaex4_constant_time_compare(computed_tag, tag, HIAEX4_MACBYTES);
 }
 
 static int
-HiAEx4_mac_aesni(
+HiAEx4_mac_vaes_avx512(
     const uint8_t *key, const uint8_t *nonce, const uint8_t *data, size_t data_len, uint8_t *tag)
 {
     HiAEx4_state_t state;
-    HiAEx4_init_aesni(&state, key, nonce);
-    HiAEx4_absorb_aesni(&state, data, data_len);
-    HiAEx4_finalize_mac_aesni(&state, data_len, tag);
+    HiAEx4_init_vaes_avx512(&state, key, nonce);
+    HiAEx4_absorb_vaes_avx512(&state, data, data_len);
+    HiAEx4_finalize_mac_vaes_avx512(&state, data_len, tag);
 
     return 0;
 }
 
 const HiAEx4_impl_t hiaex4_vaes_avx512_impl = { .name         = "VAES-AVX512",
-                                                .init         = HiAEx4_init_aesni,
-                                                .absorb       = HiAEx4_absorb_aesni,
-                                                .finalize     = HiAEx4_finalize_aesni,
-                                                .finalize_mac = HiAEx4_finalize_mac_aesni,
-                                                .enc          = HiAEx4_enc_aesni,
-                                                .dec          = HiAEx4_dec_aesni,
+                                                .init         = HiAEx4_init_vaes_avx512,
+                                                .absorb       = HiAEx4_absorb_vaes_avx512,
+                                                .finalize     = HiAEx4_finalize_vaes_avx512,
+                                                .finalize_mac = HiAEx4_finalize_mac_vaes_avx512,
+                                                .enc          = HiAEx4_enc_vaes_avx512,
+                                                .dec          = HiAEx4_dec_vaes_avx512,
                                                 .enc_partial_noupdate =
-                                                    HiAEx4_enc_partial_noupdate_aesni,
+                                                    HiAEx4_enc_partial_noupdate_vaes_avx512,
                                                 .dec_partial_noupdate =
-                                                    HiAEx4_dec_partial_noupdate_aesni,
-                                                .encrypt = HiAEx4_encrypt_aesni,
-                                                .decrypt = HiAEx4_decrypt_aesni,
-                                                .mac     = HiAEx4_mac_aesni };
+                                                    HiAEx4_dec_partial_noupdate_vaes_avx512,
+                                                .encrypt = HiAEx4_encrypt_vaes_avx512,
+                                                .decrypt = HiAEx4_decrypt_vaes_avx512,
+                                                .mac     = HiAEx4_mac_vaes_avx512 };
 
 #    ifdef __clang__
 #        pragma clang attribute pop
