@@ -110,7 +110,7 @@ $(BINDIR)/hiae: $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae
 	$(CC) $(CFLAGS) -I hiae-cli/src $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c -o $@ $(LDFLAGS)
 
 # Test targets
-test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream
+test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream test-amalgamated
 	@echo "Running functional tests..."
 	./$(BINDIR)/func_test
 	@echo ""
@@ -166,6 +166,7 @@ help:
 	@echo "  make format-check     - Check code formatting"
 	@echo "  make clean            - Remove all build artifacts"
 	@echo "  make amalgamate       - Generate single-file amalgamated version"
+	@echo "  make test-amalgamated - Test amalgamated version build and functionality"
 	@echo "  make help             - Show this help message"
 	@echo ""
 	@echo "Runtime dispatch automatically selects the best implementation based on CPU features."
@@ -222,5 +223,13 @@ format:
 		echo "clang-format not found, cannot format code"; \
 	fi
 
+# Amalgamated version test
+test-amalgamated: HiAE_amalgamated.c
+	@echo "Testing amalgamated version..."
+	@echo "Building test with amalgamated file..."
+	$(CC) $(CFLAGS) -o $(BINDIR)/test_amalgamated test/test_amalgamated.c
+	@echo "Running amalgamated version test..."
+	./$(BINDIR)/test_amalgamated
+
 # Phony targets
-.PHONY: all test test-vectors benchmark clean help perf_test perf_x2_test perf_x4_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check
+.PHONY: all test test-vectors benchmark clean help perf_test perf_x2_test perf_x4_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check test-amalgamated
