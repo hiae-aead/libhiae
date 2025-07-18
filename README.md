@@ -133,7 +133,6 @@ cc -O3 -o myapp myapp.c HiAE_amalgamated.c
 - **Zero setup**: No build system configuration needed
 - **No headers**: Include the amalgamated source file directly
 - **No symbol conflicts**: All internal conflicts resolved automatically
-- **Embedded-friendly**: Perfect for constrained environments
 - **Complete functionality**: All APIs, implementations, and runtime dispatch preserved
 
 **Example usage:**
