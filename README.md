@@ -291,6 +291,108 @@ See [hiae-cli/README.md](hiae-cli/README.md) for detailed CLI documentation.
 
 ## Performance
 
+HiAE achieves exceptional performance on modern processors. The following benchmarks were measured on an AMD Zen 4 CPU (~3.79 GHz) with VAES and AVX512 support.
+
+### Performance Highlights
+
+- **HiAE**: Up to 251 Gbps AEAD encryption throughput (30 GB/s)
+- **HiAEx2**: Up to 413 Gbps AEAD encryption throughput (49 GB/s)
+- **HiAEx4**: Up to 429 Gbps AEAD encryption throughput (51 GB/s)
+
+### HiAE Performance (VAES+AVX512)
+
+#### AEAD Performance
+| Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
+|--------------|----------------|----------------|
+| 65536        | 251.72         | 139.37         |
+| 32768        | 254.24         | 136.01         |
+| 16384        | 222.32         | 129.71         |
+| 8192         | 195.73         | 118.83         |
+| 4096         | 155.76         | 100.61         |
+| 2048         | 113.09         | 77.43          |
+| 1024         | 70.85          | 53.05          |
+| 512          | 40.45          | 32.58          |
+| 256          | 21.76          | 18.00          |
+
+#### MAC-Only Performance
+| Size (bytes) | Throughput (Gbps) |
+|--------------|-------------------|
+| 65536        | 318.34            |
+| 32768        | 308.63            |
+| 16384        | 294.15            |
+| 8192         | 265.85            |
+| 4096         | 224.36            |
+
+### HiAEx2 Performance (VAES-AVX2)
+
+#### AEAD Performance
+| Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
+|--------------|----------------|----------------|
+| 65536        | 413.20         | 267.42         |
+| 32768        | 392.98         | 257.37         |
+| 16384        | 338.59         | 239.28         |
+| 8192         | 366.33         | 210.79         |
+| 4096         | 291.35         | 170.06         |
+| 2048         | 214.61         | 121.92         |
+| 1024         | 131.68         | 78.69          |
+| 512          | 68.36          | 45.12          |
+| 256          | 41.40          | 24.28          |
+
+#### MAC-Only Performance
+| Size (bytes) | Throughput (Gbps) |
+|--------------|-------------------|
+| 65536        | 556.07            |
+| 32768        | 586.48            |
+| 16384        | 545.86            |
+| 8192         | 464.27            |
+| 4096         | 357.46            |
+
+### HiAEx4 Performance (VAES-AVX512)
+
+#### AEAD Performance
+| Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
+|--------------|----------------|----------------|
+| 65536        | 429.58         | 366.26         |
+| 32768        | 375.41         | 337.97         |
+| 16384        | 360.00         | 292.23         |
+| 8192         | 302.43         | 226.27         |
+| 4096         | 206.21         | 155.56         |
+| 2048         | 124.24         | 96.12          |
+| 1024         | 69.28          | 54.09          |
+| 512          | 34.03          | 30.06          |
+| 256          | 19.27          | 15.23          |
+
+#### MAC-Only Performance
+| Size (bytes) | Throughput (Gbps) |
+|--------------|-------------------|
+| 65536        | 662.08            |
+| 32768        | 603.84            |
+| 16384        | 499.15            |
+| 8192         | 369.09            |
+| 4096         | 242.67            |
+
+### Streaming API Performance (1MB total)
+
+| Chunk Size | HiAE (Gbps) | HiAEx2 (Gbps) | HiAEx4 (Gbps) |
+|------------|-------------|---------------|---------------|
+| 65536      | 251.12      | 329.47        | 359.56        |
+| 32768      | 248.29      | 326.31        | 354.72        |
+| 16384      | 242.24      | 320.61        | 347.00        |
+| 4096       | 212.31      | 312.28        | 322.90        |
+| 1024       | 144.53      | 272.73        | 257.31        |
+| 256        | 66.96       | 148.45        | 126.03        |
+| 64         | 16.77       | 59.92         | 40.12         |
+| 16         | 4.59        | 5.78          | 4.04          |
+
+### Performance Notes
+
+- **HiAE** (standard implementation) provides excellent performance with the broadest compatibility
+- **HiAEx2** offers higher throughput on processors with AVX2 support
+- **HiAEx4** achieves maximum throughput on processors with full AVX512 support
+- All implementations automatically select the best available instruction set at runtime
+- Decryption is generally slower than encryption due to the algorithm design
+- Performance scales well with larger data sizes
+
 Run `make benchmark` to measure performance on your system. For CMake builds, always use `-DCMAKE_BUILD_TYPE=Release` for maximum performance.
 
 ## Testing
