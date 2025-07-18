@@ -138,6 +138,13 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf $(BINDIR)
 
+# Amalgamate target - creates single-file version
+amalgamate:
+	@echo "Creating amalgamated single-file version..."
+	@if [ ! -d scripts ]; then mkdir -p scripts; fi
+	@python3 scripts/amalgamate.py
+	@echo "Amalgamated file created: HiAE_amalgamated.c"
+
 # Help target
 help:
 	@echo "HiAE Makefile targets:"
@@ -158,6 +165,7 @@ help:
 	@echo "  make format           - Format code with clang-format"
 	@echo "  make format-check     - Check code formatting"
 	@echo "  make clean            - Remove all build artifacts"
+	@echo "  make amalgamate       - Generate single-file amalgamated version"
 	@echo "  make help             - Show this help message"
 	@echo ""
 	@echo "Runtime dispatch automatically selects the best implementation based on CPU features."

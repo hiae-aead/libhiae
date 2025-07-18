@@ -33,6 +33,9 @@ make test
 # Run benchmarks
 make benchmark
 
+# Generate single-file amalgamated version
+make amalgamate
+
 # Clean
 make clean
 ```
@@ -113,6 +116,51 @@ This approach is ideal for:
 - Static linking without separate library files
 - Simple projects without complex build systems
 - Cross-compilation scenarios
+
+### Single-File Amalgamated Version
+
+For the easiest integration, HiAE provides a single-file amalgamated version that combines all source files into one compilation unit with resolved symbol conflicts:
+
+```bash
+# Generate the amalgamated file
+make amalgamate
+
+# Use it in your project (no build system or headers required)
+cc -O3 -o myapp myapp.c HiAE_amalgamated.c
+```
+
+**Benefits of the amalgamated version:**
+- **Zero setup**: No build system configuration needed
+- **No headers**: Include the amalgamated source file directly
+- **No symbol conflicts**: All internal conflicts resolved automatically
+- **Embedded-friendly**: Perfect for constrained environments
+- **Complete functionality**: All APIs, implementations, and runtime dispatch preserved
+
+**Example usage:**
+```c
+// Include the amalgamated source directly
+#include "HiAE_amalgamated.c"
+
+int main() {
+    uint8_t key[32], nonce[16], plaintext[100], ciphertext[100], tag[16];
+    // ... initialize key, nonce, plaintext ...
+    
+    // Use HiAE normally - all APIs work exactly the same
+    HiAE_encrypt(key, nonce, plaintext, ciphertext, 100, NULL, 0, tag);
+    
+    // Runtime dispatch still works
+    printf("Using: %s\n", HiAE_get_implementation_name());
+    
+    return 0;
+}
+```
+
+The amalgamated version is ideal for:
+- Simple projects that want minimal setup
+- Embedded systems with limited toolchain support
+- Projects that need to vendor dependencies
+- Cross-compilation scenarios where build systems are complex
+- Quick prototyping and testing
 
 ## API Usage
 
