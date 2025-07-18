@@ -302,8 +302,9 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 ### HiAE Performance (VAES+AVX512)
 
 #### AEAD Performance
+
 | Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
-|--------------|----------------|----------------|
+| ------------ | -------------- | -------------- |
 | 65536        | 251.72         | 139.37         |
 | 32768        | 254.24         | 136.01         |
 | 16384        | 222.32         | 129.71         |
@@ -315,8 +316,9 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 | 256          | 21.76          | 18.00          |
 
 #### MAC-Only Performance
+
 | Size (bytes) | Throughput (Gbps) |
-|--------------|-------------------|
+| ------------ | ----------------- |
 | 65536        | 318.34            |
 | 32768        | 308.63            |
 | 16384        | 294.15            |
@@ -326,8 +328,9 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 ### HiAEx2 Performance (VAES-AVX2)
 
 #### AEAD Performance
+
 | Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
-|--------------|----------------|----------------|
+| ------------ | -------------- | -------------- |
 | 65536        | 413.20         | 267.42         |
 | 32768        | 392.98         | 257.37         |
 | 16384        | 338.59         | 239.28         |
@@ -339,8 +342,9 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 | 256          | 41.40          | 24.28          |
 
 #### MAC-Only Performance
+
 | Size (bytes) | Throughput (Gbps) |
-|--------------|-------------------|
+| ------------ | ----------------- |
 | 65536        | 556.07            |
 | 32768        | 586.48            |
 | 16384        | 545.86            |
@@ -350,8 +354,9 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 ### HiAEx4 Performance (VAES-AVX512)
 
 #### AEAD Performance
+
 | Size (bytes) | Encrypt (Gbps) | Decrypt (Gbps) |
-|--------------|----------------|----------------|
+| ------------ | -------------- | -------------- |
 | 65536        | 429.58         | 366.26         |
 | 32768        | 375.41         | 337.97         |
 | 16384        | 360.00         | 292.23         |
@@ -363,8 +368,9 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 | 256          | 19.27          | 15.23          |
 
 #### MAC-Only Performance
+
 | Size (bytes) | Throughput (Gbps) |
-|--------------|-------------------|
+| ------------ | ----------------- |
 | 65536        | 662.08            |
 | 32768        | 603.84            |
 | 16384        | 499.15            |
@@ -374,7 +380,7 @@ HiAE achieves exceptional performance on modern processors. The following benchm
 ### Streaming API Performance (1MB total)
 
 | Chunk Size | HiAE (Gbps) | HiAEx2 (Gbps) | HiAEx4 (Gbps) |
-|------------|-------------|---------------|---------------|
+| ---------- | ----------- | ------------- | ------------- |
 | 65536      | 251.12      | 329.47        | 359.56        |
 | 32768      | 248.29      | 326.31        | 354.72        |
 | 16384      | 242.24      | 320.61        | 347.00        |
