@@ -457,7 +457,8 @@ hiaex2_init_dispatch(void)
 #if defined(__x86_64__) || defined(_M_X64)
     if (_cpu_features.has_avx2 && _cpu_features.has_vaes && hiaex2_vaes_avx2_impl.init != NULL) {
         hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_vaes_avx2_impl;
-    } else if (_cpu_features.has_avx && _cpu_features.has_aesni && hiaex2_aesni_avx_impl.init != NULL) {
+    } else if (_cpu_features.has_avx && _cpu_features.has_aesni &&
+               hiaex2_aesni_avx_impl.init != NULL) {
         hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_aesni_avx_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)

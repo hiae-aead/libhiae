@@ -26,16 +26,18 @@ typedef struct {
 } DATA256b;
 
 /* Load 256 bits as two 128-bit values */
-static inline DATA256b SIMD_LOAD(const uint8_t *x)
+static inline DATA256b
+SIMD_LOAD(const uint8_t *x)
 {
     DATA256b result;
-    result.low = _mm_loadu_si128((const __m128i *) x);
+    result.low  = _mm_loadu_si128((const __m128i *) x);
     result.high = _mm_loadu_si128((const __m128i *) (x + 16));
     return result;
 }
 
 /* Store 256 bits from two 128-bit values */
-static inline void SIMD_STORE(uint8_t *x, DATA256b y)
+static inline void
+SIMD_STORE(uint8_t *x, DATA256b y)
 {
     _mm_storeu_si128((__m128i *) x, y.low);
     _mm_storeu_si128((__m128i *) (x + 16), y.high);
@@ -45,54 +47,60 @@ static inline void SIMD_STORE(uint8_t *x, DATA256b y)
 #    define SIMD_STORE128(x, y) _mm_storeu_si128((__m128i *) (x), y)
 
 /* XOR two 256-bit values */
-static inline DATA256b SIMD_XOR(DATA256b x, DATA256b y)
+static inline DATA256b
+SIMD_XOR(DATA256b x, DATA256b y)
 {
     DATA256b result;
-    result.low = _mm_xor_si128(x.low, y.low);
+    result.low  = _mm_xor_si128(x.low, y.low);
     result.high = _mm_xor_si128(x.high, y.high);
     return result;
 }
 
 /* AND two 256-bit values */
-static inline DATA256b SIMD_AND(DATA256b x, DATA256b y)
+static inline DATA256b
+SIMD_AND(DATA256b x, DATA256b y)
 {
     DATA256b result;
-    result.low = _mm_and_si128(x.low, y.low);
+    result.low  = _mm_and_si128(x.low, y.low);
     result.high = _mm_and_si128(x.high, y.high);
     return result;
 }
 
 /* Zero 256-bit value */
-static inline DATA256b SIMD_ZERO_256(void)
+static inline DATA256b
+SIMD_ZERO_256(void)
 {
     DATA256b result;
-    result.low = _mm_setzero_si128();
+    result.low  = _mm_setzero_si128();
     result.high = _mm_setzero_si128();
     return result;
 }
 
 /* Load and duplicate 128 bits to both halves */
-static inline DATA256b SIMD_LOADx2(const uint8_t *x)
+static inline DATA256b
+SIMD_LOADx2(const uint8_t *x)
 {
     DATA256b result;
     DATA128b value = _mm_loadu_si128((const __m128i *) x);
-    result.low = value;
-    result.high = value;
+    result.low     = value;
+    result.high    = value;
     return result;
 }
 
 /* Fold 256 bits to 128 bits by XORing halves */
-static inline DATA128b SIMD_FOLD(DATA256b x, DATA256b y)
+static inline DATA128b
+SIMD_FOLD(DATA256b x, DATA256b y)
 {
-    (void)y; /* Unused parameter for compatibility */
+    (void) y; /* Unused parameter for compatibility */
     return _mm_xor_si128(x.low, x.high);
 }
 
 /* AESENC for 256-bit using two 128-bit operations */
-static inline DATA256b AESENC(DATA256b x, DATA256b y)
+static inline DATA256b
+AESENC(DATA256b x, DATA256b y)
 {
     DATA256b result;
-    result.low = _mm_aesenc_si128(x.low, y.low);
+    result.low  = _mm_aesenc_si128(x.low, y.low);
     result.high = _mm_aesenc_si128(x.high, y.high);
     return result;
 }
@@ -459,7 +467,10 @@ HiAEx2_absorb_aesni_avx(HiAEx2_state_t *state_opaque, const uint8_t *ad, size_t 
 }
 
 static void
-HiAEx2_finalize_aesni_avx(HiAEx2_state_t *state_opaque, uint64_t ad_len, uint64_t msg_len, uint8_t *tag)
+HiAEx2_finalize_aesni_avx(HiAEx2_state_t *state_opaque,
+                          uint64_t        ad_len,
+                          uint64_t        msg_len,
+                          uint8_t        *tag)
 {
     DATA256b state[STATE];
     memcpy(state, state_opaque->opaque, sizeof(state));
@@ -724,19 +735,19 @@ HiAEx2_mac_aesni_avx(
 }
 
 const HiAEx2_impl_t hiaex2_aesni_avx_impl = { .name         = "AESNI-AVX",
-                                               .init         = HiAEx2_init_aesni_avx,
-                                               .absorb       = HiAEx2_absorb_aesni_avx,
-                                               .finalize     = HiAEx2_finalize_aesni_avx,
-                                               .finalize_mac = HiAEx2_finalize_mac_aesni_avx,
-                                               .enc          = HiAEx2_enc_aesni_avx,
-                                               .dec          = HiAEx2_dec_aesni_avx,
-                                               .enc_partial_noupdate =
-                                                   HiAEx2_enc_partial_noupdate_aesni_avx,
-                                               .dec_partial_noupdate =
-                                                   HiAEx2_dec_partial_noupdate_aesni_avx,
-                                               .encrypt = HiAEx2_encrypt_aesni_avx,
-                                               .decrypt = HiAEx2_decrypt_aesni_avx,
-                                               .mac     = HiAEx2_mac_aesni_avx };
+                                              .init         = HiAEx2_init_aesni_avx,
+                                              .absorb       = HiAEx2_absorb_aesni_avx,
+                                              .finalize     = HiAEx2_finalize_aesni_avx,
+                                              .finalize_mac = HiAEx2_finalize_mac_aesni_avx,
+                                              .enc          = HiAEx2_enc_aesni_avx,
+                                              .dec          = HiAEx2_dec_aesni_avx,
+                                              .enc_partial_noupdate =
+                                                  HiAEx2_enc_partial_noupdate_aesni_avx,
+                                              .dec_partial_noupdate =
+                                                  HiAEx2_dec_partial_noupdate_aesni_avx,
+                                              .encrypt = HiAEx2_encrypt_aesni_avx,
+                                              .decrypt = HiAEx2_decrypt_aesni_avx,
+                                              .mac     = HiAEx2_mac_aesni_avx };
 
 #    ifdef __clang__
 #        pragma clang attribute pop
@@ -744,14 +755,14 @@ const HiAEx2_impl_t hiaex2_aesni_avx_impl = { .name         = "AESNI-AVX",
 
 #else
 const HiAEx2_impl_t hiaex2_aesni_avx_impl = { .name                 = NULL,
-                                               .init                 = NULL,
-                                               .absorb               = NULL,
-                                               .finalize             = NULL,
-                                               .enc                  = NULL,
-                                               .dec                  = NULL,
-                                               .enc_partial_noupdate = NULL,
-                                               .dec_partial_noupdate = NULL,
-                                               .encrypt              = NULL,
-                                               .decrypt              = NULL,
-                                               .mac                  = NULL };
+                                              .init                 = NULL,
+                                              .absorb               = NULL,
+                                              .finalize             = NULL,
+                                              .enc                  = NULL,
+                                              .dec                  = NULL,
+                                              .enc_partial_noupdate = NULL,
+                                              .dec_partial_noupdate = NULL,
+                                              .encrypt              = NULL,
+                                              .decrypt              = NULL,
+                                              .mac                  = NULL };
 #endif
