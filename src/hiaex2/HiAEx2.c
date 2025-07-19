@@ -379,6 +379,7 @@ extern const HiAEx2_impl_t hiaex2_software_impl;
 #endif
 #if defined(__x86_64__) || defined(_M_X64)
 extern const HiAEx2_impl_t hiaex2_vaes_avx2_impl;
+extern const HiAEx2_impl_t hiaex2_aesni_avx_impl;
 #endif
 #if defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
 extern const HiAEx2_impl_t hiaex2_arm_impl;
@@ -402,6 +403,9 @@ hiaex2_get_impl_by_name(const char *name)
 #if defined(__x86_64__) || defined(_M_X64)
     if (strcmp(name, "VAES-AVX2") == 0 && hiaex2_vaes_avx2_impl.init != NULL) {
         return (HiAEx2_impl_t *) &hiaex2_vaes_avx2_impl;
+    }
+    if (strcmp(name, "AESNI-AVX") == 0 && hiaex2_aesni_avx_impl.init != NULL) {
+        return (HiAEx2_impl_t *) &hiaex2_aesni_avx_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
     if (strcmp(name, "ARM NEON") == 0 && hiaex2_arm_impl.init != NULL) {
@@ -453,6 +457,8 @@ hiaex2_init_dispatch(void)
 #if defined(__x86_64__) || defined(_M_X64)
     if (_cpu_features.has_avx2 && _cpu_features.has_vaes && hiaex2_vaes_avx2_impl.init != NULL) {
         hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_vaes_avx2_impl;
+    } else if (_cpu_features.has_avx && _cpu_features.has_aesni && hiaex2_aesni_avx_impl.init != NULL) {
+        hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_aesni_avx_impl;
     }
 #elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
     if (_cpu_features.has_neon_sha3 && hiaex2_arm_sha3_impl.init != NULL) {
@@ -476,6 +482,14 @@ hiaex2_init_dispatch(void)
             hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_arm_impl;
         }
 #    endif
+    }
+#elif defined(__AES__) && defined(__AVX__) && (defined(__x86_64__) || defined(_M_X64))
+    // When hardware AES+AVX is available, ensure we have a valid implementation
+    if (hiaex2_impl == NULL) {
+        // Fallback to AESNI-AVX on x86-64 if available
+        if (hiaex2_aesni_avx_impl.init != NULL) {
+            hiaex2_impl = (HiAEx2_impl_t *) &hiaex2_aesni_avx_impl;
+        }
     }
 #endif
 }

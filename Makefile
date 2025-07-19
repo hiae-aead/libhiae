@@ -22,6 +22,7 @@ IMPL_SOURCES += src/hiaex2/HiAEx2_arm.c
 IMPL_SOURCES += src/hiaex2/HiAEx2_arm_sha3.c
 IMPL_SOURCES += src/hiaex2/HiAEx2_software.c
 IMPL_SOURCES += src/hiaex2/HiAEx2_vaes_avx2.c
+IMPL_SOURCES += src/hiaex2/HiAEx2_aesni_avx.c
 
 IMPL_SOURCES += src/hiaex4/HiAEx4_stream.c
 IMPL_SOURCES += src/hiaex4/HiAEx4_arm.c

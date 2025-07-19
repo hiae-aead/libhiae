@@ -34,6 +34,7 @@ pub fn build(b: *std.Build) void {
         "src/hiaex2/HiAEx2_arm_sha3.c",
         "src/hiaex2/HiAEx2_software.c",
         "src/hiaex2/HiAEx2_vaes_avx2.c",
+        "src/hiaex2/HiAEx2_aesni_avx.c",
         "src/hiaex2/HiAEx2_stream.c",
         "src/hiaex2/HiAEx2.c",
 
