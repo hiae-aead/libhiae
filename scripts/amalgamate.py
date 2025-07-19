@@ -98,8 +98,9 @@ def remove_includes(content, implementation_file=None):
     
     for line in lines:
         # Remove includes that we'll consolidate
-        if line.strip().startswith('#include'):
-            include_file = line.strip()
+        stripped_line = line.strip()
+        if stripped_line.startswith('#include') or re.match(r'^\s*#\s*include', line):
+            include_file = stripped_line
             # Keep system includes, remove local includes
             if ('"HiAE.h"' in include_file or 
                 '"HiAE_internal.h"' in include_file or
@@ -242,9 +243,6 @@ def create_amalgamation():
 
 #ifndef HIAE_AMALGAMATED_H
 #define HIAE_AMALGAMATED_H
-
-/* Include guard to prevent multiple inclusions */
-#pragma once
 
 /* Standard C library includes */
 #include <stddef.h>

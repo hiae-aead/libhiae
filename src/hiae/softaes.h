@@ -1,3 +1,6 @@
+#ifndef SOFTAES_H
+#define SOFTAES_H
+
 #include <stdint.h>
 #include <string.h>
 
@@ -422,3 +425,5 @@ softaes_block_encrypt(const SoftAesBlock block, const SoftAesBlock rk)
 
     return out;
 }
+
+#endif /* SOFTAES_H */
