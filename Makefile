@@ -11,7 +11,7 @@ ARCH := $(shell uname -m)
 
 # Source files
 # Runtime dispatch builds all implementations and selects at runtime
-MAIN_SOURCE = src/hiae/HiAE.c src/hiaex2/HiAEx2.c src/hiaex4/HiAEx4.c
+MAIN_SOURCE = src/hiae/HiAE.c src/hiaex2/HiAEx2.c src/hiaex4/HiAEx4.c src/hiaet/HiAEt.c
 
 IMPL_SOURCES += src/hiae/HiAE_software.c src/hiae/HiAE_stream.c
 IMPL_SOURCES += src/hiae/HiAE_aesni.c src/hiae/HiAE_vaes_avx512.c
@@ -30,12 +30,18 @@ IMPL_SOURCES += src/hiaex4/HiAEx4_arm_sha3.c
 IMPL_SOURCES += src/hiaex4/HiAEx4_software.c
 IMPL_SOURCES += src/hiaex4/HiAEx4_vaes_avx512.c
 
+IMPL_SOURCES += src/hiaet/HiAEt_software.c
+IMPL_SOURCES += src/hiaet/HiAEt_arm_sha3.c
+IMPL_SOURCES += src/hiaet/HiAEt_aesni.c
+IMPL_SOURCES += src/hiaet/HiAEt_vaes_avx512.c
+
 ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 
 # Header dependencies
 HIAE_HEADERS = include/HiAE.h src/hiae/HiAE_internal.h src/hiae/softaes.h
 HIAEX2_HEADERS = include/HiAEx2.h src/hiaex2/HiAEx2_internal.h src/hiaex2/softaes.h
 HIAEX4_HEADERS = include/HiAEx4.h src/hiaex4/HiAEx4_internal.h src/hiaex4/softaes.h
+HIAET_HEADERS = include/HiAEt.h src/hiaet/HiAEt_internal.h src/hiaet/softaes.h
 CLI_HEADERS = hiae-cli/src/platform.h hiae-cli/src/key_utils.h hiae-cli/src/file_ops.h
 TEST_HEADERS = test/timing.h
 
@@ -48,7 +54,7 @@ ALL_OBJECTS = $(MAIN_OBJECTS) $(IMPL_OBJECTS)
 BINDIR = bin
 
 # Target executables
-TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream $(BINDIR)/hiae
+TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream $(BINDIR)/hiae $(BINDIR)/hiaet_func_test $(BINDIR)/hiaet_perf_test
 
 # Default target
 all: $(BINDIR) $(TARGETS)
@@ -59,6 +65,7 @@ $(BINDIR):
 	@mkdir -p $(BINDIR)/src/hiae
 	@mkdir -p $(BINDIR)/src/hiaex2
 	@mkdir -p $(BINDIR)/src/hiaex4
+	@mkdir -p $(BINDIR)/src/hiaet
 
 # Object file rules with proper header dependencies
 $(BINDIR)/src/hiae/%.o: src/hiae/%.c $(HIAE_HEADERS) | $(BINDIR)
@@ -68,6 +75,9 @@ $(BINDIR)/src/hiaex2/%.o: src/hiaex2/%.c $(HIAEX2_HEADERS) | $(BINDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BINDIR)/src/hiaex4/%.o: src/hiaex4/%.c $(HIAEX4_HEADERS) | $(BINDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BINDIR)/src/hiaet/%.o: src/hiaet/%.c $(HIAET_HEADERS) | $(BINDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Performance test
@@ -110,8 +120,18 @@ $(BINDIR)/hiae: $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae
 	@echo "Building hiae CLI utility..."
 	$(CC) $(CFLAGS) -I hiae-cli/src $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c -o $@ $(LDFLAGS)
 
+# HiAEt functional test
+$(BINDIR)/hiaet_func_test: $(ALL_OBJECTS) test/hiaet_function_test.c $(TEST_HEADERS)
+	@echo "Building HiAEt functional test..."
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/hiaet_function_test.c -o $@ $(LDFLAGS)
+
+# HiAEt performance test
+$(BINDIR)/hiaet_perf_test: $(ALL_OBJECTS) test/hiaet_performance_test.c $(TEST_HEADERS)
+	@echo "Building HiAEt performance test..."
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/hiaet_performance_test.c -o $@ $(LDFLAGS)
+
 # Test targets
-test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream test-amalgamated
+test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream $(BINDIR)/hiaet_func_test test-amalgamated
 	@echo "Running functional tests..."
 	./$(BINDIR)/func_test
 	@echo ""
@@ -123,16 +143,26 @@ test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $
 	@echo ""
 	@echo "Running streaming API tests..."
 	./$(BINDIR)/test_stream
+	@echo ""
+	@echo "Running HiAEt functional tests..."
+	./$(BINDIR)/hiaet_func_test
 
 test-vectors: $(BINDIR)/test_vectors
 	@echo "Running test vector validation..."
 	./$(BINDIR)/test_vectors
 
-benchmark: $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test
+benchmark: $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test $(BINDIR)/hiaet_perf_test
 	@echo "Running performance benchmark..."
 	./$(BINDIR)/perf_x4_test
 	./$(BINDIR)/perf_x2_test
 	./$(BINDIR)/perf_test
+	@echo ""
+	@echo "Running HiAEt performance benchmark..."
+	./$(BINDIR)/hiaet_perf_test
+
+hiaet-benchmark: $(BINDIR)/hiaet_perf_test
+	@echo "Running HiAEt performance benchmark..."
+	./$(BINDIR)/hiaet_perf_test
 
 # Clean target
 clean:
