@@ -312,7 +312,7 @@ HiAEt_get_implementation_name(void)
 // Low-level API functions
 
 void
-HiAEt_init(HiAEt_state_t *state, const uint8_t key[32], const uint8_t nonce[16])
+HiAEt_init(HiAEt_state_t *state, const uint8_t *key, const uint8_t *nonce)
 {
     if (hiaet_impl == NULL) {
         hiaet_init_dispatch();
@@ -357,9 +357,9 @@ HiAEt_finalize(HiAEt_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t 
 // High-level all-at-once API
 
 int
-HiAEt_encrypt(const uint8_t key[32], const uint8_t nonce[16], const uint8_t *plaintext,
+HiAEt_encrypt(const uint8_t *key, const uint8_t *nonce, const uint8_t *plaintext,
               uint8_t *ciphertext, size_t msg_len, const uint8_t *ad, size_t ad_len,
-              uint8_t tag[16])
+              uint8_t *tag)
 {
     HiAEt_state_t state;
 
@@ -379,9 +379,9 @@ HiAEt_encrypt(const uint8_t key[32], const uint8_t nonce[16], const uint8_t *pla
 }
 
 int
-HiAEt_decrypt(const uint8_t key[32], const uint8_t nonce[16], uint8_t *plaintext,
+HiAEt_decrypt(const uint8_t *key, const uint8_t *nonce, uint8_t *plaintext,
               const uint8_t *ciphertext, size_t msg_len, const uint8_t *ad, size_t ad_len,
-              const uint8_t tag[16])
+              const uint8_t *tag)
 {
     HiAEt_state_t state;
     uint8_t       computed_tag[16];
@@ -408,8 +408,8 @@ HiAEt_decrypt(const uint8_t key[32], const uint8_t nonce[16], uint8_t *plaintext
 }
 
 int
-HiAEt_mac(const uint8_t key[32], const uint8_t nonce[16], const uint8_t *data, size_t data_len,
-          uint8_t tag[16])
+HiAEt_mac(const uint8_t *key, const uint8_t *nonce, const uint8_t *data, size_t data_len,
+          uint8_t *tag)
 {
     return HiAEt_encrypt(key, nonce, NULL, NULL, 0, data, data_len, tag);
 }
@@ -417,7 +417,7 @@ HiAEt_mac(const uint8_t key[32], const uint8_t nonce[16], const uint8_t *data, s
 // Streaming API stubs (TODO: Implement if needed)
 
 void
-HiAEt_stream_init(HiAEt_stream_state_t *stream, const uint8_t key[32], const uint8_t nonce[16])
+HiAEt_stream_init(HiAEt_stream_state_t *stream, const uint8_t *key, const uint8_t *nonce)
 {
     // TODO: Implement streaming API
     (void) stream;
@@ -457,7 +457,7 @@ HiAEt_stream_decrypt(HiAEt_stream_state_t *stream, uint8_t *plaintext, const uin
 }
 
 void
-HiAEt_stream_finalize(HiAEt_stream_state_t *stream, uint8_t tag[16])
+HiAEt_stream_finalize(HiAEt_stream_state_t *stream, uint8_t *tag)
 {
     // TODO: Implement streaming API
     (void) stream;

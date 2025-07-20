@@ -390,7 +390,7 @@ HiAEt_enc_aesni(HiAEt_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, siz
     size_t prefix = size - rest;
     if (size == 0)
         return;
-    DATA128b M[STATE], C[STATE], tmp[STATE];
+    DATA128b M[STATE], C[STATE];
 
     // Main processing loop with prefetching
     for (size_t i = 0; i < prefix; i += UNROLL_BLOCK_SIZE) {
