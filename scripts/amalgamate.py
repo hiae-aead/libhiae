@@ -165,14 +165,15 @@ def update_macro_usage(content, prefix):
     """Update macro usage to use prefixed versions."""
     for macro in SCOPED_MACROS + LOAD_STORE_MACROS:
         # Replace macro usage (not definitions)
-        pattern = r'(\W)(' + re.escape(macro) + r')(\s*\()'
-        replacement = r'\1' + prefix + r'_\2\3'
+        # Use \b for word boundary instead of \W to catch all occurrences
+        pattern = r'\b(' + re.escape(macro) + r')(\s*\()'
+        replacement = prefix + r'_\1\2'
         content = re.sub(pattern, replacement, content)
         
         # Also handle standalone usage (e.g., DATA128b variable declarations)
         if macro != 'DATA128b':  # Skip DATA128b for now - handle separately
-            pattern = r'(\W)(' + re.escape(macro) + r')(\s*[^(])'
-            replacement = r'\1' + prefix + r'_\2\3'
+            pattern = r'\b(' + re.escape(macro) + r')(\s*[^(])'
+            replacement = prefix + r'_\1\2'
             content = re.sub(pattern, replacement, content)
     
     # Handle DATA128b usage specifically (but not in typedef lines)
