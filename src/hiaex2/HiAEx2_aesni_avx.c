@@ -177,24 +177,24 @@ state_shift(DATA256b *state)
 }
 
 static inline void
-init_update(DATA256b *state, DATA256b *tmp, DATA256b c0)
+init_update(DATA256b *state, DATA256b *tmp, DATA256b c0, DATA256b c1)
 {
     update_state_offset(state, tmp, c0, 0);
-    update_state_offset(state, tmp, c0, 1);
+    update_state_offset(state, tmp, c1, 1);
     update_state_offset(state, tmp, c0, 2);
-    update_state_offset(state, tmp, c0, 3);
+    update_state_offset(state, tmp, c1, 3);
     update_state_offset(state, tmp, c0, 4);
-    update_state_offset(state, tmp, c0, 5);
+    update_state_offset(state, tmp, c1, 5);
     update_state_offset(state, tmp, c0, 6);
-    update_state_offset(state, tmp, c0, 7);
+    update_state_offset(state, tmp, c1, 7);
     update_state_offset(state, tmp, c0, 8);
-    update_state_offset(state, tmp, c0, 9);
+    update_state_offset(state, tmp, c1, 9);
     update_state_offset(state, tmp, c0, 10);
-    update_state_offset(state, tmp, c0, 11);
+    update_state_offset(state, tmp, c1, 11);
     update_state_offset(state, tmp, c0, 12);
-    update_state_offset(state, tmp, c0, 13);
+    update_state_offset(state, tmp, c1, 13);
     update_state_offset(state, tmp, c0, 14);
-    update_state_offset(state, tmp, c0, 15);
+    update_state_offset(state, tmp, c1, 15);
 }
 
 static inline void
@@ -395,16 +395,16 @@ HiAEx2_init_aesni_avx(HiAEx2_state_t *state_opaque, const uint8_t *key, const ui
 
     DATA256b ze = SIMD_ZERO_256();
     state[0]    = c0;
-    state[1]    = k1;
-    state[2]    = N;
-    state[3]    = c0;
+    state[1]    = k0;
+    state[2]    = c0;
+    state[3]    = N;
     state[4]    = ze;
-    state[5]    = SIMD_XOR(N, k0);
+    state[5]    = k0;
     state[6]    = ze;
     state[7]    = c1;
-    state[8]    = SIMD_XOR(N, k1);
+    state[8]    = k1;
     state[9]    = ze;
-    state[10]   = k1;
+    state[10]   = SIMD_XOR(N, k1);
     state[11]   = c0;
     state[12]   = c1;
     state[13]   = k1;
@@ -424,11 +424,9 @@ HiAEx2_init_aesni_avx(HiAEx2_state_t *state_opaque, const uint8_t *key, const ui
     }
 
     DATA256b tmp[STATE];
-    init_update(state, tmp, c0);
-    init_update(state, tmp, c0);
+    init_update(state, tmp, k0, k1);
+    init_update(state, tmp, c0, c1);
 
-    state[9]  = SIMD_XOR(state[9], k0);
-    state[13] = SIMD_XOR(state[13], k1);
     memcpy(state_opaque->opaque, state, sizeof(state));
 }
 
@@ -479,8 +477,8 @@ HiAEx2_finalize_aesni_avx(HiAEx2_state_t *state_opaque,
     lens[1] = msg_len * 8;
     DATA256b temp, tmp[STATE];
     temp = SIMD_LOADx2((uint8_t *) lens);
-    init_update(state, tmp, temp);
-    init_update(state, tmp, temp);
+    init_update(state, tmp, temp, temp);
+    init_update(state, tmp, temp, temp);
     temp = state[0];
     for (size_t i = 1; i < STATE; ++i) {
         temp = SIMD_XOR(temp, state[i]);
@@ -502,8 +500,8 @@ HiAEx2_finalize_mac_aesni_avx(HiAEx2_state_t *state_opaque, uint64_t data_len, u
     lens[0]       = data_len * 8;
     lens[1]       = HIAEX2_MACBYTES * 8;
     DATA256b temp = SIMD_LOADx2((uint8_t *) lens);
-    init_update(state, tmp, temp);
-    init_update(state, tmp, temp);
+    init_update(state, tmp, temp, temp);
+    init_update(state, tmp, temp, temp);
 
     /* Step 2: Compute MAC of all lanes (XOR all states together) */
     DATA256b tag_multi = state[0];
@@ -532,8 +530,8 @@ HiAEx2_finalize_mac_aesni_avx(HiAEx2_state_t *state_opaque, uint64_t data_len, u
     degree_lens[0]       = degree;
     degree_lens[1]       = HIAEX2_MACBYTES * 8;
     DATA256b degree_temp = SIMD_LOADx2((uint8_t *) degree_lens);
-    init_update(state, tmp, degree_temp);
-    init_update(state, tmp, degree_temp);
+    init_update(state, tmp, degree_temp, degree_temp);
+    init_update(state, tmp, degree_temp, degree_temp);
 
     /* Step 5: Final MAC extraction (XOR all states and extract first tag_length bytes) */
     tag_multi = state[0];

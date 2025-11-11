@@ -113,24 +113,24 @@ state_shift(DATA512b *state)
 }
 
 static inline void
-init_update(DATA512b *state, DATA512b *tmp, DATA512b c0)
+init_update(DATA512b *state, DATA512b *tmp, DATA512b c0, DATA512b c1)
 {
     update_state_offset(state, tmp, c0, 0);
-    update_state_offset(state, tmp, c0, 1);
+    update_state_offset(state, tmp, c1, 1);
     update_state_offset(state, tmp, c0, 2);
-    update_state_offset(state, tmp, c0, 3);
+    update_state_offset(state, tmp, c1, 3);
     update_state_offset(state, tmp, c0, 4);
-    update_state_offset(state, tmp, c0, 5);
+    update_state_offset(state, tmp, c1, 5);
     update_state_offset(state, tmp, c0, 6);
-    update_state_offset(state, tmp, c0, 7);
+    update_state_offset(state, tmp, c1, 7);
     update_state_offset(state, tmp, c0, 8);
-    update_state_offset(state, tmp, c0, 9);
+    update_state_offset(state, tmp, c1, 9);
     update_state_offset(state, tmp, c0, 10);
-    update_state_offset(state, tmp, c0, 11);
+    update_state_offset(state, tmp, c1, 11);
     update_state_offset(state, tmp, c0, 12);
-    update_state_offset(state, tmp, c0, 13);
+    update_state_offset(state, tmp, c1, 13);
     update_state_offset(state, tmp, c0, 14);
-    update_state_offset(state, tmp, c0, 15);
+    update_state_offset(state, tmp, c1, 15);
 }
 
 static inline void
@@ -331,16 +331,16 @@ HiAEx4_init_vaes_avx512(HiAEx4_state_t *state_opaque, const uint8_t *key, const 
 
     DATA512b ze = SIMD_ZERO_512();
     state[0]    = c0;
-    state[1]    = k1;
-    state[2]    = N;
-    state[3]    = c0;
+    state[1]    = k0;
+    state[2]    = c0;
+    state[3]    = N;
     state[4]    = ze;
-    state[5]    = SIMD_XOR(N, k0);
+    state[5]    = k0;
     state[6]    = ze;
     state[7]    = c1;
-    state[8]    = SIMD_XOR(N, k1);
+    state[8]    = k1;
     state[9]    = ze;
-    state[10]   = k1;
+    state[10]   = SIMD_XOR(N, k1);
     state[11]   = c0;
     state[12]   = c1;
     state[13]   = k1;
@@ -360,11 +360,9 @@ HiAEx4_init_vaes_avx512(HiAEx4_state_t *state_opaque, const uint8_t *key, const 
     }
 
     DATA512b tmp[STATE];
-    init_update(state, tmp, c0);
-    init_update(state, tmp, c0);
+    init_update(state, tmp, k0, k1);
+    init_update(state, tmp, k0, k1);
 
-    state[9]  = SIMD_XOR(state[9], k0);
-    state[13] = SIMD_XOR(state[13], k1);
     memcpy(state_opaque->opaque, state, sizeof(state));
 }
 
@@ -415,8 +413,8 @@ HiAEx4_finalize_vaes_avx512(HiAEx4_state_t *state_opaque,
     lens[1] = msg_len * 8;
     DATA512b temp, tmp[STATE];
     temp = SIMD_LOADx4((uint8_t *) lens);
-    init_update(state, tmp, temp);
-    init_update(state, tmp, temp);
+    init_update(state, tmp, temp, temp);
+    init_update(state, tmp, temp, temp);
     temp = state[0];
     for (size_t i = 1; i < STATE; ++i) {
         temp = SIMD_XOR(temp, state[i]);
@@ -439,8 +437,8 @@ HiAEx4_finalize_mac_vaes_avx512(HiAEx4_state_t *state_opaque, uint64_t data_len,
     lens[0]       = data_len * 8;
     lens[1]       = HIAEX4_MACBYTES * 8;
     DATA512b temp = SIMD_LOADx4((uint8_t *) lens);
-    init_update(state, tmp, temp);
-    init_update(state, tmp, temp);
+    init_update(state, tmp, temp, temp);
+    init_update(state, tmp, temp, temp);
 
     /* Step 2: XOR all states together to get tag_multi */
     temp = state[0];
@@ -472,8 +470,8 @@ HiAEx4_finalize_mac_vaes_avx512(HiAEx4_state_t *state_opaque, uint64_t data_len,
         degree_lens[0]       = degree;
         degree_lens[1]       = HIAEX4_MACBYTES * 8;
         DATA512b degree_temp = SIMD_LOADx4((uint8_t *) degree_lens);
-        init_update(state, tmp, degree_temp);
-        init_update(state, tmp, degree_temp);
+        init_update(state, tmp, degree_temp, degree_temp);
+        init_update(state, tmp, degree_temp, degree_temp);
     }
 
     /* Step 5: Final MAC extraction */
