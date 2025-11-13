@@ -155,7 +155,7 @@ HiAE_init_vaes(HiAE_state_t *state_opaque, const uint8_t *key, const uint8_t *no
     DATA128b tmp[STATE];
     init_update(state, tmp, k0, k1);
     init_update(state, tmp, k0, k1);
-    
+
     memcpy(state_opaque->opaque, state, sizeof(state));
 }
 

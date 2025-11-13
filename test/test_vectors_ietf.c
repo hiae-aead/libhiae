@@ -60,15 +60,15 @@ static const TestVector test_vectors[] = {
       .ad         = "",
       .plaintext  = "",
       .ciphertext = "",
-      .tag        = "e3b7c5993e804d7e1f95905fe8fa1d74" },
+      .tag        = "a25049aa37deea054de461d10ce7840b" },
     // Test Vector 2 - Single block plaintext, no AD
     { .name       = "Test Vector 2",
       .key        = "2f8e4d7c3b9a5e1f8d2c6b4a9f3e7d5c1b8a6f4e3d2c9b5a8f7e6d4c3b2a1f9e",
       .nonce      = "7c3e9f5a1d8b4c6f2e9a5d7b3f8c1e4a",
       .ad         = "",
       .plaintext  = "55f00fcc339669aa55f00fcc339669aa",
-      .ciphertext = "66fc201d96ace3ca550326964c2fa950",
-      .tag        = "2e4d9b3bf320283de63ea5547454878d" },
+      .ciphertext = "af9bd1865daa6fc351652589abf70bff",
+      .tag        = "ed9e2edc8241c3184fc08972bd8e9952" },
     // Test Vector 3 - Empty plaintext with AD
     { .name       = "Test Vector 3",
       .key        = "9f3e7d5c4b8a2f1e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e",
@@ -76,7 +76,7 @@ static const TestVector test_vectors[] = {
       .ad         = "394a5b6c7d8e9fb0c1d2e3f405162738495a6b7c8d9eafc0d1e2f30415263748",
       .plaintext  = "",
       .ciphertext = "",
-      .tag        = "531a4d1ed47bda55d01cc510512099e4" },
+      .tag        = "7e19c04f68f5af633bf67529cfb5e5f4" },
     // Test Vector 4 - Rate-aligned plaintext (256 bytes)
     { .name       = "Test Vector 4",
       .key        = "6c8f2d5a9e3b7f4c1d8a5e9f3c7b2d6a4f8e1c9b5d3a7e2f4c8b6d9a1e5f3c7d",
@@ -98,23 +98,23 @@ static const TestVector test_vectors[] = {
                     "ffffffffffffffffffffffffffffffff"
                     "ffffffffffffffffffffffffffffffff"
                     "ffffffffffffffffffffffffffffffff",
-      .ciphertext = "2e28f49c20d1a90a5bce3bc85f6eab2f"
-                    "e0d3ee31c293f368ee20e485ec732c90"
-                    "45633aa4d53e271b1f583f4f0b208487"
-                    "6e4b0d2b2f633433e43c48386155d03d"
-                    "00dbf10c07a66159e1bec7859839263a"
-                    "c12e77045c6d718ddf5907297818e4ae"
-                    "0b4ed7b890f57fa585e4a5940525aa2f"
-                    "62e4b6748fa4cd86b75f69eff9dfd4df"
-                    "9b0861ae7d52541ff892aa41d41d55a9"
-                    "a62f4e4fefb718ee13faca582d73c1d1"
-                    "f51592c25c64b0a79d2f24181362dfbb"
-                    "352ac20e1b07be892a05b394eb6b2a9d"
-                    "473c49e6b63e754311fdbb6c476503f0"
-                    "a3570482ece70856ae6e6f8d5aa19cc2"
-                    "7b5bce24ee028e197ed9891b0a54bf02"
-                    "328cb80ceefc44b11043d784594226ab",
-      .tag        = "f330ae219d6739aba556fe94776b486b" },
+      .ciphertext = "cf9f118ccc3ae98998ddaae1a5d1f9a1"
+                    "69e4ca3e732baf7178cdd9a353057166"
+                    "8fe403e77111eac3da34bf2f25719cea"
+                    "09445cc58197b1c6ac490626724e7372"
+                    "707cfb60cdba8262f0e33a1ef8adda1f"
+                    "2e390a80c58e5c055d9be9bbccdc06ad"
+                    "af74f1dcaa372204bf42e5e0e0ac5943"
+                    "7a353978298837023f79fac6daa1fe8f"
+                    "6bcaaaf060ae2e37ed7b7da0577a7643"
+                    "5f0403b8e277b6bc2ea99682f2d0d577"
+                    "77fec6d901e0d8fc7cf46bb97336812a"
+                    "2d8cfd39053993288cce2c077fce0c6c"
+                    "00e99cf919281b261acf86b058164f10"
+                    "1d9c24e8f40b4fa0ed60955eeeb4e33f"
+                    "f1087519c13db8e287199a7df7e94b0d"
+                    "368da9ccf3d2ecebfa46f860348f8e3c",
+      .tag        = "4f42c3042cba3973153673156309dd69" },
     // Test Vector 5 - Rate + 1 byte plaintext
     { .name       = "Test Vector 5",
       .key        = "3e9d6c5b4a8f7e2d1c9b8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d",
@@ -137,24 +137,24 @@ static const TestVector test_vectors[] = {
                     "cc339669aa55f00fcc339669aa55f00f"
                     "cc339669aa55f00fcc339669aa55f00f"
                     "cc",
-      .ciphertext = "5d2d2c7f1ff780687c65ed69c08805c2"
-                    "69652b55f5d1ef005f25300d1f644b57"
-                    "e500d5b0d75f9b025fee04cfdf422c6c"
-                    "3c472e6967ac60f69ff730d4d308faed"
-                    "beac375ae88da8ab78d26e496a5226b5"
-                    "ffd7834a2f76ecc495a444ffa3db60d8"
-                    "ec3fb75c0fcaa74966e1caec294c8eb7"
-                    "a4895aa2b1e3976eb6bed2f975ff218d"
-                    "c98f86f7c95996f03842cee71c6c1bc5"
-                    "f7b64374e101b32927ed95432e88f8e3"
-                    "8835f1981325dbcec412a4254e964c22"
-                    "cf82688ee5e471c23a3537de7e51c288"
-                    "92e32c565aa86ab708c70cf01f0d0ee9"
-                    "781251759893d55e60e0d70014cb3afb"
-                    "45e0821ba6e82e0f490ff2efef2f62c5"
-                    "7332c68c11e6ed71ef730b62c3e05edf"
-                    "f6",
-      .tag        = "1122dc5bedc7cad4e196f7227b7102f3" },
+      .ciphertext = "522e4cd9b0881809d80e149bb4ed8b8a"
+                    "dd70b7257afca6c2bc38e4da11e290cf"
+                    "cabd9dd1d4ed8c514482f444f903e42e"
+                    "c21a7a605ee37f95a504ec667fabec40"
+                    "66eb4521cdaf9c4eb7b62d659ab0a936"
+                    "3b145f1120c1b2e589ab9cb893d01be0"
+                    "d22182fc7de4932f1e8652b50e4a0d48"
+                    "c49a8a1232b201e2e535cd95c15cf0ee"
+                    "389b75e372653579c72c4dd1906fd81c"
+                    "2b9fc2483fab8b4df5a09d59753b5bd4"
+                    "1334be2e5085e349b6e5aac0c555a0a8"
+                    "3e94eab974052131f8d451c9d85389a3"
+                    "6126f93464e6f93119c6b1bf15b4c0a9"
+                    "e6c9beb52e82c846c472f87c15ac49e9"
+                    "9d59248ba7e6b97ca04327769d6b8c1f"
+                    "751d95dba709fb335183c21476836ea1"
+                    "ab",
+      .tag        = "61bac11505dd8bbf55e7fbb7489de7b0" },
     // Test Vector 6 - Rate - 1 byte plaintext
     { .name       = "Test Vector 6",
       .key        = "8a7f6e5d4c3b2a1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f",
@@ -176,23 +176,23 @@ static const TestVector test_vectors[] = {
                     "00000000000000000000000000000000"
                     "00000000000000000000000000000000"
                     "000000000000000000000000000000",
-      .ciphertext = "322970ad70b2af87676d57dd0b27866d"
-                    "8c4f0e251b5162b93672de1ab7aaf20c"
-                    "d91e7751a31e19762aeea4f3811657a3"
-                    "06787ff4ebc06957c1f45b7fd284ef87"
-                    "f3a902922999895ff26fddbd5986eac5"
-                    "ef856f6ae270136315c698ec7fe5a618"
-                    "8aa1847c00a3a870044e8d37e22b1bca"
-                    "b3e493d8ae984c7646f2536032a40910"
-                    "b6c0f317b916d5789189268c00ef4493"
-                    "bcb5fb0135974fa9bec299d473fdbf76"
-                    "f44107ec56b5941404fd4b3352576c31"
-                    "3169662f1664bd5bccf210a710aa6665"
-                    "fb3ec4fa3b4c648411fd09d4cada31b8"
-                    "947fdd486de45a4e4a33c151364e23be"
-                    "6b3fc14f0855b0518e733d5ea9051165"
-                    "25286bb2d6a46ac8ef73144e2046f9",
-      .tag        = "7eb4461a035fe51eaf4a1829605e6227" },
+      .ciphertext = "2ba49be54eb675efe446fd597721d4cd"
+                    "ca6e01f1a51728a859d8f206d13cdb08"
+                    "ba4f0fe78fbbd6885964ed54e9beceed"
+                    "1ff306642c4761e67efa7a2620e57128"
+                    "15b5e9f066b42e879cd62e7adc2821e5"
+                    "08311b88a6ee14bedcbac7ce339994c0"
+                    "09bbbadf9444748e4ab9a91acbbc7301"
+                    "742dab74aa1be6847ad8e9f08c170359"
+                    "b87e0ccd480812aaaf847aff03c2e858"
+                    "1c55848c2b50f6c6608540fe82627a2c"
+                    "0f5ee37fbe9cdeab5f6c9799702bd303"
+                    "2bf733e2108d03247cd20edaa2c322e5"
+                    "bf086bfecc4ac97b61096f016c57d5d0"
+                    "1c24d398cefd5ae8131c1f51f172ce9c"
+                    "6d3b8395d396dcbd70b4af790018796b"
+                    "31f0b0ad6198f86e5e1f26e9258492",
+      .tag        = "221dd1b69afb4e0c149e0a058e471a4a" },
     // Test Vector 7 - Medium plaintext with AD
     { .name       = "Test Vector 7",
       .key        = "5d9c3b7a8f2e6d4c1b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c",
@@ -214,28 +214,28 @@ static const TestVector test_vectors[] = {
                     "f43b2e75265e1a000dde451b64658919"
                     "e93143d2781955fb4ca2a38076ac9eb4"
                     "9adc2b92b05f0ec7",
-      .ciphertext = "ca3b18f0ffb25e4e1a6108abedcfc931"
-                    "841804c22a132a701d2f0b5eb845a380"
-                    "8028e9e1e0978795776c57a0415971cf"
-                    "e87abc72171a24fd11f3c331d1efe306"
-                    "e4ca1d8ede6e79cbd531020502d38026"
-                    "20d9453ffdd5633fe98ff1d12b057edd"
-                    "bd4d99ee6cabf4c8d2c9b4c7ee0d219b"
-                    "3b4145e3c63acde6c45f6d65e08dd06e"
-                    "f9dd2dde090f1f7579a5657720f348ae"
-                    "5761a8df321f20ad711a2c703b1c3f20"
-                    "0e4004da409daaa138f3c20f8f77c89c"
-                    "b6f46df671f25c75a6a7838a5d792d18"
-                    "a59c202fab564f0f",
-      .tag        = "74ba4c28296f09101db59c37c4759bcf" },
+      .ciphertext = "1d8d56867870574d1c4ac114620c6a2a"
+                    "bb44680fe321dd116601e2c92540f85a"
+                    "11c41dcac9814397b8f37b812cd52c93"
+                    "2db6ecbaa247c3e14f228bd792334570"
+                    "2fc43ad1eb1b8086e2c3c57bb602971c"
+                    "29772a35dfb1c45c66f81633e67fdc8d"
+                    "8005457ddbe4179312abab981049eb0a"
+                    "0a555b9fa01378878d7349111e2446fd"
+                    "e89ce64022d032cbf0cf2672e00d7999"
+                    "ed8b631c1b9bee547cbe464673464a4b"
+                    "80e8f72ad2b91a40fdcee5357980c090"
+                    "b34ab5e732e2a7df7613131ee42e42ec"
+                    "6ae9b05ac5683ebe",
+      .tag        = "e93686b266c481196d44536eb51b5f2d" },
     // Test Vector 8 - Single byte plaintext
     { .name       = "Test Vector 8",
       .key        = "7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b6a",
       .nonce      = "2e7c9f5d3b8a4c6f1e9b5d7a3f8c2e4a",
       .ad         = "",
       .plaintext  = "ff",
-      .ciphertext = "51",
-      .tag        = "588535eb70c53ba5cce0d215194cb1c9" },
+      .ciphertext = "21",
+      .tag        = "3cf9020bd1cc59cc5f2f6ce19f7cbf68" },
     // Test Vector 9 - Two blocks plaintext
     { .name       = "Test Vector 9",
       .key        = "4c8b7a9f3e5d2c6b1a8f9e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d8c7b",
@@ -245,9 +245,9 @@ static const TestVector test_vectors[] = {
                     "e3f405162738495a6b7c8d9eafc0d1e2",
       .plaintext  = "aa55f00fcc339669aa55f00fcc339669"
                     "aa55f00fcc339669aa55f00fcc339669",
-      .ciphertext = "03694107097ff7ea0b1eac408fabb60a"
-                    "cd89df4d0288fa9063309e5e323bf78f",
-      .tag        = "2a3144f369a893c3d756f262067e5e59" },
+      .ciphertext = "c2e199ac8c23ce6e3778e7fd0b4f8f75"
+                    "2badd4b67be0cdc3f6c98ae5f6fb0d25",
+      .tag        = "7aea3fbce699ceb1d0737e0483217745" },
     // Test Vector 10 - All zeros plaintext
     { .name       = "Test Vector 10",
       .key        = "9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d",
@@ -261,15 +261,15 @@ static const TestVector test_vectors[] = {
                     "00000000000000000000000000000000"
                     "00000000000000000000000000000000"
                     "00000000000000000000000000000000",
-      .ciphertext = "eef78d00c4de4c557d5c769e499af7b9"
-                    "8e5ad36cdaf1ff775a8629d82751e97e"
-                    "8f98caa0773fe81ee40266f0d52ddbbe"
-                    "f621504863bf39552682b29748f8c244"
-                    "5c176cd63865732141edc59073cff90e"
-                    "5996a23a763f8dd058a6a91ada1d8f83"
-                    "2f5e600b39f799a698228b68d20cd189"
-                    "e5e423b253a44c78060435050698ccae",
-      .tag        = "59970b0b35a7822f3b88b63396c2da98" }
+      .ciphertext = "fc7f1142f681399099c5008980e73420"
+                    "65b4e62a9b9cb301bdf441d3282b6aa9"
+                    "3bd7cd735ef77755b4109f86b7c09083"
+                    "8e7b05f08ef4947946155a03ff483095"
+                    "152ef3dec8bdddae3990d00d41d5ee6c"
+                    "90dcf65dbed4b7ebbe9bb4ef096e1238"
+                    "d388bf15faacdb7a68be19dddc8a5b74"
+                    "216f4442bfa32d1dfccdc9c4020baec9",
+      .tag        = "ad0b841c3d145a6ee86dc7b67338f113" }
 };
 
 static const size_t num_test_vectors = sizeof(test_vectors) / sizeof(test_vectors[0]);

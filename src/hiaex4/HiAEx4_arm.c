@@ -429,7 +429,7 @@ HiAEx4_init_arm(HiAEx4_state_t *state_opaque, const uint8_t *key, const uint8_t 
 
     init_update(state, k0, k1);
     init_update(state, k0, k1);
-    
+
     memcpy(state_opaque->opaque, state, sizeof(state));
 }
 

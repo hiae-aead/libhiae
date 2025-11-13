@@ -514,8 +514,8 @@ HiAEx2_finalize_mac_arm(HiAEx2_state_t *state_opaque, uint64_t data_len, uint8_t
     degree_lens[0]       = degree;
     degree_lens[1]       = HIAEX2_MACBYTES * 8;
     DATA256b degree_temp = SIMD_LOADx2((uint8_t *) degree_lens);
-    init_update(state, degree_temp);
-    init_update(state, degree_temp);
+    init_update(state, degree_temp, degree_temp);
+    init_update(state, degree_temp, degree_temp);
 
     /* Step 5: Final MAC extraction (XOR all states and extract first tag_length bytes) */
     tag_multi = state[0];

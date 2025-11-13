@@ -119,7 +119,7 @@ state_shift(DATA128b *state)
 }
 
 static inline void
-init_update(DATA128b *state, DATA128b *tmp, DATA128b c0 DATA128b c1)
+init_update(DATA128b *state, DATA128b *tmp, DATA128b c0, DATA128b c1)
 {
     update_state_offset(state, tmp, c0, 0);
     update_state_offset(state, tmp, c1, 1);

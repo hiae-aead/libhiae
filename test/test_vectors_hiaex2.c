@@ -60,7 +60,7 @@ static const TestVector test_vectors[] = {
       .ad         = "",
       .plaintext  = "",
       .ciphertext = "",
-      .tag        = "c96bb0ff5718c7d186bf00689ac5c8a6" },
+      .tag        = "814466e804ffb89e586130ef8c5a09eb" },
 
     // Test Vector 2 - Single block plaintext, no AD
     { .name       = "Test Vector 2",
@@ -68,8 +68,8 @@ static const TestVector test_vectors[] = {
       .nonce      = "7c3e9f5a1d8b4c6f2e9a5d7b3f8c1e4a",
       .ad         = "",
       .plaintext  = "55f00fcc339669aa55f00fcc339669aa",
-      .ciphertext = "db8d509ba11db9f7d3504293218e5eb7",
-      .tag        = "22f033c4f4c1ae2642462733f2601383" },
+      .ciphertext = "b1b159fa6b6d3088a4fdb2d70aae888e",
+      .tag        = "c07f5633f8125b73839805aa0e029f9e" },
 
     // Test Vector 3 - Empty plaintext with AD
     { .name       = "Test Vector 3",
@@ -78,7 +78,7 @@ static const TestVector test_vectors[] = {
       .ad         = "394a5b6c7d8e9fb0c1d2e3f405162738495a6b7c8d9eafc0d1e2f30415263748",
       .plaintext  = "",
       .ciphertext = "",
-      .tag        = "768ccc178a1e756ec0c492d52d1794c7" },
+      .tag        = "0802b8d956e7c9cce970750b984aa2c7" },
 
     // Test Vector 4 - 32-byte aligned plaintext
     { .name       = "Test Vector 4",
@@ -86,8 +86,8 @@ static const TestVector test_vectors[] = {
       .nonce      = "9a5c7e3f1b8d4a6c2e9f5b7d3a8c1e6f",
       .ad         = "",
       .plaintext  = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-      .ciphertext = "7a1fec5e947d2b972399109b4e779a4ec47fd2430a2e16b72eb721a25981a9b1",
-      .tag        = "7b3480ce03da1dcda77cdb742335badb" },
+      .ciphertext = "ad8a0a8a056d1584022c656b23bba01b9b39f54495681ef0764c838796b0ab90",
+      .tag        = "fd86bc44dda4966a386923bd29fac27c" },
 
     // Test Vector 5 - Single byte plaintext
     { .name       = "Test Vector 5",
@@ -95,8 +95,8 @@ static const TestVector test_vectors[] = {
       .nonce      = "2e7c9f5d3b8a4c6f1e9b5d7a3f8c2e4a",
       .ad         = "",
       .plaintext  = "ff",
-      .ciphertext = "1c",
-      .tag        = "fbbb10e0d508e706b5646a298edc5412" }
+      .ciphertext = "32",
+      .tag        = "15a55f0bbffc3d6bc6c192db1cb19768" }
 };
 
 static const size_t num_test_vectors = sizeof(test_vectors) / sizeof(test_vectors[0]);

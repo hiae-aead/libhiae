@@ -540,8 +540,8 @@ HiAEx2_finalize_mac_arm_sha3(HiAEx2_state_t *state_opaque, uint64_t data_len, ui
     degree_lens[0]       = degree;
     degree_lens[1]       = HIAEX2_MACBYTES * 8;
     DATA256b degree_temp = SIMD_LOADx2((uint8_t *) degree_lens);
-    init_update(state, tmp, degree_temp);
-    init_update(state, tmp, degree_temp);
+    init_update(state, tmp, degree_temp, degree_temp);
+    init_update(state, tmp, degree_temp, degree_temp);
 
     /* Step 5: Final MAC extraction using EOR3 for efficiency */
     acc0 = SIMD_XOR3(state[0], state[1], state[2]);
