@@ -4,7 +4,7 @@ HiAE is a high-performance, cross-platform cryptographic library implementing an
 
 ## Features
 
-- **High Performance**: Achieves over 200 Gbps throughput on modern CPUs, including ARM CPUs
+- **High Performance**: Achieves very high throughput on modern CPUs, including ARM CPUs
 - **Main Cipher**: HiAE with VAES+AVX512 support (16 parallel states, 256-byte unroll)
 - **Experimental Variants**:
   - **HiAEx2**: Benchmarking variant with VAES+AVX2 support (32-byte blocks, 512-byte unroll)
