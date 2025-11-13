@@ -336,8 +336,6 @@ HiAE_init_aesni(HiAE_state_t *state_opaque, const uint8_t *key, const uint8_t *n
     init_update(state, tmp, k0, k1);
     init_update(state, tmp, k0, k1);
 
-    state[9]  = SIMD_XOR(state[9], k0);
-    state[13] = SIMD_XOR(state[13], k1);
     memcpy(state_opaque->opaque, state, sizeof(state));
 }
 
