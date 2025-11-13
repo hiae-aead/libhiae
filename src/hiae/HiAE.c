@@ -487,6 +487,16 @@ hiae_init_dispatch(void)
 #    endif
     }
 #endif
+
+#ifdef SOFTAES_ENABLED
+    (void) softaes_block_zero;
+    (void) softaes_block_load;
+    (void) softaes_block_load64x2;
+    (void) softaes_block_store;
+    (void) softaes_block_xor;
+    (void) softaes_block_and;
+    (void) softaes_block_encrypt;
+#endif
 }
 
 // Public API function to initialize library

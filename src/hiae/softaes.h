@@ -1,6 +1,8 @@
 #ifndef SOFTAES_H
 #define SOFTAES_H
 
+#define SOFTAES_ENABLED
+
 #include <stdint.h>
 #include <string.h>
 
@@ -67,7 +69,7 @@ softaes_block_zero(void)
     return out;
 }
 
-__attribute__((unused)) static inline SoftAesBlock
+static inline SoftAesBlock
 softaes_block_load(const uint8_t in[16])
 {
     const SoftAesBlock out = { LOAD32_LE(in + 0), LOAD32_LE(in + 4), LOAD32_LE(in + 8),
@@ -413,7 +415,7 @@ softaes_block_xaesl(SoftAesBlock block, const SoftAesBlock prk)
     return softaes_block_aesl(block);
 }
 
-__attribute__((unused)) static inline SoftAesBlock
+static inline SoftAesBlock
 softaes_block_encrypt(const SoftAesBlock block, const SoftAesBlock rk)
 {
 
