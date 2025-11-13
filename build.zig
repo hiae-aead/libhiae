@@ -183,4 +183,19 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(performance_test);
     b.installArtifact(performance_x2_test);
     b.installArtifact(performance_x4_test);
+
+    // Create a test step
+    const test_step = b.step("test", "Run all tests");
+
+    // Add run steps for each test
+    const run_functions_test = b.addRunArtifact(functions_test);
+    const run_test_vectors_test = b.addRunArtifact(test_vectors_test);
+    const run_test_vectors_hiaex2_test = b.addRunArtifact(test_vectors_hiaex2_test);
+    const run_stream_test = b.addRunArtifact(stream_test);
+
+    // Add them as dependencies of the test step
+    test_step.dependOn(&run_functions_test.step);
+    test_step.dependOn(&run_test_vectors_test.step);
+    test_step.dependOn(&run_test_vectors_hiaex2_test.step);
+    test_step.dependOn(&run_stream_test.step);
 }
