@@ -67,7 +67,7 @@ softaes_block_zero(void)
     return out;
 }
 
-static inline SoftAesBlock
+__attribute__((unused)) static inline SoftAesBlock
 softaes_block_load(const uint8_t in[16])
 {
     const SoftAesBlock out = { LOAD32_LE(in + 0), LOAD32_LE(in + 4), LOAD32_LE(in + 8),
@@ -413,7 +413,7 @@ softaes_block_xaesl(SoftAesBlock block, const SoftAesBlock prk)
     return softaes_block_aesl(block);
 }
 
-static inline SoftAesBlock
+__attribute__((unused)) static inline SoftAesBlock
 softaes_block_encrypt(const SoftAesBlock block, const SoftAesBlock rk)
 {
 

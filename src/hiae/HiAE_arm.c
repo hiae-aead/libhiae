@@ -326,7 +326,6 @@ HiAE_init_arm(HiAE_state_t *state_opaque, const uint8_t *key, const uint8_t *non
     state[14]   = ze;
     state[15]   = SIMD_XOR(c0, c1);
 
-    DATA128b tmp[STATE];
     init_update(state, k0, k1);
     init_update(state, k0, k1);
 

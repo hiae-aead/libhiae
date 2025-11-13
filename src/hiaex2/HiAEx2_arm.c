@@ -411,7 +411,6 @@ HiAEx2_init_arm(HiAEx2_state_t *state_opaque, const uint8_t *key, const uint8_t 
         state[i] = SIMD_XOR(state[i], ctx);
     }
 
-    DATA256b tmp[STATE];
     init_update(state, k0, k1);
     init_update(state, k0, k1);
 
