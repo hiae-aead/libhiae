@@ -79,7 +79,7 @@ functional_test_work(size_t plain_len, size_t ad_len)
     return 0;
 }
 
-void
+int
 functional_test(void)
 {
     int result = 0;
@@ -110,6 +110,8 @@ functional_test(void)
     printf("passed: %d of total %d test cases.\n", result, REPEAT * size_group);
     printf("average AD len: %.2f Bytes \t average message len: %.2f Bytes\n",
            avg_ad / REPEAT / size_group, avg_len / REPEAT / size_group);
+
+    return result == REPEAT * size_group ? 0 : 1;
 }
 
 int
@@ -657,5 +659,5 @@ main(void)
         printf("API test failed !!!\n\n");
 
     printf("========HiAE Functional Test========\n");
-    functional_test();
+    return pass_API | functional_test();
 }
