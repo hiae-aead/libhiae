@@ -146,9 +146,220 @@ ad_update(DATA128b *state, DATA128b *tmp, const uint8_t *ad, size_t i)
     update_state_offset(state, tmp, M[15], 15);
 }
 
+/*
+ * Every output column is stored at once and followed by a memory barrier,
+ * or the compiler hoists all sixteen table loads of a round above their XOR
+ * consumers and register-poor targets (wasmtime) spill the lot.
+ *
+ * And we add an empty asm to prevent the vectorizer from using vector lanes.
+ */
+#    if (defined(__GNUC__) || defined(__clang__)) && defined(__BYTE_ORDER__) && \
+        __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+
+#        define TT_COL(xb, i0, i1, i2, i3) \
+            (LUT0[(xb)[i0]] ^ LUT1[(xb)[i1]] ^ LUT2[(xb)[i2]] ^ LUT3[(xb)[i3]])
+#        define TT_BARRIER() __asm__ __volatile__("" ::: "memory")
+
+#        define TT_ENC_STEP(o)                                                \
+            do {                                                              \
+                uint32_t       *S0   = w + (o) * 4;                           \
+                const uint32_t *S2   = w + ((((o) + 2) & 15) * 4);            \
+                uint32_t       *S3   = w + ((((o) + 3) & 15) * 4);            \
+                const uint32_t *S9   = w + ((((o) + 9) & 15) * 4);            \
+                uint32_t       *S13  = w + ((((o) + 13) & 15) * 4);           \
+                const uint8_t  *s13b = (const uint8_t *) S13;                 \
+                uint32_t       *pn   = psc + (((o) + 1) & 1) * 4;             \
+                const uint8_t  *pb   = (const uint8_t *) (psc + ((o) & 1) * 4); \
+                uint32_t        x0, x1, x2, x3, n0, n1, n2, n3, a;            \
+                n0    = S2[0];                                                \
+                n1    = S2[1];                                                \
+                n2    = S2[2];                                                \
+                n3    = S2[3];                                                \
+                pn[0] = cc0 ^ n0;                                             \
+                pn[1] = cc1 ^ n1;                                             \
+                pn[2] = cc2 ^ n2;                                             \
+                pn[3] = cc3 ^ n3;                                             \
+                __asm__("" : "+r"(pb));                                       \
+                x0 = LOAD32_LE(mi + (o) * 16);                                \
+                x1 = LOAD32_LE(mi + (o) * 16 + 4);                            \
+                x2 = LOAD32_LE(mi + (o) * 16 + 8);                            \
+                x3 = LOAD32_LE(mi + (o) * 16 + 12);                           \
+                __asm__("" : "+r"(x0), "+r"(x1), "+r"(x2), "+r"(x3));         \
+                a = x0 ^ TT_COL(pb, 0, 5, 10, 15);                            \
+                STORE32_LE(ci + (o) * 16, a ^ S9[0]);                         \
+                TT_BARRIER();                                                 \
+                S0[0] = a ^ TT_COL(s13b, 0, 5, 10, 15);                       \
+                TT_BARRIER();                                                 \
+                a = x1 ^ TT_COL(pb, 4, 9, 14, 3);                             \
+                STORE32_LE(ci + (o) * 16 + 4, a ^ S9[1]);                     \
+                TT_BARRIER();                                                 \
+                S0[1] = a ^ TT_COL(s13b, 4, 9, 14, 3);                        \
+                TT_BARRIER();                                                 \
+                a = x2 ^ TT_COL(pb, 8, 13, 2, 7);                             \
+                STORE32_LE(ci + (o) * 16 + 8, a ^ S9[2]);                     \
+                TT_BARRIER();                                                 \
+                S0[2] = a ^ TT_COL(s13b, 8, 13, 2, 7);                        \
+                TT_BARRIER();                                                 \
+                a = x3 ^ TT_COL(pb, 12, 1, 6, 11);                            \
+                STORE32_LE(ci + (o) * 16 + 12, a ^ S9[3]);                    \
+                TT_BARRIER();                                                 \
+                S0[3] = a ^ TT_COL(s13b, 12, 1, 6, 11);                       \
+                TT_BARRIER();                                                 \
+                S3[0] ^= x0;                                                  \
+                S3[1] ^= x1;                                                  \
+                S3[2] ^= x2;                                                  \
+                S3[3] ^= x3;                                                  \
+                TT_BARRIER();                                                 \
+                S13[0] ^= x0;                                                 \
+                S13[1] ^= x1;                                                 \
+                S13[2] ^= x2;                                                 \
+                S13[3] ^= x3;                                                 \
+                TT_BARRIER();                                                 \
+                cc0 = n0;                                                     \
+                cc1 = n1;                                                     \
+                cc2 = n2;                                                     \
+                cc3 = n3;                                                     \
+            } while (0)
+
+#        define TT_LAYOUT_ASSERT() \
+            (void) sizeof(char[(sizeof(DATA128b) == 16 && sizeof(DATA128b[16]) == 256) ? 1 : -1])
+
+static void __attribute__((noinline))
+encrypt_chunk_ttab(uint32_t *w, const uint8_t *mi, uint8_t *ci)
+{
+    uint32_t psc[8];
+    uint32_t cc0 = w[4], cc1 = w[5], cc2 = w[6], cc3 = w[7];
+
+    TT_LAYOUT_ASSERT();
+
+    psc[0] = w[0] ^ w[4];
+    psc[1] = w[1] ^ w[5];
+    psc[2] = w[2] ^ w[6];
+    psc[3] = w[3] ^ w[7];
+
+    TT_ENC_STEP(0);
+    TT_ENC_STEP(1);
+    TT_ENC_STEP(2);
+    TT_ENC_STEP(3);
+    TT_ENC_STEP(4);
+    TT_ENC_STEP(5);
+    TT_ENC_STEP(6);
+    TT_ENC_STEP(7);
+    TT_ENC_STEP(8);
+    TT_ENC_STEP(9);
+    TT_ENC_STEP(10);
+    TT_ENC_STEP(11);
+    TT_ENC_STEP(12);
+    TT_ENC_STEP(13);
+    TT_ENC_STEP(14);
+    TT_ENC_STEP(15);
+}
+
+#        define TT_DEC_STEP(o)                                                \
+            do {                                                              \
+                uint32_t       *S0   = w + (o) * 4;                           \
+                const uint32_t *S2   = w + ((((o) + 2) & 15) * 4);            \
+                uint32_t       *S3   = w + ((((o) + 3) & 15) * 4);            \
+                const uint32_t *S9   = w + ((((o) + 9) & 15) * 4);            \
+                uint32_t       *S13  = w + ((((o) + 13) & 15) * 4);           \
+                const uint8_t  *s13b = (const uint8_t *) S13;                 \
+                uint32_t       *pn   = psc + (((o) + 1) & 1) * 4;             \
+                const uint8_t  *pb   = (const uint8_t *) (psc + ((o) & 1) * 4); \
+                uint32_t        t0, t1, t2, t3, m0, m1, m2, m3;               \
+                uint32_t        n0, n1, n2, n3;                               \
+                n0    = S2[0];                                                \
+                n1    = S2[1];                                                \
+                n2    = S2[2];                                                \
+                n3    = S2[3];                                                \
+                pn[0] = cc0 ^ n0;                                             \
+                pn[1] = cc1 ^ n1;                                             \
+                pn[2] = cc2 ^ n2;                                             \
+                pn[3] = cc3 ^ n3;                                             \
+                __asm__("" : "+r"(pb));                                       \
+                t0 = LOAD32_LE(ci + (o) * 16) ^ S9[0];                        \
+                t1 = LOAD32_LE(ci + (o) * 16 + 4) ^ S9[1];                    \
+                t2 = LOAD32_LE(ci + (o) * 16 + 8) ^ S9[2];                    \
+                t3 = LOAD32_LE(ci + (o) * 16 + 12) ^ S9[3];                   \
+                m0 = t0 ^ TT_COL(pb, 0, 5, 10, 15);                           \
+                TT_BARRIER();                                                 \
+                m1 = t1 ^ TT_COL(pb, 4, 9, 14, 3);                            \
+                TT_BARRIER();                                                 \
+                m2 = t2 ^ TT_COL(pb, 8, 13, 2, 7);                            \
+                TT_BARRIER();                                                 \
+                m3 = t3 ^ TT_COL(pb, 12, 1, 6, 11);                           \
+                TT_BARRIER();                                                 \
+                STORE32_LE(mi + (o) * 16, m0);                                \
+                STORE32_LE(mi + (o) * 16 + 4, m1);                            \
+                STORE32_LE(mi + (o) * 16 + 8, m2);                            \
+                STORE32_LE(mi + (o) * 16 + 12, m3);                           \
+                S0[0] = t0 ^ TT_COL(s13b, 0, 5, 10, 15);                      \
+                TT_BARRIER();                                                 \
+                S0[1] = t1 ^ TT_COL(s13b, 4, 9, 14, 3);                       \
+                TT_BARRIER();                                                 \
+                S0[2] = t2 ^ TT_COL(s13b, 8, 13, 2, 7);                       \
+                TT_BARRIER();                                                 \
+                S0[3] = t3 ^ TT_COL(s13b, 12, 1, 6, 11);                      \
+                TT_BARRIER();                                                 \
+                S3[0] ^= m0;                                                  \
+                S3[1] ^= m1;                                                  \
+                S3[2] ^= m2;                                                  \
+                S3[3] ^= m3;                                                  \
+                S13[0] ^= m0;                                                 \
+                S13[1] ^= m1;                                                 \
+                S13[2] ^= m2;                                                 \
+                S13[3] ^= m3;                                                 \
+                cc0 = n0;                                                     \
+                cc1 = n1;                                                     \
+                cc2 = n2;                                                     \
+                cc3 = n3;                                                     \
+            } while (0)
+
+static void __attribute__((noinline))
+decrypt_chunk_ttab(uint32_t *w, const uint8_t *ci, uint8_t *mi)
+{
+    uint32_t psc[8];
+    uint32_t cc0 = w[4], cc1 = w[5], cc2 = w[6], cc3 = w[7];
+
+    TT_LAYOUT_ASSERT();
+
+    psc[0] = w[0] ^ w[4];
+    psc[1] = w[1] ^ w[5];
+    psc[2] = w[2] ^ w[6];
+    psc[3] = w[3] ^ w[7];
+
+    TT_DEC_STEP(0);
+    TT_DEC_STEP(1);
+    TT_DEC_STEP(2);
+    TT_DEC_STEP(3);
+    TT_DEC_STEP(4);
+    TT_DEC_STEP(5);
+    TT_DEC_STEP(6);
+    TT_DEC_STEP(7);
+    TT_DEC_STEP(8);
+    TT_DEC_STEP(9);
+    TT_DEC_STEP(10);
+    TT_DEC_STEP(11);
+    TT_DEC_STEP(12);
+    TT_DEC_STEP(13);
+    TT_DEC_STEP(14);
+    TT_DEC_STEP(15);
+}
+
+#        undef TT_ENC_STEP
+#        undef TT_DEC_STEP
+#        undef TT_COL
+#        undef TT_BARRIER
+#        undef TT_LAYOUT_ASSERT
+
+#        define HIAE_TTAB_CHUNKS 1
+#    endif
+
 static inline void
 encrypt_chunk(DATA128b *state, const uint8_t *mi, uint8_t *ci, size_t i)
 {
+#    ifdef HIAE_TTAB_CHUNKS
+    encrypt_chunk_ttab((uint32_t *) (void *) state, mi + i, ci + i);
+#    else
     DATA128b M[16], C[16];
     LOAD_1BLOCK_offset_enc(M[0], 0);
     LOAD_1BLOCK_offset_enc(M[1], 1);
@@ -198,11 +409,16 @@ encrypt_chunk(DATA128b *state, const uint8_t *mi, uint8_t *ci, size_t i)
     STORE_1BLOCK_offset_enc(C[13], 13);
     STORE_1BLOCK_offset_enc(C[14], 14);
     STORE_1BLOCK_offset_enc(C[15], 15);
+#    endif
 }
 
 static inline void
 decrypt_chunk(DATA128b *state, DATA128b *tmp, const uint8_t *ci, uint8_t *mi, size_t i)
 {
+#    ifdef HIAE_TTAB_CHUNKS
+    (void) tmp;
+    decrypt_chunk_ttab((uint32_t *) (void *) state, ci + i, mi + i);
+#    else
     DATA128b M[16], C[16];
     LOAD_1BLOCK_offset_dec(C[0], 0);
     LOAD_1BLOCK_offset_dec(C[1], 1);
@@ -252,6 +468,7 @@ decrypt_chunk(DATA128b *state, DATA128b *tmp, const uint8_t *ci, uint8_t *mi, si
     STORE_1BLOCK_offset_dec(M[13], 13);
     STORE_1BLOCK_offset_dec(M[14], 14);
     STORE_1BLOCK_offset_dec(M[15], 15);
+#    endif
 }
 
 static void
