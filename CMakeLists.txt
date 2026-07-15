@@ -77,6 +77,20 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64|AMD64)")
     endif()
 endif()
 
+# WebAssembly: the software path has a much faster vector-permute AES when
+# SIMD128 is available; relaxed-simd swizzles map to a single pshufb on x86
+# engines such as V8 and wasmtime.
+#
+# Turn HIAE_WASM_RELAXED_SIMD off for engines that support simd128 but not
+# relaxed-simd.
+option(HIAE_WASM_RELAXED_SIMD "Use relaxed SIMD on WebAssembly targets" ON)
+if(EMSCRIPTEN OR CMAKE_SYSTEM_PROCESSOR MATCHES "^wasm")
+    target_compile_options("${PROJECT_NAME}" PRIVATE -msimd128)
+    if(HIAE_WASM_RELAXED_SIMD)
+        target_compile_options("${PROJECT_NAME}" PRIVATE -mrelaxed-simd)
+    endif()
+endif()
+
 # Check for -mtune=native support
 include(CheckCCompilerFlag)
 if(NOT MSVC)

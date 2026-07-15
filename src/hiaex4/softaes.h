@@ -53,6 +53,179 @@ rotl32(const uint32_t x, const int b)
     return (x << b) | (x >> (32 - b));
 }
 
+#if defined(__wasm_simd128__) && !defined(SOFTAES_NO_SIMD)
+
+#    include <wasm_simd128.h>
+
+#    define SOFTAES_SIMD128 1
+
+typedef v128_t SoftAesBlock;
+
+#    if defined(__wasm_relaxed_simd__)
+#        define SOFTAES_SWIZZLE(T, I) wasm_i8x16_relaxed_swizzle((T), (I))
+#    else
+#        define SOFTAES_SWIZZLE(T, I) wasm_i8x16_swizzle((T), (I))
+#    endif
+
+static inline SoftAesBlock
+softaes_block_zero(void)
+{
+    return wasm_u8x16_const_splat(0);
+}
+
+static inline SoftAesBlock
+softaes_block_load(const uint8_t in[16])
+{
+    return wasm_v128_load(in);
+}
+
+static inline SoftAesBlock
+softaes_block_load64x2(const uint64_t a, const uint64_t b)
+{
+    return wasm_u64x2_make(b, a);
+}
+
+static inline void
+softaes_block_store(uint8_t out[16], const SoftAesBlock in)
+{
+    wasm_v128_store(out, in);
+}
+
+static inline SoftAesBlock
+softaes_block_xor(const SoftAesBlock a, const SoftAesBlock b)
+{
+    return wasm_v128_xor(a, b);
+}
+
+static inline SoftAesBlock
+softaes_block_and(const SoftAesBlock a, const SoftAesBlock b)
+{
+    return wasm_v128_and(a, b);
+}
+
+/*
+ * All v128 constants live in linear memory rather than as v128.const: V8
+ * rematerializes each v128.const from immediates (4+ instructions per use)
+ * while a table load is a single instruction. External linkage keeps LLVM
+ * from folding the loads back into constants, which is also why the array
+ * is deliberately not const. It is defined in this header because exactly
+ * one translation unit per library includes it.
+ *
+ * Rows: the vpaes tables, a doubled S-box output pair (sbo2 = xtime(sbo),
+ * which replaces the xtime computation in MixColumns), four
+ * ShiftRows+rotate byte permutations, and splat masks.
+ */
+CRYPTO_ALIGN(64)
+uint8_t hiaex4_softaes_simd_tables[14][16] = {
+    { 0x00, 0x70, 0x2a, 0x5a, 0x98, 0xe8, 0xb2, 0xc2, 0x08, 0x78, 0x22, 0x52, 0x90, 0xe0, 0xba,
+      0xca }, /* ipt_lo */
+    { 0x00, 0x4d, 0x7c, 0x31, 0x7d, 0x30, 0x01, 0x4c, 0x81, 0xcc, 0xfd, 0xb0, 0xfc, 0xb1, 0x80,
+      0xcd }, /* ipt_hi */
+    { 0x80, 0x01, 0x08, 0x0d, 0x0f, 0x06, 0x05, 0x0e, 0x02, 0x0c, 0x0b, 0x0a, 0x09, 0x03, 0x07,
+      0x04 }, /* inv */
+    { 0x80, 0x07, 0x0b, 0x0f, 0x06, 0x0a, 0x04, 0x01, 0x09, 0x08, 0x05, 0x02, 0x0c, 0x0e, 0x0d,
+      0x03 }, /* inva */
+    { 0x00, 0xc7, 0xbd, 0x6f, 0x17, 0x6d, 0xd2, 0xd0, 0x78, 0xa8, 0x02, 0xc5, 0x7a, 0xbf, 0xaa,
+      0x15 }, /* sbo_u */
+    { 0x00, 0x6a, 0xbb, 0x5f, 0xa5, 0x74, 0xe4, 0xcf, 0xfa, 0x35, 0x2b, 0x41, 0xd1, 0x90, 0x1e,
+      0x8e }, /* sbo_t */
+    { 0x00, 0x95, 0x61, 0xde, 0x2e, 0xda, 0xbf, 0xbb, 0xf0, 0x4b, 0x04, 0x91, 0xf4, 0x65, 0x4f,
+      0x2a }, /* sbo2_u = xtime(sbo_u) */
+    { 0x00, 0xd4, 0x6d, 0xbe, 0x51, 0xe8, 0xd3, 0x85, 0xef, 0x6a, 0x56, 0x82, 0xb9, 0x3b, 0x3c,
+      0x07 }, /* sbo2_t = xtime(sbo_t) */
+    { 0x00, 0x05, 0x0a, 0x0f, 0x04, 0x09, 0x0e, 0x03, 0x08, 0x0d, 0x02, 0x07, 0x0c, 0x01, 0x06,
+      0x0b }, /* ShiftRows */
+    { 0x05, 0x0a, 0x0f, 0x00, 0x09, 0x0e, 0x03, 0x04, 0x0d, 0x02, 0x07, 0x08, 0x01, 0x06, 0x0b,
+      0x0c }, /* ShiftRows + column rotate 1 */
+    { 0x0a, 0x0f, 0x00, 0x05, 0x0e, 0x03, 0x04, 0x09, 0x02, 0x07, 0x08, 0x0d, 0x06, 0x0b, 0x0c,
+      0x01 }, /* ShiftRows + column rotate 2 */
+    { 0x0f, 0x00, 0x05, 0x0a, 0x03, 0x04, 0x09, 0x0e, 0x07, 0x08, 0x0d, 0x02, 0x0b, 0x0c, 0x01,
+      0x06 }, /* ShiftRows + column rotate 3 */
+    { 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f,
+      0x0f }, /* 0x0f splat */
+    { 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
+      0x63 }, /* 0x63 splat (S-box affine constant) */
+};
+
+/* AES round without the S-box affine constant: the returned value is the
+ * true AESL output XOR 0x63 in every byte. Callers that combine two AESL
+ * outputs can skip the constant entirely as it cancels; others add it back
+ * via softaes_block_c63(). */
+static inline SoftAesBlock
+softaes_block_aesl_nc(const SoftAesBlock x)
+{
+    const v128_t ipt_lo = wasm_v128_load(hiaex4_softaes_simd_tables[0]);
+    const v128_t ipt_hi = wasm_v128_load(hiaex4_softaes_simd_tables[1]);
+    const v128_t inv    = wasm_v128_load(hiaex4_softaes_simd_tables[2]);
+    const v128_t inva   = wasm_v128_load(hiaex4_softaes_simd_tables[3]);
+    const v128_t sbo_u  = wasm_v128_load(hiaex4_softaes_simd_tables[4]);
+    const v128_t sbo_t  = wasm_v128_load(hiaex4_softaes_simd_tables[5]);
+    const v128_t sbo2_u = wasm_v128_load(hiaex4_softaes_simd_tables[6]);
+    const v128_t sbo2_t = wasm_v128_load(hiaex4_softaes_simd_tables[7]);
+    const v128_t mc0    = wasm_v128_load(hiaex4_softaes_simd_tables[8]);
+    const v128_t mc1    = wasm_v128_load(hiaex4_softaes_simd_tables[9]);
+    const v128_t mc2    = wasm_v128_load(hiaex4_softaes_simd_tables[10]);
+    const v128_t mc3    = wasm_v128_load(hiaex4_softaes_simd_tables[11]);
+    const v128_t s0f    = wasm_v128_load(hiaex4_softaes_simd_tables[12]);
+
+    /* to tower basis; 16-bit shifts keep V8 from materializing byte-shift
+     * masks, the 0x0f mask makes them byte-exact */
+    const v128_t lo = wasm_v128_and(x, s0f);
+    const v128_t hi = wasm_v128_and(wasm_u16x8_shr(x, 4), s0f);
+    const v128_t t  = wasm_v128_xor(SOFTAES_SWIZZLE(ipt_lo, lo), SOFTAES_SWIZZLE(ipt_hi, hi));
+
+    /* GF(16)^2 inversion */
+    const v128_t k   = wasm_v128_and(t, s0f);
+    const v128_t i   = wasm_v128_and(wasm_u16x8_shr(t, 4), s0f);
+    const v128_t j   = wasm_v128_xor(k, i);
+    const v128_t ak  = SOFTAES_SWIZZLE(inva, k);
+    const v128_t iak = wasm_v128_xor(SOFTAES_SWIZZLE(inv, i), ak);
+    const v128_t jak = wasm_v128_xor(SOFTAES_SWIZZLE(inv, j), ak);
+    const v128_t io  = wasm_v128_xor(SOFTAES_SWIZZLE(inv, iak), j);
+    const v128_t jo  = wasm_v128_xor(SOFTAES_SWIZZLE(inv, jak), i);
+
+    /* SubBytes output a and its double a2, standard basis, affine constant
+     * omitted (a uniform 0x63 is invariant under ShiftRows+MixColumns, so
+     * the omission propagates as a plain 0x63 XOR on the result) */
+    const v128_t a  = wasm_v128_xor(SOFTAES_SWIZZLE(sbo_u, io), SOFTAES_SWIZZLE(sbo_t, jo));
+    const v128_t a2 = wasm_v128_xor(SOFTAES_SWIZZLE(sbo2_u, io), SOFTAES_SWIZZLE(sbo2_t, jo));
+
+    /* ShiftRows and MixColumns: 2*v ^ 3*rot1(v) ^ rot2(v) ^ rot3(v) with all
+     * byte permutations precomposed into the mc masks */
+    const v128_t m0 = SOFTAES_SWIZZLE(a2, mc0);
+    const v128_t m1 = SOFTAES_SWIZZLE(wasm_v128_xor(a, a2), mc1);
+    const v128_t m2 = SOFTAES_SWIZZLE(a, mc2);
+    const v128_t m3 = SOFTAES_SWIZZLE(a, mc3);
+
+    return wasm_v128_xor(wasm_v128_xor(m0, m1), wasm_v128_xor(m2, m3));
+}
+
+static inline SoftAesBlock
+softaes_block_c63(void)
+{
+    return wasm_v128_load(hiaex4_softaes_simd_tables[13]);
+}
+
+static inline SoftAesBlock
+softaes_block_aesl(const SoftAesBlock x)
+{
+    return wasm_v128_xor(softaes_block_aesl_nc(x), softaes_block_c63());
+}
+
+static inline SoftAesBlock
+softaes_block_xaesl(const SoftAesBlock block, const SoftAesBlock prk)
+{
+    return softaes_block_aesl(wasm_v128_xor(block, prk));
+}
+
+static inline SoftAesBlock
+softaes_block_encrypt(const SoftAesBlock block, const SoftAesBlock rk)
+{
+    return wasm_v128_xor(softaes_block_aesl(block), rk);
+}
+
+#else /* scalar implementation */
+
 typedef struct SoftAesBlock {
     uint32_t w0;
     uint32_t w1;
@@ -425,5 +598,7 @@ softaes_block_encrypt(const SoftAesBlock block, const SoftAesBlock rk)
 
     return out;
 }
+
+#endif /* __wasm_simd128__ && !SOFTAES_NO_SIMD */
 
 #endif /* SOFTAES_H */

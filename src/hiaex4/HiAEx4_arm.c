@@ -110,7 +110,7 @@ SIMD_FOLD(const DATA512b x)
 }
 
 static inline DATA512b
-SIMD_ZERO_256(void)
+SIMD_ZERO_512(void)
 {
     DATA512b result;
     result.data[0] = vmovq_n_u8(0);
@@ -131,7 +131,7 @@ XAESL(const DATA512b x, const DATA512b y)
     return result;
 }
 
-#    define AESL(x) XAESL(x, SIMD_ZERO_256())
+#    define AESL(x) XAESL(x, SIMD_ZERO_512())
 
 static inline void
 update_state_offset(DATA512b *state, DATA512b M, int offset)
@@ -397,7 +397,7 @@ HiAEx4_init_arm(HiAEx4_state_t *state_opaque, const uint8_t *key, const uint8_t 
     DATA512b k1 = SIMD_LOADx4(key + 16);
     DATA512b N  = SIMD_LOADx4(nonce);
 
-    DATA512b ze = SIMD_ZERO_256();
+    DATA512b ze = SIMD_ZERO_512();
     state[0]    = c0;
     state[1]    = k0;
     state[2]    = c0;

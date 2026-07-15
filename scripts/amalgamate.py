@@ -49,6 +49,9 @@ SCOPED_MACROS = [
     "AESENC",
     "AESL",
     "XAESL",
+    "AESL_NC",
+    "XAESL_NC",
+    "AESL_C63",
     "PREFETCH_READ",
     "PREFETCH_WRITE",
     "PREFETCH_DISTANCE"
@@ -266,6 +269,9 @@ def create_amalgamation():
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
 #    include <intrin.h>
 #endif
+#ifdef __wasm_simd128__
+#    include <wasm_simd128.h>
+#endif
 
 /* Architecture-specific intrinsics */
 #if defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_AMD64)
@@ -325,7 +331,9 @@ extern "C" {{
         if softaes_content:
             softaes_body = softaes_content.group(1)
             softaes_body = re.sub(r'#include\s+<[^>]+>', '', softaes_body)
-            amalgamated_content += f"\n/* Software AES implementation from softaes.h */\n{softaes_body}\n"
+            # HiAE_software.c defines FAVOR_PERFORMANCE before including softaes.h
+            amalgamated_content += ("\n/* Software AES implementation from softaes.h */\n"
+                                    f"#define FAVOR_PERFORMANCE\n{softaes_body}\n")
     
     # Add implementation files
     implementation_files = [

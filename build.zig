@@ -1,9 +1,24 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
+    var target = b.standardTargetOptions(.{});
     const optimize = .ReleaseFast;
     const version = std.SemanticVersion.parse("0.2.3") catch unreachable;
+
+    // Use -Dwasm-relaxed-simd=false to keep baseline SIMD128 only.
+    const wasm_relaxed = b.option(
+        bool,
+        "wasm-relaxed-simd",
+        "Use relaxed SIMD on WebAssembly targets (default: true)",
+    ) orelse true;
+    if (target.result.cpu.arch.isWasm() and target.query.cpu_model == .determined_by_arch_os) {
+        var query = target.query;
+        query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.simd128));
+        if (wasm_relaxed) {
+            query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.relaxed_simd));
+        }
+        target = b.resolveTargetQuery(query);
+    }
 
     const lib_mod = b.createModule(.{
         .target = target,
