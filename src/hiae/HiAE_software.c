@@ -160,65 +160,65 @@ ad_update(DATA128b *state, DATA128b *tmp, const uint8_t *ad, size_t i)
             (LUT0[(xb)[i0]] ^ LUT1[(xb)[i1]] ^ LUT2[(xb)[i2]] ^ LUT3[(xb)[i3]])
 #        define TT_BARRIER() __asm__ __volatile__("" ::: "memory")
 
-#        define TT_ENC_STEP(o)                                                \
-            do {                                                              \
-                uint32_t       *S0   = w + (o) * 4;                           \
-                const uint32_t *S2   = w + ((((o) + 2) & 15) * 4);            \
-                uint32_t       *S3   = w + ((((o) + 3) & 15) * 4);            \
-                const uint32_t *S9   = w + ((((o) + 9) & 15) * 4);            \
-                uint32_t       *S13  = w + ((((o) + 13) & 15) * 4);           \
-                const uint8_t  *s13b = (const uint8_t *) S13;                 \
-                uint32_t       *pn   = psc + (((o) + 1) & 1) * 4;             \
+#        define TT_ENC_STEP(o)                                                  \
+            do {                                                                \
+                uint32_t       *S0   = w + (o) * 4;                             \
+                const uint32_t *S2   = w + ((((o) + 2) & 15) * 4);              \
+                uint32_t       *S3   = w + ((((o) + 3) & 15) * 4);              \
+                const uint32_t *S9   = w + ((((o) + 9) & 15) * 4);              \
+                uint32_t       *S13  = w + ((((o) + 13) & 15) * 4);             \
+                const uint8_t  *s13b = (const uint8_t *) S13;                   \
+                uint32_t       *pn   = psc + (((o) + 1) & 1) * 4;               \
                 const uint8_t  *pb   = (const uint8_t *) (psc + ((o) & 1) * 4); \
-                uint32_t        x0, x1, x2, x3, n0, n1, n2, n3, a;            \
-                n0    = S2[0];                                                \
-                n1    = S2[1];                                                \
-                n2    = S2[2];                                                \
-                n3    = S2[3];                                                \
-                pn[0] = cc0 ^ n0;                                             \
-                pn[1] = cc1 ^ n1;                                             \
-                pn[2] = cc2 ^ n2;                                             \
-                pn[3] = cc3 ^ n3;                                             \
-                __asm__("" : "+r"(pb));                                       \
-                x0 = LOAD32_LE(mi + (o) * 16);                                \
-                x1 = LOAD32_LE(mi + (o) * 16 + 4);                            \
-                x2 = LOAD32_LE(mi + (o) * 16 + 8);                            \
-                x3 = LOAD32_LE(mi + (o) * 16 + 12);                           \
-                __asm__("" : "+r"(x0), "+r"(x1), "+r"(x2), "+r"(x3));         \
-                a = x0 ^ TT_COL(pb, 0, 5, 10, 15);                            \
-                STORE32_LE(ci + (o) * 16, a ^ S9[0]);                         \
-                TT_BARRIER();                                                 \
-                S0[0] = a ^ TT_COL(s13b, 0, 5, 10, 15);                       \
-                TT_BARRIER();                                                 \
-                a = x1 ^ TT_COL(pb, 4, 9, 14, 3);                             \
-                STORE32_LE(ci + (o) * 16 + 4, a ^ S9[1]);                     \
-                TT_BARRIER();                                                 \
-                S0[1] = a ^ TT_COL(s13b, 4, 9, 14, 3);                        \
-                TT_BARRIER();                                                 \
-                a = x2 ^ TT_COL(pb, 8, 13, 2, 7);                             \
-                STORE32_LE(ci + (o) * 16 + 8, a ^ S9[2]);                     \
-                TT_BARRIER();                                                 \
-                S0[2] = a ^ TT_COL(s13b, 8, 13, 2, 7);                        \
-                TT_BARRIER();                                                 \
-                a = x3 ^ TT_COL(pb, 12, 1, 6, 11);                            \
-                STORE32_LE(ci + (o) * 16 + 12, a ^ S9[3]);                    \
-                TT_BARRIER();                                                 \
-                S0[3] = a ^ TT_COL(s13b, 12, 1, 6, 11);                       \
-                TT_BARRIER();                                                 \
-                S3[0] ^= x0;                                                  \
-                S3[1] ^= x1;                                                  \
-                S3[2] ^= x2;                                                  \
-                S3[3] ^= x3;                                                  \
-                TT_BARRIER();                                                 \
-                S13[0] ^= x0;                                                 \
-                S13[1] ^= x1;                                                 \
-                S13[2] ^= x2;                                                 \
-                S13[3] ^= x3;                                                 \
-                TT_BARRIER();                                                 \
-                cc0 = n0;                                                     \
-                cc1 = n1;                                                     \
-                cc2 = n2;                                                     \
-                cc3 = n3;                                                     \
+                uint32_t        x0, x1, x2, x3, n0, n1, n2, n3, a;              \
+                n0    = S2[0];                                                  \
+                n1    = S2[1];                                                  \
+                n2    = S2[2];                                                  \
+                n3    = S2[3];                                                  \
+                pn[0] = cc0 ^ n0;                                               \
+                pn[1] = cc1 ^ n1;                                               \
+                pn[2] = cc2 ^ n2;                                               \
+                pn[3] = cc3 ^ n3;                                               \
+                __asm__("" : "+r"(pb));                                         \
+                x0 = LOAD32_LE(mi + (o) * 16);                                  \
+                x1 = LOAD32_LE(mi + (o) * 16 + 4);                              \
+                x2 = LOAD32_LE(mi + (o) * 16 + 8);                              \
+                x3 = LOAD32_LE(mi + (o) * 16 + 12);                             \
+                __asm__("" : "+r"(x0), "+r"(x1), "+r"(x2), "+r"(x3));           \
+                a = x0 ^ TT_COL(pb, 0, 5, 10, 15);                              \
+                STORE32_LE(ci + (o) * 16, a ^ S9[0]);                           \
+                TT_BARRIER();                                                   \
+                S0[0] = a ^ TT_COL(s13b, 0, 5, 10, 15);                         \
+                TT_BARRIER();                                                   \
+                a = x1 ^ TT_COL(pb, 4, 9, 14, 3);                               \
+                STORE32_LE(ci + (o) * 16 + 4, a ^ S9[1]);                       \
+                TT_BARRIER();                                                   \
+                S0[1] = a ^ TT_COL(s13b, 4, 9, 14, 3);                          \
+                TT_BARRIER();                                                   \
+                a = x2 ^ TT_COL(pb, 8, 13, 2, 7);                               \
+                STORE32_LE(ci + (o) * 16 + 8, a ^ S9[2]);                       \
+                TT_BARRIER();                                                   \
+                S0[2] = a ^ TT_COL(s13b, 8, 13, 2, 7);                          \
+                TT_BARRIER();                                                   \
+                a = x3 ^ TT_COL(pb, 12, 1, 6, 11);                              \
+                STORE32_LE(ci + (o) * 16 + 12, a ^ S9[3]);                      \
+                TT_BARRIER();                                                   \
+                S0[3] = a ^ TT_COL(s13b, 12, 1, 6, 11);                         \
+                TT_BARRIER();                                                   \
+                S3[0] ^= x0;                                                    \
+                S3[1] ^= x1;                                                    \
+                S3[2] ^= x2;                                                    \
+                S3[3] ^= x3;                                                    \
+                TT_BARRIER();                                                   \
+                S13[0] ^= x0;                                                   \
+                S13[1] ^= x1;                                                   \
+                S13[2] ^= x2;                                                   \
+                S13[3] ^= x3;                                                   \
+                TT_BARRIER();                                                   \
+                cc0 = n0;                                                       \
+                cc1 = n1;                                                       \
+                cc2 = n2;                                                       \
+                cc3 = n3;                                                       \
             } while (0)
 
 #        define TT_LAYOUT_ASSERT() \
@@ -255,63 +255,63 @@ encrypt_chunk_ttab(uint32_t *w, const uint8_t *mi, uint8_t *ci)
     TT_ENC_STEP(15);
 }
 
-#        define TT_DEC_STEP(o)                                                \
-            do {                                                              \
-                uint32_t       *S0   = w + (o) * 4;                           \
-                const uint32_t *S2   = w + ((((o) + 2) & 15) * 4);            \
-                uint32_t       *S3   = w + ((((o) + 3) & 15) * 4);            \
-                const uint32_t *S9   = w + ((((o) + 9) & 15) * 4);            \
-                uint32_t       *S13  = w + ((((o) + 13) & 15) * 4);           \
-                const uint8_t  *s13b = (const uint8_t *) S13;                 \
-                uint32_t       *pn   = psc + (((o) + 1) & 1) * 4;             \
+#        define TT_DEC_STEP(o)                                                  \
+            do {                                                                \
+                uint32_t       *S0   = w + (o) * 4;                             \
+                const uint32_t *S2   = w + ((((o) + 2) & 15) * 4);              \
+                uint32_t       *S3   = w + ((((o) + 3) & 15) * 4);              \
+                const uint32_t *S9   = w + ((((o) + 9) & 15) * 4);              \
+                uint32_t       *S13  = w + ((((o) + 13) & 15) * 4);             \
+                const uint8_t  *s13b = (const uint8_t *) S13;                   \
+                uint32_t       *pn   = psc + (((o) + 1) & 1) * 4;               \
                 const uint8_t  *pb   = (const uint8_t *) (psc + ((o) & 1) * 4); \
-                uint32_t        t0, t1, t2, t3, m0, m1, m2, m3;               \
-                uint32_t        n0, n1, n2, n3;                               \
-                n0    = S2[0];                                                \
-                n1    = S2[1];                                                \
-                n2    = S2[2];                                                \
-                n3    = S2[3];                                                \
-                pn[0] = cc0 ^ n0;                                             \
-                pn[1] = cc1 ^ n1;                                             \
-                pn[2] = cc2 ^ n2;                                             \
-                pn[3] = cc3 ^ n3;                                             \
-                __asm__("" : "+r"(pb));                                       \
-                t0 = LOAD32_LE(ci + (o) * 16) ^ S9[0];                        \
-                t1 = LOAD32_LE(ci + (o) * 16 + 4) ^ S9[1];                    \
-                t2 = LOAD32_LE(ci + (o) * 16 + 8) ^ S9[2];                    \
-                t3 = LOAD32_LE(ci + (o) * 16 + 12) ^ S9[3];                   \
-                m0 = t0 ^ TT_COL(pb, 0, 5, 10, 15);                           \
-                TT_BARRIER();                                                 \
-                m1 = t1 ^ TT_COL(pb, 4, 9, 14, 3);                            \
-                TT_BARRIER();                                                 \
-                m2 = t2 ^ TT_COL(pb, 8, 13, 2, 7);                            \
-                TT_BARRIER();                                                 \
-                m3 = t3 ^ TT_COL(pb, 12, 1, 6, 11);                           \
-                TT_BARRIER();                                                 \
-                STORE32_LE(mi + (o) * 16, m0);                                \
-                STORE32_LE(mi + (o) * 16 + 4, m1);                            \
-                STORE32_LE(mi + (o) * 16 + 8, m2);                            \
-                STORE32_LE(mi + (o) * 16 + 12, m3);                           \
-                S0[0] = t0 ^ TT_COL(s13b, 0, 5, 10, 15);                      \
-                TT_BARRIER();                                                 \
-                S0[1] = t1 ^ TT_COL(s13b, 4, 9, 14, 3);                       \
-                TT_BARRIER();                                                 \
-                S0[2] = t2 ^ TT_COL(s13b, 8, 13, 2, 7);                       \
-                TT_BARRIER();                                                 \
-                S0[3] = t3 ^ TT_COL(s13b, 12, 1, 6, 11);                      \
-                TT_BARRIER();                                                 \
-                S3[0] ^= m0;                                                  \
-                S3[1] ^= m1;                                                  \
-                S3[2] ^= m2;                                                  \
-                S3[3] ^= m3;                                                  \
-                S13[0] ^= m0;                                                 \
-                S13[1] ^= m1;                                                 \
-                S13[2] ^= m2;                                                 \
-                S13[3] ^= m3;                                                 \
-                cc0 = n0;                                                     \
-                cc1 = n1;                                                     \
-                cc2 = n2;                                                     \
-                cc3 = n3;                                                     \
+                uint32_t        t0, t1, t2, t3, m0, m1, m2, m3;                 \
+                uint32_t        n0, n1, n2, n3;                                 \
+                n0    = S2[0];                                                  \
+                n1    = S2[1];                                                  \
+                n2    = S2[2];                                                  \
+                n3    = S2[3];                                                  \
+                pn[0] = cc0 ^ n0;                                               \
+                pn[1] = cc1 ^ n1;                                               \
+                pn[2] = cc2 ^ n2;                                               \
+                pn[3] = cc3 ^ n3;                                               \
+                __asm__("" : "+r"(pb));                                         \
+                t0 = LOAD32_LE(ci + (o) * 16) ^ S9[0];                          \
+                t1 = LOAD32_LE(ci + (o) * 16 + 4) ^ S9[1];                      \
+                t2 = LOAD32_LE(ci + (o) * 16 + 8) ^ S9[2];                      \
+                t3 = LOAD32_LE(ci + (o) * 16 + 12) ^ S9[3];                     \
+                m0 = t0 ^ TT_COL(pb, 0, 5, 10, 15);                             \
+                TT_BARRIER();                                                   \
+                m1 = t1 ^ TT_COL(pb, 4, 9, 14, 3);                              \
+                TT_BARRIER();                                                   \
+                m2 = t2 ^ TT_COL(pb, 8, 13, 2, 7);                              \
+                TT_BARRIER();                                                   \
+                m3 = t3 ^ TT_COL(pb, 12, 1, 6, 11);                             \
+                TT_BARRIER();                                                   \
+                STORE32_LE(mi + (o) * 16, m0);                                  \
+                STORE32_LE(mi + (o) * 16 + 4, m1);                              \
+                STORE32_LE(mi + (o) * 16 + 8, m2);                              \
+                STORE32_LE(mi + (o) * 16 + 12, m3);                             \
+                S0[0] = t0 ^ TT_COL(s13b, 0, 5, 10, 15);                        \
+                TT_BARRIER();                                                   \
+                S0[1] = t1 ^ TT_COL(s13b, 4, 9, 14, 3);                         \
+                TT_BARRIER();                                                   \
+                S0[2] = t2 ^ TT_COL(s13b, 8, 13, 2, 7);                         \
+                TT_BARRIER();                                                   \
+                S0[3] = t3 ^ TT_COL(s13b, 12, 1, 6, 11);                        \
+                TT_BARRIER();                                                   \
+                S3[0] ^= m0;                                                    \
+                S3[1] ^= m1;                                                    \
+                S3[2] ^= m2;                                                    \
+                S3[3] ^= m3;                                                    \
+                S13[0] ^= m0;                                                   \
+                S13[1] ^= m1;                                                   \
+                S13[2] ^= m2;                                                   \
+                S13[3] ^= m3;                                                   \
+                cc0 = n0;                                                       \
+                cc1 = n1;                                                       \
+                cc2 = n2;                                                       \
+                cc3 = n3;                                                       \
             } while (0)
 
 static void __attribute__((noinline))
