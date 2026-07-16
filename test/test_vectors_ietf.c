@@ -269,7 +269,15 @@ static const TestVector test_vectors[] = {
                     "90dcf65dbed4b7ebbe9bb4ef096e1238"
                     "d388bf15faacdb7a68be19dddc8a5b74"
                     "216f4442bfa32d1dfccdc9c4020baec9",
-      .tag        = "ad0b841c3d145a6ee86dc7b67338f113" }
+      .tag        = "ad0b841c3d145a6ee86dc7b67338f113" },
+    // Test Vector 11 - Partial-block AD and plaintext
+    { .name       = "Test Vector 11",
+      .key        = "1122334455667788112233445566778811223344556677881122334455667788",
+      .nonce      = "aabbccddeeff0011aabbccddeeff0011",
+      .ad         = "0102030405060708090a0b0c0d",
+      .plaintext  = "48656c6c6f576f726c64",
+      .ciphertext = "1fb0e0348c6a3a917133",
+      .tag        = "7d292173b55ba02dae56ac1224b7e775" }
 };
 
 static const size_t num_test_vectors = sizeof(test_vectors) / sizeof(test_vectors[0]);
@@ -281,7 +289,7 @@ run_test_vector(const TestVector *tv)
     uint8_t key[HIAE_KEYBYTES], nonce[HIAE_NONCEBYTES], tag[HIAE_MACBYTES];
     uint8_t ad[2048], plaintext[2048], ciphertext[2048];
     uint8_t computed_ciphertext[2048], computed_tag[HIAE_MACBYTES];
-    uint8_t decrypted[2048];
+    uint8_t decrypted[2048], forged_tag[HIAE_MACBYTES];
 
     // Parse inputs
     if (hex_to_bytes(tv->key, key, sizeof(key)) != HIAE_KEYBYTES) {
@@ -352,6 +360,15 @@ run_test_vector(const TestVector *tv)
 
     if (memcmp(decrypted, plaintext, pt_len) != 0) {
         printf("  ERROR: Decrypted plaintext mismatch\n");
+        return 0;
+    }
+
+    memcpy(forged_tag, tag, sizeof(forged_tag));
+    forged_tag[0] ^= 1;
+    auth_result = HiAE_decrypt(key, nonce, decrypted, ciphertext, ct_len, ad, ad_len, forged_tag);
+
+    if (auth_result == 0) {
+        printf("  ERROR: Forged tag was accepted\n");
         return 0;
     }
 
