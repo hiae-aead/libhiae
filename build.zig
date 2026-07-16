@@ -3,7 +3,7 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     var target = b.standardTargetOptions(.{});
     const optimize = .ReleaseFast;
-    const version = std.SemanticVersion.parse("0.2.3") catch unreachable;
+    const version = std.SemanticVersion.parse("0.2.4") catch unreachable;
 
     // Use -Dwasm-relaxed-simd=false to keep baseline SIMD128 only.
     const wasm_relaxed = b.option(

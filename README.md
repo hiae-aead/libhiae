@@ -533,6 +533,13 @@ make benchmark        # Performance benchmarks (all variants)
 ./bin/perf_x4_test    # HiAEx4 performance measurements
 ```
 
+Run the same suite as WebAssembly with Zig and Wasmtime:
+
+```bash
+zig build test -fwasmtime -Dtarget=wasm32-wasi -Dwasm-relaxed-simd=false
+zig build test -fwasmtime -Dtarget=wasm32-wasi -Dwasm-relaxed-simd=true
+```
+
 ## CMake Integration
 
 To use HiAE in your CMake project:
