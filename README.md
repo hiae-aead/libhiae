@@ -4,20 +4,20 @@ HiAE is a high-performance, cross-platform cryptographic library implementing an
 
 ## Features
 
-- **High Performance**: Achieves very high throughput on modern CPUs, including ARM CPUs
-- **Main Cipher**: HiAE with VAES+AVX512 support (16 parallel states, 256-byte unroll)
-- **Experimental Variants**:
-  - **HiAEx2**: Benchmarking variant with VAES+AVX2 support (32-byte blocks, 512-byte unroll)
-  - **HiAEx4**: Benchmarking variant optimized for AVX512 (64 parallel states, 1024-byte unroll)
-- **Cross-Platform**: Supports x86-64, ARM64, and other architectures
-- **Runtime Optimization**: Automatically selects the best implementation based on CPU capabilities:
+- High Performance: Achieves very high throughput on modern CPUs, including ARM CPUs
+- Main Cipher: HiAE with VAES+AVX512 support (16 parallel states, 256-byte unroll)
+- Experimental Variants:
+  - HiAEx2: Benchmarking variant with VAES+AVX2 support (32-byte blocks, 512-byte unroll)
+  - HiAEx4: Benchmarking variant optimized for AVX512 (64 parallel states, 1024-byte unroll)
+- Cross-Platform: Supports x86-64, ARM64, and other architectures
+- Runtime Optimization: Automatically selects the best implementation based on CPU capabilities:
   - VAES+AVX512 for latest Intel/AMD processors
   - AES-NI for x86-64 processors with hardware AES
   - ARM Crypto Extensions with optional SHA3 support for ARM64
   - Pure software fallback for universal compatibility
-- **Multiple APIs**: High-level all-at-once, streaming, and low-level block-oriented APIs
-- **No External Dependencies**: Only requires standard C library
-- **Command-Line Tool**: Included `hiae` CLI for file encryption/decryption/authentication
+- Multiple APIs: High-level all-at-once, streaming, and low-level block-oriented APIs
+- No External Dependencies: Only requires standard C library
+- Command-Line Tool: Included `hiae` CLI for file encryption/decryption/authentication
 
 ## Quick Start
 
@@ -54,7 +54,7 @@ make test
 ctest --output-on-failure
 ```
 
-**Build Types:**
+Build Types:
 
 - `Release`: Optimized for maximum performance (-O3 optimization)
 - `Debug`: Includes debugging symbols and assertions (default if not specified)
@@ -108,9 +108,9 @@ SOURCES = main.c other.c src/hiae/HiAE.c src/hiae/HiAE_software.c src/hiae/HiAE_
           src/hiaex4/HiAEx4_vaes_avx512.c src/hiaex4/HiAEx4_arm.c src/hiaex4/HiAEx4_arm_sha3.c
 ```
 
-**Compiler Recommendation:** For best performance, we highly recommend using **clang** or **zig cc** instead of gcc. These compilers produce significantly better optimized code for HiAE, especially for the vectorized implementations (VAES, AES-NI, ARM Crypto). If you must use gcc, ensure you're using a recent version (GCC 14+ recommended).
+Compiler Recommendation: For best performance, we highly recommend using clang or zig cc instead of gcc. These compilers produce significantly better optimized code for HiAE, especially for the vectorized implementations (VAES, AES-NI, ARM Crypto). If you must use gcc, ensure you're using a recent version (GCC 14+ recommended).
 
-**WebAssembly:** Compile with `-msimd128 -mrelaxed-simd` if supported by the engine.
+WebAssembly: Compile with `-msimd128 -mrelaxed-simd` if supported by the engine.
 
 This approach is ideal for:
 
@@ -131,13 +131,13 @@ make amalgamate
 cc -O3 -o myapp myapp.c HiAE_amalgamated.c
 ```
 
-**Benefits of the amalgamated version:**
-- **Zero setup**: No build system configuration needed
-- **No headers**: Include the amalgamated source file directly
-- **No symbol conflicts**: All internal conflicts resolved automatically
-- **Complete functionality**: All APIs, implementations, and runtime dispatch preserved
+Benefits of the amalgamated version:
+- Zero setup: No build system configuration needed
+- No headers: Include the amalgamated source file directly
+- No symbol conflicts: All internal conflicts resolved automatically
+- Complete functionality: All APIs, implementations, and runtime dispatch preserved
 
-**Example usage:**
+Example usage:
 ```c
 // Include the amalgamated source directly
 #include "HiAE_amalgamated.c"
@@ -236,7 +236,7 @@ if (HiAE_stream_verify(&dec_stream, tag) != 0) {
 }
 ```
 
-**Key Features:**
+Key Features:
 
 - No alignment requirements - handles any chunk size
 - Automatic internal buffering
@@ -275,7 +275,7 @@ printf("Using: %s\n", impl);  // e.g., "VAES+AVX512", "AES-NI", "ARM SHA3"
 
 ### Experimental Variants (HiAEx2 and HiAEx4)
 
-**Note**: HiAEx2 and HiAEx4 are experimental variants for benchmarking purposes only and are not part of the official specification.
+Note: HiAEx2 and HiAEx4 are experimental variants for benchmarking purposes only and are not part of the official specification.
 
 These variants provide identical APIs to HiAE but with different performance characteristics:
 
@@ -303,11 +303,11 @@ HiAEx4_init(&state, key, nonce);  // 64-byte alignment for multi-block calls
 
 When used as a MAC, unique nonces is currently required with these variants.
 
-**Benchmarking Characteristics:**
+Benchmarking Characteristics:
 
-- **HiAE**: Standard implementation (use this for production)
-- **HiAEx4**: Maximum throughput on latest processors with full AVX512 support
-- **HiAEx2**: Broader compatibility for processors with AVX2 but no AVX512
+- HiAE: Standard implementation (use this for production)
+- HiAEx4: Maximum throughput on latest processors with full AVX512 support
+- HiAEx2: Broader compatibility for processors with AVX2 but no AVX512
 
 ## Command-Line Tool
 
@@ -344,8 +344,8 @@ HiAE achieves exceptional performance on modern processors. Benchmarks have been
 
 ### Performance Highlights
 
-- **ARM64 (Apple Silicon M4)**: Up to 261 Gbps AEAD encryption throughput (31 GB/s) with HiAE
-- **x86-64 (AMD Zen 4)**: Up to 429 Gbps AEAD encryption throughput (51 GB/s) with HiAEx4
+- ARM64 (Apple Silicon M4): Up to 261 Gbps AEAD encryption throughput (31 GB/s) with HiAE
+- x86-64 (AMD Zen 4): Up to 429 Gbps AEAD encryption throughput (51 GB/s) with HiAEx4
 - Excellent performance across different processor architectures
 
 ### HiAE Performance on ARM64 (Apple Silicon M4, ARM SHA3)
@@ -504,9 +504,9 @@ HiAE achieves exceptional performance on modern processors. Benchmarks have been
 
 ### Performance Notes
 
-- **HiAE** (standard implementation) provides excellent performance with the broadest compatibility
-- **HiAEx2** offers higher throughput on processors with AVX2 support
-- **HiAEx4** achieves maximum throughput on processors with full AVX512 support
+- HiAE (standard implementation) provides excellent performance with the broadest compatibility
+- HiAEx2 offers higher throughput on processors with AVX2 support
+- HiAEx4 achieves maximum throughput on processors with full AVX512 support
 - All implementations automatically select the best available instruction set at runtime
 - Decryption is generally slower than encryption due to the algorithm design
 - Performance scales well with larger data sizes
@@ -552,13 +552,13 @@ target_link_libraries(myapp PRIVATE hiae::hiae)
 
 ## Technical Details
 
-- **Algorithm**: HiAE AEAD cipher (see `draft-pham-cfrg-hiae.md`)
-- **Key Size**: 256 bits (32 bytes)
-- **Nonce Size**: 128 bits (16 bytes)
-- **Tag Size**: 128 bits (16 bytes)
-- **Block Size**: 16 bytes (AES block size)
-- **Security**: 128-bit authentication, 256-bit encryption
-- **Thread Safety**: Each state is independent
+- Algorithm: HiAE AEAD cipher (see `draft-pham-cfrg-hiae.md`)
+- Key Size: 256 bits (32 bytes)
+- Nonce Size: 128 bits (16 bytes)
+- Tag Size: 128 bits (16 bytes)
+- Block Size: 16 bytes (AES block size)
+- Security: 128-bit authentication, 256-bit encryption
+- Thread Safety: Each state is independent
 
 ## References
 
