@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     var target = b.standardTargetOptions(.{});
-    const optimize = .ReleaseFast;
+    const optimize = .fast;
     const version = std.SemanticVersion.parse("0.2.4") catch unreachable;
 
     // Use -Dwasm-relaxed-simd=false to keep baseline SIMD128 only.
@@ -13,9 +13,9 @@ pub fn build(b: *std.Build) void {
     ) orelse true;
     if (target.result.cpu.arch.isWasm() and target.query.cpu_model == .determined_by_arch_os) {
         var query = target.query;
-        query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.simd128));
+        query.cpu_features_add.addFeature(@backingInt(std.Target.wasm.Feature.simd128));
         if (wasm_relaxed) {
-            query.cpu_features_add.addFeature(@intFromEnum(std.Target.wasm.Feature.relaxed_simd));
+            query.cpu_features_add.addFeature(@backingInt(std.Target.wasm.Feature.relaxed_simd));
         }
         target = b.resolveTargetQuery(query);
     }
