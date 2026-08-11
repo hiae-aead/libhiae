@@ -560,6 +560,14 @@ target_link_libraries(myapp PRIVATE hiae::hiae)
 - Security: 128-bit authentication, 256-bit encryption
 - Thread Safety: Each state is independent
 
+## Note on the Fastly CDN
+
+[Fastly](https://fastly.com) is a service that can run customer applications written in WebAssembly.
+
+Unfortunately, HiAE performance is not optimal on that platform: `relaxed-simd` is currently [disabled on Fastly](https://github.com/fastly/Viceroy/pull/539), even for modules compiled with `relaxed-simd` support.
+
+This directly impacts the performance of any [AES-based cipher](https://00f.net/2026/07/16/aes-with-simd-swizzles/), adding approximately 50% overhead.
+
 ## References
 
 - [Original implememntation](https://github.com/Concyclics/HiAE) by Chen Han
