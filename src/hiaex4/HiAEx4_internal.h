@@ -1,6 +1,8 @@
 #ifndef HiAEx4_INTERNAL_H
 #define HiAEx4_INTERNAL_H
 
+#include "../common/common.h"
+#include "../common/cpu.h"
 #include "HiAEx4.h"
 #include <string.h>
 

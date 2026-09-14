@@ -11,67 +11,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __linux__
-#    define HAVE_SYS_AUXV_H
-#    define HAVE_GETAUXVAL
-#endif
-#ifdef __ANDROID_API__
-#    if __ANDROID_API__ < 18
-#        undef HAVE_GETAUXVAL
-#    endif
-#    define HAVE_ANDROID_GETCPUFEATURES
-#endif
-#if defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_AMD64)
-#    define HAVE_CPUID
-#    define NATIVE_LITTLE_ENDIAN
-#    if defined(__clang__) || defined(__GNUC__)
-#        define HAVE_AVX_ASM
-#    endif
-#    define HAVE_AVXINTRIN_H
-#    define HAVE_AVX2INTRIN_H
-#    define HAVE_AVX512FINTRIN_H
-#    define HAVE_TMMINTRIN_H
-#    define HAVE_WMMINTRIN_H
-#    define HAVE_VAESINTRIN_H
-#    ifdef __GNUC__
-#        if !__has_include(<vaesintrin.h>)
-#            undef HAVE_VAESINTRIN_H
-#        endif
-#    endif
-/* target pragmas don't define these flags on clang-cl (an alternative clang driver for Windows) */
-#    if defined(__clang__) && defined(_MSC_BUILD) && defined(_MSC_VER) && \
-        (defined(_M_IX86) || defined(_M_AMD64)) && !defined(__SSE3__)
-#        undef __SSE3__
-#        undef __SSSE3__
-#        undef __SSE4_1__
-#        undef __AVX__
-#        undef __AVX2__
-#        undef __AVX512F__
-#        undef __AES__
-#        undef __VAES__
-
-#        define __SSE3__    1
-#        define __SSSE3__   1
-#        define __SSE4_1__  1
-#        define __AVX__     1
-#        define __AVX2__    1
-#        define __AVX512F__ 1
-#        define __AES__     1
-#        define __VAES__    1
-#    endif
-
-#endif
-
-#ifdef DISABLE_AVX2
-#    undef HAVE_AVXINTRIN_H
-#    undef HAVE_AVX2INTRIN_H
-#    undef HAVE_AVX512FINTRIN_H
-#    undef HAVE_VAESINTRIN_H
-#endif
-#ifdef DISABLE_AVX512
-#    undef HAVE_AVX512FINTRIN_H
-#endif
-
 #ifdef HAVE_ANDROID_GETCPUFEATURES
 #    include <cpu-features.h>
 #endif
@@ -374,8 +313,7 @@ hiaex4_runtime_get_cpu_features(void)
 }
 
 // External declarations for implementation tables
-#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || \
-      defined(__ARM_FEATURE_CRYPTO))
+#ifndef HIAEX4_HAS_HW_AES
 extern const HiAEx4_impl_t hiaex4_software_impl;
 #endif
 #if defined(__x86_64__) || defined(_M_X64)
@@ -394,8 +332,7 @@ hiaex4_get_impl_by_name(const char *name)
         return NULL;
     }
 
-#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || \
-      defined(__ARM_FEATURE_CRYPTO))
+#ifndef HIAEX4_HAS_HW_AES
     if (strcmp(name, "Software") == 0) {
         return (HiAEx4_impl_t *) &hiaex4_software_impl;
     }
@@ -446,10 +383,14 @@ hiaex4_init_dispatch(void)
         hiaex4_runtime_get_cpu_features();
     }
 
-#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || \
-      defined(__ARM_FEATURE_CRYPTO))
-    // Default to software implementation when hardware AES+VAES+AVX512 is not available
+    // Start from the implementation the compilation baseline guarantees, then
+    // upgrade it below if the CPU actually supports something faster.
+#ifndef HIAEX4_HAS_HW_AES
     hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_software_impl;
+#elif defined(__x86_64__) || defined(_M_X64)
+    hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_vaes_avx512_impl;
+#elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
+    hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_arm_impl;
 #endif
 
     // Select best available implementation based on CPU features
@@ -463,23 +404,6 @@ hiaex4_init_dispatch(void)
         hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_arm_sha3_impl;
     } else if (_cpu_features.has_neon_aes && hiaex4_arm_impl.init != NULL) {
         hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_arm_impl;
-    }
-#endif
-
-#if (defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)) || defined(__ARM_FEATURE_CRYPTO)
-    // When hardware AES+VAES+AVX512 is available, ensure we have a valid implementation
-    if (hiaex4_impl == NULL) {
-#    if defined(__x86_64__) || defined(_M_X64)
-        // Fallback to VAES-AVX512 on x86-64 if available
-        if (hiaex4_vaes_avx512_impl.init != NULL) {
-            hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_vaes_avx512_impl;
-        }
-#    elif defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64__)
-        // Fallback to ARM NEON on ARM64 if available
-        if (hiaex4_arm_impl.init != NULL) {
-            hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_arm_impl;
-        }
-#    endif
     }
 #endif
 }
