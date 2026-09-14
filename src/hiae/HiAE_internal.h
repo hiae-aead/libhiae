@@ -1,6 +1,8 @@
 #ifndef HIAE_INTERNAL_H
 #define HIAE_INTERNAL_H
 
+#include "../common/common.h"
+#include "../common/cpu.h"
 #include "HiAE.h"
 #include <string.h>
 

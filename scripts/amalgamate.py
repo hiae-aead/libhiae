@@ -107,6 +107,8 @@ def remove_includes(content, implementation_file=None):
             # Keep system includes, remove local includes
             if ('"HiAE.h"' in include_file or 
                 '"HiAE_internal.h"' in include_file or
+                '"../common/common.h"' in include_file or
+                '"../common/cpu.h"' in include_file or
                 '"softaes.h"' in include_file):
                 continue
             # Keep all other includes (system headers, intrinsics, etc.)
@@ -307,6 +309,21 @@ extern "C" {{
         header_body = re.sub(r'#ifdef __cplusplus.*?#endif', '', header_body, flags=re.DOTALL)
         amalgamated_content += header_body
     
+    # Add shared capability-detection headers (src/common)
+    for common_name, guard in (("common.h", "hiae_common_H"), ("cpu.h", "hiae_cpu_H")):
+        common_header = read_file(repo_root / "src" / "common" / common_name)
+        if not common_header:
+            print(f"Failed to read src/common/{common_name}")
+            return False
+        common_content = re.search(r'#define ' + guard + r'\s*\n(.*?)#endif /\* ' + guard + r' \*/',
+                                   common_header, re.DOTALL)
+        if not common_content:
+            print(f"Failed to parse src/common/{common_name}")
+            return False
+        common_body = common_content.group(1)
+        common_body = re.sub(r'#include\s+"[^"]+"', '', common_body)
+        amalgamated_content += f"\n/* Shared definitions from src/common/{common_name} */\n{common_body}\n"
+
     # Add internal header content
     internal_header = read_file(source_path / "HiAE_internal.h")
     if not internal_header:
@@ -320,6 +337,7 @@ extern "C" {{
         internal_body = internal_content.group(1)
         # Remove includes we've already handled
         internal_body = re.sub(r'#include\s+"HiAE\.h"', '', internal_body)
+        internal_body = re.sub(r'#include\s+"\.\./common/[^"]+"', '', internal_body)
         internal_body = re.sub(r'#include\s+<[^>]+>', '', internal_body)
         amalgamated_content += f"\n/* Internal definitions from HiAE_internal.h */\n{internal_body}\n"
     

@@ -1,8 +1,9 @@
 #include "HiAE.h"
 #include "HiAE_internal.h"
 
+/* clang-cl can build this implementation; MSVC proper cannot (no target pragmas) */
 #if (defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_AMD64)) && \
-    !defined(_MSC_VER)
+    (!defined(_MSC_VER) || defined(__clang__))
 
 #    ifdef __clang__
 #        if __clang_major__ >= 18

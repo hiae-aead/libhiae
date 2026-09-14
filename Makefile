@@ -33,9 +33,10 @@ IMPL_SOURCES += src/hiaex4/HiAEx4_vaes_avx512.c
 ALL_SOURCES = $(MAIN_SOURCE) $(IMPL_SOURCES)
 
 # Header dependencies
-HIAE_HEADERS = include/HiAE.h src/hiae/HiAE_internal.h src/hiae/softaes.h
-HIAEX2_HEADERS = include/HiAEx2.h src/hiaex2/HiAEx2_internal.h src/hiaex2/softaes.h
-HIAEX4_HEADERS = include/HiAEx4.h src/hiaex4/HiAEx4_internal.h src/hiaex4/softaes.h
+COMMON_HEADERS = src/common/common.h src/common/cpu.h
+HIAE_HEADERS = include/HiAE.h src/hiae/HiAE_internal.h src/hiae/softaes.h $(COMMON_HEADERS)
+HIAEX2_HEADERS = include/HiAEx2.h src/hiaex2/HiAEx2_internal.h src/hiaex2/softaes.h $(COMMON_HEADERS)
+HIAEX4_HEADERS = include/HiAEx4.h src/hiaex4/HiAEx4_internal.h src/hiaex4/softaes.h $(COMMON_HEADERS)
 CLI_HEADERS = hiae-cli/src/platform.h hiae-cli/src/key_utils.h hiae-cli/src/file_ops.h
 TEST_HEADERS = test/timing.h
 

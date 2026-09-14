@@ -2,7 +2,7 @@
 #include "HiAEx2_internal.h"
 
 // Only compile software implementation if hardware AES+VAES+AVX2 is not available
-#if !((defined(__AES__) && defined(__VAES__) && defined(__AVX2__)) || defined(__ARM_FEATURE_CRYPTO))
+#ifndef HIAEX2_HAS_HW_AES
 
 #    define FAVOR_PERFORMANCE
 #    include "softaes.h"
@@ -681,4 +681,4 @@ const HiAEx2_impl_t hiaex2_software_impl = { .name         = "Software",
                                              .decrypt = HiAEx2_decrypt_software,
                                              .mac     = HiAEx2_mac_software };
 
-#endif // !defined(__AES__) && !defined(__ARM_FEATURE_CRYPTO)
+#endif /* !HIAEX2_HAS_HW_AES */
