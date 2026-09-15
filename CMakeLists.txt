@@ -18,9 +18,6 @@ else()
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 endif()
 
-# Include directories
-include_directories("include")
-
 # Source files for the library
 set(HIAE_SOURCES
     src/hiae/HiAE.c
@@ -54,6 +51,10 @@ set(HIAE_HEADERS
 # Create the library
 add_library("${PROJECT_NAME}" ${HIAE_SOURCES})
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
+
+if(BUILD_SHARED_LIBS)
+    set_target_properties("${PROJECT_NAME}" PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
 
 # Set include directories for the library
 target_include_directories("${PROJECT_NAME}"
@@ -105,6 +106,7 @@ set(TARGETS_EXPORT_NAME "${PROJECT_NAME}-targets")
 
 install(TARGETS "${PROJECT_NAME}"
         EXPORT "${TARGETS_EXPORT_NAME}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
