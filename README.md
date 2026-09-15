@@ -61,6 +61,12 @@ Build Types:
 - `RelWithDebInfo`: Release optimizations with debug symbols
 - `MinSizeRel`: Optimized for size rather than speed
 
+### Using Zig
+
+```bash
+zig build --release
+```
+
 ## Installation
 
 ### From Source
