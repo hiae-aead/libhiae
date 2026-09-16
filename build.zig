@@ -2,7 +2,10 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     var target = b.standardTargetOptions(.{});
-    const optimize = .fast;
+    const optimize = b.standardOptimizeOption(.{
+        .preferred_optimize_mode = .fast,
+    });
+
     const version = std.SemanticVersion.parse("0.2.4") catch unreachable;
 
     // Use -Dwasm-relaxed-simd=false to keep baseline SIMD128 only.
