@@ -345,7 +345,7 @@ typedef enum {
  */
 typedef struct {
     HiAEx2_state_t        state; /**< Internal cryptographic state */
-    uint8_t               buffer[16]; /**< Internal buffer for partial blocks */
+    uint8_t               buffer[32]; /**< Internal buffer for partial blocks */
     size_t                offset; /**< Current offset in buffer */
     size_t                ad_len; /**< Total associated data processed */
     size_t                msg_len; /**< Total message data processed */
