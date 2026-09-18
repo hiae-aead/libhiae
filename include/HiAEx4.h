@@ -35,6 +35,14 @@ extern "C" {
 #    define __attribute__(a)
 #endif
 
+#ifndef HIAE_ALIGN
+#    if defined(_MSC_VER) && !defined(__clang__)
+#        define HIAE_ALIGN(x) __declspec(align(x))
+#    else
+#        define HIAE_ALIGN(x) __attribute__((aligned(x)))
+#    endif
+#endif
+
 /**
  * @defgroup constants Cryptographic Constants
  * @brief Core cryptographic parameter sizes for HiAEx4
@@ -80,11 +88,12 @@ extern "C" {
  * directly by applications.
  *
  * @note The state is 1024 bytes to accommodate AVX512 implementations with 64 parallel states
+ * @note States allocated on the heap should be 64-byte aligned, for example with aligned_alloc(). Other states still work, just more slowly.
  * @note Each state instance is independent and thread-safe when used by one thread
  * @warning Never modify the contents directly or copy states between operations
  */
 typedef struct {
-    uint8_t opaque[1024];
+    HIAE_ALIGN(64) uint8_t opaque[1024];
 } HiAEx4_state_t;
 
 /** @} */

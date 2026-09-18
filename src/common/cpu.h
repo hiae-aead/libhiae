@@ -22,6 +22,8 @@
 #elif !defined(HIAE_ISA_MACROS_SYNTHESIZED)
 #    if defined(__AES__) && defined(__VAES__) && defined(__AVX512F__)
 #        define HIAE_HAS_HW_AES
+#    endif
+#    if defined(__AES__) && defined(__VAES__) && defined(__AVX512F__) && defined(__AVX512VL__)
 #        define HIAEX4_HAS_HW_AES
 #    endif
 #    if defined(__AES__) && defined(__VAES__) && defined(__AVX2__)

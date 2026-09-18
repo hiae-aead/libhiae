@@ -26,10 +26,14 @@ target_link_libraries(test_vectors PRIVATE hiae::hiae)
 add_executable(test_stream test_stream.c)
 target_link_libraries(test_stream PRIVATE hiae::hiae)
 
+add_executable(test_vectors_hiaex4 test_vectors_hiaex4.c)
+target_link_libraries(test_vectors_hiaex4 PRIVATE hiae::hiae)
+
 # Add tests
 add_test(NAME functional_test COMMAND func_test)
 add_test(NAME ietf_test_vectors COMMAND test_vectors)
 add_test(NAME streaming_api_test COMMAND test_stream)
+add_test(NAME hiaex4_test_vectors COMMAND test_vectors_hiaex4)
 
 # Performance tests (not run by default in test suite)
 # These can be run manually with: ctest -R "performance"

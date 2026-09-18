@@ -33,6 +33,14 @@ extern "C" {
 #    define __attribute__(a)
 #endif
 
+#ifndef HIAE_ALIGN
+#    if defined(_MSC_VER) && !defined(__clang__)
+#        define HIAE_ALIGN(x) __declspec(align(x))
+#    else
+#        define HIAE_ALIGN(x) __attribute__((aligned(x)))
+#    endif
+#endif
+
 /**
  * @defgroup constants Cryptographic Constants
  * @brief Core cryptographic parameter sizes for HiAEx2
@@ -77,12 +85,13 @@ extern "C" {
  * operations. The contents are implementation-specific and should not be accessed
  * directly by applications.
  *
- * @note The state is 256 bytes to accommodate all implementation variants
+ * @note The state is 512 bytes to accommodate all implementation variants
+ * @note States allocated on the heap should be 64-byte aligned, for example with aligned_alloc(). Other states still work, just more slowly.
  * @note Each state instance is independent and thread-safe when used by one thread
  * @warning Never modify the contents directly or copy states between operations
  */
 typedef struct {
-    uint8_t opaque[512];
+    HIAE_ALIGN(64) uint8_t opaque[512];
 } HiAEx2_state_t;
 
 /** @} */

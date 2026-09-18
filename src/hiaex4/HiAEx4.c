@@ -42,6 +42,7 @@ typedef struct CPUFeatures {
     int has_avx;
     int has_avx2;
     int has_avx512f;
+    int has_avx512vl;
     int has_aesni;
     int has_vaes;
     int has_altivec;
@@ -51,8 +52,9 @@ static CPUFeatures    _cpu_features;
 static HiAEx4_impl_t *hiaex4_impl      = NULL;
 static const char    *forced_impl_name = NULL;
 
-#define CPUID_EBX_AVX2    0x00000020
-#define CPUID_EBX_AVX512F 0x00010000
+#define CPUID_EBX_AVX2     0x00000020
+#define CPUID_EBX_AVX512F  0x00010000
+#define CPUID_EBX_AVX512VL 0x80000000
 
 #define CPUID_ECX_AESNI   0x02000000
 #define CPUID_ECX_XSAVE   0x04000000
@@ -195,7 +197,8 @@ _runtime_intel_cpu_features(CPUFeatures *const cpu_features)
         if ((cpu_info7[1] & CPUID_EBX_AVX512F) == CPUID_EBX_AVX512F &&
             (xcr0 & (XCR0_OPMASK | XCR0_ZMM_HI256 | XCR0_HI16_ZMM)) ==
                 (XCR0_OPMASK | XCR0_ZMM_HI256 | XCR0_HI16_ZMM)) {
-            cpu_features->has_avx512f = 1;
+            cpu_features->has_avx512f  = 1;
+            cpu_features->has_avx512vl = (cpu_info7[1] & CPUID_EBX_AVX512VL) != 0x0;
         }
         /* LCOV_EXCL_STOP */
     }
@@ -395,7 +398,7 @@ hiaex4_init_dispatch(void)
 
     // Select best available implementation based on CPU features
 #if defined(__x86_64__) || defined(_M_X64)
-    if (_cpu_features.has_avx512f && _cpu_features.has_vaes &&
+    if (_cpu_features.has_avx512f && _cpu_features.has_avx512vl && _cpu_features.has_vaes &&
         hiaex4_vaes_avx512_impl.init != NULL) {
         hiaex4_impl = (HiAEx4_impl_t *) &hiaex4_vaes_avx512_impl;
     }

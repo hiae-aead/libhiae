@@ -49,7 +49,7 @@ ALL_OBJECTS = $(MAIN_OBJECTS) $(IMPL_OBJECTS)
 BINDIR = bin
 
 # Target executables
-TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream $(BINDIR)/hiae
+TARGETS = $(BINDIR)/perf_test $(BINDIR)/perf_x2_test $(BINDIR)/perf_x4_test $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_vectors_hiaex4 $(BINDIR)/test_stream $(BINDIR)/hiae
 
 # Default target
 all: $(BINDIR) $(TARGETS)
@@ -101,6 +101,11 @@ $(BINDIR)/test_vectors_hiaex2: $(ALL_OBJECTS) test/test_vectors_hiaex2.c $(TEST_
 	@echo "Building HiAEx2 test vectors validation..."
 	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/test_vectors_hiaex2.c -o $@ $(LDFLAGS)
 
+# HiAEx4 test vectors validation
+$(BINDIR)/test_vectors_hiaex4: $(ALL_OBJECTS) test/test_vectors_hiaex4.c $(TEST_HEADERS)
+	@echo "Building HiAEx4 test vectors validation..."
+	$(CC) $(CFLAGS) $(ALL_OBJECTS) test/test_vectors_hiaex4.c -o $@ $(LDFLAGS)
+
 # Streaming API test
 $(BINDIR)/test_stream: $(ALL_OBJECTS) test/test_stream.c $(TEST_HEADERS)
 	@echo "Building streaming API test..."
@@ -112,7 +117,7 @@ $(BINDIR)/hiae: $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae
 	$(CC) $(CFLAGS) -I hiae-cli/src $(ALL_OBJECTS) hiae-cli/src/hiae.c hiae-cli/src/key_utils.c hiae-cli/src/file_ops.c hiae-cli/src/platform.c -o $@ $(LDFLAGS)
 
 # Test targets
-test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_stream test-amalgamated
+test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $(BINDIR)/test_vectors_hiaex4 $(BINDIR)/test_stream test-amalgamated
 	@echo "Running functional tests..."
 	./$(BINDIR)/func_test
 	@echo ""
@@ -121,6 +126,9 @@ test: $(BINDIR)/func_test $(BINDIR)/test_vectors $(BINDIR)/test_vectors_hiaex2 $
 	@echo ""
 	@echo "Running HiAEx2 test vectors..."
 	./$(BINDIR)/test_vectors_hiaex2
+	@echo ""
+	@echo "Running HiAEx4 test vectors..."
+	./$(BINDIR)/test_vectors_hiaex4
 	@echo ""
 	@echo "Running streaming API tests..."
 	./$(BINDIR)/test_stream
@@ -226,12 +234,15 @@ format:
 	fi
 
 # Amalgamated version test
-test-amalgamated: HiAE_amalgamated.c
+test-amalgamated: HiAE_amalgamated.c | $(BINDIR)
 	@echo "Testing amalgamated version..."
 	@echo "Building test with amalgamated file..."
 	$(CC) $(CFLAGS) -o $(BINDIR)/test_amalgamated test/test_amalgamated.c
 	@echo "Running amalgamated version test..."
 	./$(BINDIR)/test_amalgamated
+
+HiAE_amalgamated.c: scripts/amalgamate.py $(wildcard src/hiae/*.c) $(HIAE_HEADERS)
+	python3 scripts/amalgamate.py
 
 # Phony targets
 .PHONY: all test test-vectors benchmark clean help perf_test perf_x2_test perf_x4_test func_test test_vectors test_stream hiae install uninstall libhiae format format-check test-amalgamated
