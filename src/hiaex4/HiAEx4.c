@@ -477,7 +477,7 @@ HiAEx4_dec(HiAEx4_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size)
 void
 HiAEx4_enc_partial_noupdate(HiAEx4_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size)
 {
-    assert(size < 16);
+    assert(size < BLOCK_SIZE);
     hiaex4_init_dispatch();
     hiaex4_impl->enc_partial_noupdate(state, ci, mi, size);
 }
@@ -485,7 +485,7 @@ HiAEx4_enc_partial_noupdate(HiAEx4_state_t *state, uint8_t *ci, const uint8_t *m
 void
 HiAEx4_dec_partial_noupdate(HiAEx4_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size)
 {
-    assert(size < 16);
+    assert(size < BLOCK_SIZE);
     hiaex4_init_dispatch();
     hiaex4_impl->dec_partial_noupdate(state, mi, ci, size);
 }
