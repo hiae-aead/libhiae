@@ -1,6 +1,8 @@
 #ifndef hiae_common_H
 #define hiae_common_H
 
+#include <stdint.h>
+
 /*
  * Compiler / target capability detection shared by every translation unit.
  *
@@ -77,6 +79,10 @@
 #endif
 #ifdef DISABLE_AVX512
 #    undef HAVE_AVX512FINTRIN_H
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+typedef uint64_t hiae_unaligned_u64 __attribute__((aligned(1), may_alias));
 #endif
 
 /* The C0 and C1 constants from the specification, which the parallel variants use in every lane */

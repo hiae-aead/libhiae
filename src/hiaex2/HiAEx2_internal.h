@@ -66,10 +66,31 @@ static const uint8_t C1[BLOCK_SIZE] = { HIAE_C1_BYTES, HIAE_C1_BYTES };
 static inline int
 hiaex2_constant_time_compare(const uint8_t *a, const uint8_t *b, size_t len)
 {
-    volatile uint8_t result = 0;
-    for (size_t i = 0; i < len; i++) {
-        result |= a[i] ^ b[i];
+    volatile uint16_t result;
+    uint16_t          acc = 0U;
+    size_t            i   = 0U;
+
+#if defined(__GNUC__) || defined(__clang__)
+    {
+        const volatile hiae_unaligned_u64 *volatile a64 =
+            (const volatile hiae_unaligned_u64 *volatile) (const void *) a;
+        const volatile hiae_unaligned_u64 *volatile b64 =
+            (const volatile hiae_unaligned_u64 *volatile) (const void *) b;
+        uint64_t acc64 = 0U;
+
+        for (; i + 8U <= len; i += 8U) {
+            acc64 |= a64[i / 8U] ^ b64[i / 8U];
+        }
+        acc64 |= acc64 >> 32;
+        acc64 |= acc64 >> 16;
+        acc64 |= acc64 >> 8;
+        acc = (uint16_t) (acc64 & 0xffU);
     }
+#endif
+    for (; i < len; i++) {
+        acc |= a[i] ^ b[i];
+    }
+    result = acc;
 #if defined(__GNUC__) || defined(__clang__)
     __asm__("" : "+r"(result) :);
 #endif
