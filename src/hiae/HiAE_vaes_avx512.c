@@ -266,7 +266,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm4, %%xmm23, %%xmm4;" // S[4] = SIMD_XOR(S[4], M[7])
 
         // round 9
-        "vmovdqa64 128(%1, %%rax), %%xmm16;" // Load M[8] into xmm16
+        "vmovdqu64 128(%1, %%rax), %%xmm16;" // Load M[8] into xmm16
         "vpxorq %%xmm8, %%xmm9, %%xmm24;" // C[8] = SIMD_XOR(S[8], S[9])
         "vaesenc %%xmm16, %%xmm24, %%xmm24;" // C[8] = AESENC(M[8], C[8])
         "vaesenc %%xmm24, %%xmm5, %%xmm8;" // S[24] = AESENC(C[8], S[5])
@@ -274,7 +274,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm5, %%xmm16, %%xmm5;" // S[5] = SIMD_XOR(S[5], M[8])
 
         // round 10
-        "vmovdqa64 144(%1, %%rax), %%xmm17;" // Load M[9] into xmm17
+        "vmovdqu64 144(%1, %%rax), %%xmm17;" // Load M[9] into xmm17
         "vpxorq %%xmm9, %%xmm10, %%xmm25;" // C[9] = SIMD_XOR(S[9], S[10])
         "vaesenc %%xmm17, %%xmm25, %%xmm25;" // C[9] = AESENC(M[9], C[9])
         "vaesenc %%xmm25, %%xmm6, %%xmm9;" // S[25] = AESENC(C[9], S[6])
@@ -282,7 +282,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm6, %%xmm17, %%xmm6;" // S[6] = SIMD_XOR(S[6], M[9])
 
         // round 11
-        "vmovdqa64 160(%1, %%rax), %%xmm18;" // Load M[10] into xmm18
+        "vmovdqu64 160(%1, %%rax), %%xmm18;" // Load M[10] into xmm18
         "vpxorq %%xmm10, %%xmm11, %%xmm26;" // C[10] = SIMD_XOR(S[10], S[11])
         "vaesenc %%xmm18, %%xmm26, %%xmm26;" // C[10] = AESENC(M[10], C[10])
         "vaesenc %%xmm26, %%xmm7, %%xmm10;" // S[26] = AESENC(C[10], S[7])
@@ -290,7 +290,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm7, %%xmm18, %%xmm7;" // S[7] = SIMD_XOR(S[7], M[10])
 
         // round 12
-        "vmovdqa64 176(%1, %%rax), %%xmm19;" // Load M[11] into xmm19
+        "vmovdqu64 176(%1, %%rax), %%xmm19;" // Load M[11] into xmm19
         "vpxorq %%xmm11, %%xmm12, %%xmm27;" // C[11] = SIMD_XOR(S[11], S[12])
         "vaesenc %%xmm19, %%xmm27, %%xmm27;" // C[11] = AESENC(M[11], C[11])
         "vaesenc %%xmm27, %%xmm8, %%xmm11;" // S[27] = AESENC(C[11], S[8])
@@ -298,7 +298,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm8, %%xmm19, %%xmm8;" // S[8] = SIMD_XOR(S[8], M[11])
 
         // round 13
-        "vmovdqa64 192(%1, %%rax), %%xmm20;" // Load M[12] into xmm20
+        "vmovdqu64 192(%1, %%rax), %%xmm20;" // Load M[12] into xmm20
         "vpxorq %%xmm12, %%xmm13, %%xmm28;" // C[12] = SIMD_XOR(S[12], S[13])
         "vaesenc %%xmm20, %%xmm28, %%xmm28;" // C[12] = AESENC(M[12], C[12])
         "vaesenc %%xmm28, %%xmm9, %%xmm12;" // S[28] = AESENC(C[12], S[9])
@@ -306,7 +306,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm9, %%xmm20, %%xmm9;" // S[9] = SIMD_XOR(S[9], M[12])
 
         // round 14
-        "vmovdqa64 208(%1, %%rax), %%xmm21;" // Load M[13] into xmm21
+        "vmovdqu64 208(%1, %%rax), %%xmm21;" // Load M[13] into xmm21
         "vpxorq %%xmm13, %%xmm14, %%xmm29;" // C[13] = SIMD_XOR(S[13], S[14])
         "vaesenc %%xmm21, %%xmm29, %%xmm29;" // C[13] = AESENC(M[13], C[13])
         "vaesenc %%xmm29, %%xmm10, %%xmm13;" // S[29] = AESENC(C[13], S[10])
@@ -314,7 +314,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm10, %%xmm21, %%xmm10;" // S[10] = SIMD_XOR(S[10], M[13])
 
         // round 15
-        "vmovdqa64 224(%1, %%rax), %%xmm22;" // Load M[14] into xmm22
+        "vmovdqu64 224(%1, %%rax), %%xmm22;" // Load M[14] into xmm22
         "vpxorq %%xmm14, %%xmm15, %%xmm30;" // C[14] = SIMD_XOR(S[14], S[15])
         "vaesenc %%xmm22, %%xmm30, %%xmm30;" // C[14] = AESENC(M[14], C[14])
         "vaesenc %%xmm30, %%xmm11, %%xmm14;" // S[30] = AESENC(C[14], S[11])
@@ -322,7 +322,7 @@ HiAE_absorb_vaes(HiAE_state_t *state_opaque, const uint8_t *ad, size_t len)
         "vpxorq %%xmm11, %%xmm22, %%xmm11;" // S[11] = SIMD_XOR(S[11], M[14])
 
         // round 16
-        "vmovdqa64 240(%1, %%rax), %%xmm23;" // Load M[15] into xmm23
+        "vmovdqu64 240(%1, %%rax), %%xmm23;" // Load M[15] into xmm23
         "vpxorq %%xmm15, %%xmm0, %%xmm31;" // C[15] = SIMD_XOR(S[15], S[0])
         "vaesenc %%xmm23, %%xmm31, %%xmm31;" // C[15] = AESENC(M[15], C[15])
         "vaesenc %%xmm31, %%xmm12, %%xmm15;" // S[31] = AESENC(C[15], S[12])
@@ -520,84 +520,84 @@ HiAE_enc_vaes(HiAE_state_t *state_opaque, uint8_t *ci, const uint8_t *mi, size_t
         "vmovdqu64 %%xmm31, 112(%0, %%rax);" // Write back C[7] to ci[i+112:i+128]
 
         // round 9
-        "vmovdqa64 128(%1, %%rax), %%xmm16;" // Load M[8] into xmm16
+        "vmovdqu64 128(%1, %%rax), %%xmm16;" // Load M[8] into xmm16
         "vpxorq %%xmm8, %%xmm9, %%xmm24;" // C[8] = SIMD_XOR(S[8], S[9])
         "vaesenc %%xmm16, %%xmm24, %%xmm24;" // C[8] = AESENC(M[8], C[8])
         "vaesenc %%xmm24, %%xmm5, %%xmm8;" // S[24] = AESENC(C[8], S[5])
         "vpxorq %%xmm24, %%xmm1, %%xmm24;" // C[8] = SIMD_XOR(C[8], S[1])
         "vpxorq %%xmm11, %%xmm16, %%xmm11;" // S[11] = SIMD_XOR(S[11], M[8])
         "vpxorq %%xmm5, %%xmm16, %%xmm5;" // S[5] = SIMD_XOR(S[5], M[8])
-        "vmovdqa64 %%xmm24, 128(%0, %%rax);" // Write back C[8] to ci[i+128:i+144]
+        "vmovdqu64 %%xmm24, 128(%0, %%rax);" // Write back C[8] to ci[i+128:i+144]
 
         // round 10
-        "vmovdqa64 144(%1, %%rax), %%xmm17;" // Load M[9] into xmm17
+        "vmovdqu64 144(%1, %%rax), %%xmm17;" // Load M[9] into xmm17
         "vpxorq %%xmm9, %%xmm10, %%xmm25;" // C[9] = SIMD_XOR(S[9], S[10])
         "vaesenc %%xmm17, %%xmm25, %%xmm25;" // C[9] = AESENC(M[9], C[9])
         "vaesenc %%xmm25, %%xmm6, %%xmm9;" // S[25] = AESENC(C[9], S[6])
         "vpxorq %%xmm25, %%xmm2, %%xmm25;" // C[9] = SIMD_XOR(C[9], S[2])
         "vpxorq %%xmm12, %%xmm17, %%xmm12;" // S[12] = SIMD_XOR(S[12], M[9])
         "vpxorq %%xmm6, %%xmm17, %%xmm6;" // S[6] = SIMD_XOR(S[6], M[9])
-        "vmovdqa64 %%xmm25, 144(%0, %%rax);" // Write back C[9] to ci[i+144:i+160]
+        "vmovdqu64 %%xmm25, 144(%0, %%rax);" // Write back C[9] to ci[i+144:i+160]
 
         // round 11
-        "vmovdqa64 160(%1, %%rax), %%xmm18;" // Load M[10] into xmm18
+        "vmovdqu64 160(%1, %%rax), %%xmm18;" // Load M[10] into xmm18
         "vpxorq %%xmm10, %%xmm11, %%xmm26;" // C[10] = SIMD_XOR(S[10], S[11])
         "vaesenc %%xmm18, %%xmm26, %%xmm26;" // C[10] = AESENC(M[10], C[10])
         "vaesenc %%xmm26, %%xmm7, %%xmm10;" // S[26] = AESENC(C[10], S[7])
         "vpxorq %%xmm26, %%xmm3, %%xmm26;" // C[10] = SIMD_XOR(C[10], S[3])
         "vpxorq %%xmm13, %%xmm18, %%xmm13;" // S[13] = SIMD_XOR(S[13], M[10])
         "vpxorq %%xmm7, %%xmm18, %%xmm7;" // S[7] = SIMD_XOR(S[7], M[10])
-        "vmovdqa64 %%xmm26, 160(%0, %%rax);" // Write back C[10] to ci[i+160:i+176]
+        "vmovdqu64 %%xmm26, 160(%0, %%rax);" // Write back C[10] to ci[i+160:i+176]
 
         // round 12
-        "vmovdqa64 176(%1, %%rax), %%xmm19;" // Load M[11] into xmm19
+        "vmovdqu64 176(%1, %%rax), %%xmm19;" // Load M[11] into xmm19
         "vpxorq %%xmm11, %%xmm12, %%xmm27;" // C[11] = SIMD_XOR(S[11], S[12])
         "vaesenc %%xmm19, %%xmm27, %%xmm27;" // C[11] = AESENC(M[11], C[11])
         "vaesenc %%xmm27, %%xmm8, %%xmm11;" // S[27] = AESENC(C[11], S[8])
         "vpxorq %%xmm27, %%xmm4, %%xmm27;" // C[11] = SIMD_XOR(C[11], S[4])
         "vpxorq %%xmm14, %%xmm19, %%xmm14;" // S[14] = SIMD_XOR(S[14], M[11])
         "vpxorq %%xmm8, %%xmm19, %%xmm8;" // S[8] = SIMD_XOR(S[8], M[11])
-        "vmovdqa64 %%xmm27, 176(%0, %%rax);" // Write back C[11] to ci[i+176:i+192]
+        "vmovdqu64 %%xmm27, 176(%0, %%rax);" // Write back C[11] to ci[i+176:i+192]
 
         // round 13
-        "vmovdqa64 192(%1, %%rax), %%xmm20;" // Load M[12] into xmm20
+        "vmovdqu64 192(%1, %%rax), %%xmm20;" // Load M[12] into xmm20
         "vpxorq %%xmm12, %%xmm13, %%xmm28;" // C[12] = SIMD_XOR(S[12], S[13])
         "vaesenc %%xmm20, %%xmm28, %%xmm28;" // C[12] = AESENC(M[12], C[12])
         "vaesenc %%xmm28, %%xmm9, %%xmm12;" // S[28] = AESENC(C[12], S[9])
         "vpxorq %%xmm28, %%xmm5, %%xmm28;" // C[12] = SIMD_XOR(C[12], S[5])
         "vpxorq %%xmm15, %%xmm20, %%xmm15;" // S[15] = SIMD_XOR(S[15], M[12])
         "vpxorq %%xmm9, %%xmm20, %%xmm9;" // S[9] = SIMD_XOR(S[9], M[12])
-        "vmovdqa64 %%xmm28, 192(%0, %%rax);" // Write back C[12] to ci[i+192:i+208]
+        "vmovdqu64 %%xmm28, 192(%0, %%rax);" // Write back C[12] to ci[i+192:i+208]
 
         // round 14
-        "vmovdqa64 208(%1, %%rax), %%xmm21;" // Load M[13] into xmm21
+        "vmovdqu64 208(%1, %%rax), %%xmm21;" // Load M[13] into xmm21
         "vpxorq %%xmm13, %%xmm14, %%xmm29;" // C[13] = SIMD_XOR(S[13], S[14])
         "vaesenc %%xmm21, %%xmm29, %%xmm29;" // C[13] = AESENC(M[13], C[13])
         "vaesenc %%xmm29, %%xmm10, %%xmm13;" // S[29] = AESENC(C[13], S[10])
         "vpxorq %%xmm29, %%xmm6, %%xmm29;" // C[13] = SIMD_XOR(C[13], S[6])
         "vpxorq %%xmm0, %%xmm21, %%xmm0;" // S[0] = SIMD_XOR(S[0], M[13])
         "vpxorq %%xmm10, %%xmm21, %%xmm10;" // S[10] = SIMD_XOR(S[10], M[13])
-        "vmovdqa64 %%xmm29, 208(%0, %%rax);" // Write back C[13] to ci[i+208:i+224]
+        "vmovdqu64 %%xmm29, 208(%0, %%rax);" // Write back C[13] to ci[i+208:i+224]
 
         // round 15
-        "vmovdqa64 224(%1, %%rax), %%xmm22;" // Load M[14] into xmm22
+        "vmovdqu64 224(%1, %%rax), %%xmm22;" // Load M[14] into xmm22
         "vpxorq %%xmm14, %%xmm15, %%xmm30;" // C[14] = SIMD_XOR(S[14], S[15])
         "vaesenc %%xmm22, %%xmm30, %%xmm30;" // C[14] = AESENC(M[14], C[14])
         "vaesenc %%xmm30, %%xmm11, %%xmm14;" // S[30] = AESENC(C[14], S[11])
         "vpxorq %%xmm30, %%xmm7, %%xmm30;" // C[14] = SIMD_XOR(C[14], S[7])
         "vpxorq %%xmm1, %%xmm22, %%xmm1;" // S[1] = SIMD_XOR(S[1], M[14])
         "vpxorq %%xmm11, %%xmm22, %%xmm11;" // S[11] = SIMD_XOR(S[11], M[14])
-        "vmovdqa64 %%xmm30, 224(%0, %%rax);" // Write back C[14] to ci[i+224:i+240]
+        "vmovdqu64 %%xmm30, 224(%0, %%rax);" // Write back C[14] to ci[i+224:i+240]
 
         // round 16
-        "vmovdqa64 240(%1, %%rax), %%xmm23;" // Load M[15] into xmm23
+        "vmovdqu64 240(%1, %%rax), %%xmm23;" // Load M[15] into xmm23
         "vpxorq %%xmm15, %%xmm0, %%xmm31;" // C[15] = SIMD_XOR(S[15], S[0])
         "vaesenc %%xmm23, %%xmm31, %%xmm31;" // C[15] = AESENC(M[15], C[15])
         "vaesenc %%xmm31, %%xmm12, %%xmm15;" // S[31] = AESENC(C[15], S[12])
         "vpxorq %%xmm31, %%xmm8, %%xmm31;" // C[15] = SIMD_XOR(C[15], S[8])
         "vpxorq %%xmm2, %%xmm23, %%xmm2;" // S[2] = SIMD_XOR(S[2], M[15])
         "vpxorq %%xmm12, %%xmm23, %%xmm12;" // S[12] = SIMD_XOR(S[12], M[15])
-        "vmovdqa64 %%xmm31, 240(%0, %%rax);" // Write back C[15] to ci[i+240:i+256]
+        "vmovdqu64 %%xmm31, 240(%0, %%rax);" // Write back C[15] to ci[i+240:i+256]
 
         "addq $256, %%rax;" // i += 256
         "jmp 1b;" // Loop back
