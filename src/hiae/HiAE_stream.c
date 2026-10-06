@@ -1,7 +1,5 @@
 #include "HiAE.h"
 #include "HiAE_internal.h"
-#include <assert.h>
-#include <string.h>
 
 void
 HiAE_stream_init(HiAE_stream_state_t *stream, const uint8_t *key, const uint8_t *nonce)

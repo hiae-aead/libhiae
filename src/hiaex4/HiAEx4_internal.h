@@ -4,7 +4,6 @@
 #include "../common/common.h"
 #include "../common/cpu.h"
 #include "HiAEx4.h"
-#include <string.h>
 
 /* Implementation function table */
 typedef struct {

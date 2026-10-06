@@ -253,8 +253,6 @@ def create_amalgamation():
 /* Standard C library includes */
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
-#include <assert.h>
 
 /* Platform-specific includes */
 #ifdef __linux__
@@ -348,7 +346,7 @@ extern "C" {{
                                     softaes_header, re.DOTALL)
         if softaes_content:
             softaes_body = softaes_content.group(1)
-            softaes_body = re.sub(r'#include\s+<[^>]+>', '', softaes_body)
+            softaes_body = re.sub(r'#include\s+(<[^>]+>|"[^"]+")', '', softaes_body)
             # HiAE_software.c defines FAVOR_PERFORMANCE before including softaes.h
             amalgamated_content += ("\n/* Software AES implementation from softaes.h */\n"
                                     f"#define FAVOR_PERFORMANCE\n{softaes_body}\n")

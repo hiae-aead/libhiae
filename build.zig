@@ -23,11 +23,15 @@ pub fn build(b: *std.Build) void {
         target = b.resolveTargetQuery(query);
     }
 
+    // Freestanding targets have no libc.
+    // The library doesn't need one, but the test programs do, so only the library is built there.
+    const freestanding = target.result.os.tag == .freestanding;
+
     const lib_mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
         .strip = true,
-        .link_libc = true,
+        .link_libc = !freestanding,
     });
 
     const lib = b.addLibrary(.{
@@ -73,6 +77,8 @@ pub fn build(b: *std.Build) void {
         .install_subdir = "",
         .source_dir = b.path("include"),
     });
+
+    if (freestanding) return;
 
     const TestSpec = struct { name: []const u8, src: []const u8, run: bool };
     const test_specs = [_]TestSpec{

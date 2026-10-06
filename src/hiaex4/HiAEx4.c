@@ -7,9 +7,6 @@
 
 #include "HiAEx4.h"
 #include "HiAEx4_internal.h"
-#include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
 
 #ifdef HAVE_ANDROID_GETCPUFEATURES
 #    include <cpu-features.h>

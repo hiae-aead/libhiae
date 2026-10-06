@@ -1,8 +1,7 @@
 #ifndef SOFTAES_H
 #define SOFTAES_H
 
-#include <stdint.h>
-#include <string.h>
+#include "../common/common.h"
 
 #ifndef CRYPTO_ALIGN
 #    if defined(__INTEL_COMPILER) || defined(_MSC_VER)

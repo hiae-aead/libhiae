@@ -1,7 +1,5 @@
 #include "HiAEx4.h"
 #include "HiAEx4_internal.h"
-#include <assert.h>
-#include <string.h>
 
 void
 HiAEx4_stream_init(HiAEx4_stream_state_t *stream, const uint8_t *key, const uint8_t *nonce)

@@ -1,7 +1,32 @@
 #ifndef hiae_common_H
 #define hiae_common_H
 
+#include <stddef.h>
 #include <stdint.h>
+
+/* Freestanding WebAssembly comes without a libc, so only compiler builtins can be used there. */
+#if defined(__wasm__) && !defined(__wasi__) && !defined(__EMSCRIPTEN__)
+#    define memcpy(A, B, C) __builtin_memcpy((A), (B), (C))
+#    define memset(A, B, C) __builtin_memset((A), (B), (C))
+#    define strcmp(A, B)    hiae_strcmp((A), (B))
+static inline int
+hiae_strcmp(const char *a, const char *b)
+{
+    while (*a != 0 && *a == *b) {
+        a++;
+        b++;
+    }
+    return (int) (unsigned char) *a - (int) (unsigned char) *b;
+}
+#    ifdef NDEBUG
+#        define assert(X) ((void) 0)
+#    else
+#        define assert(X) ((X) ? (void) 0 : __builtin_trap())
+#    endif
+#else
+#    include <assert.h>
+#    include <string.h>
+#endif
 
 /*
  * Compiler / target capability detection shared by every translation unit.

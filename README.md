@@ -539,12 +539,14 @@ make benchmark        # Performance benchmarks (all variants)
 ./bin/perf_x4_test    # HiAEx4 performance measurements
 ```
 
-Run the same suite as WebAssembly with Zig and Wasmtime:
+The library can also be built for freestanding WebAssembly with Zig, where it doesn't need a C library:
 
 ```bash
-zig build test -fwasmtime -Dtarget=wasm32-wasi -Dwasm-relaxed-simd=false
-zig build test -fwasmtime -Dtarget=wasm32-wasi -Dwasm-relaxed-simd=true
+zig build -Dtarget=wasm32-freestanding -Dwasm-relaxed-simd=false
+zig build -Dtarget=wasm32-freestanding -Dwasm-relaxed-simd=true
 ```
+
+The test programs do need a C library, so they are not built for that target.
 
 ## CMake Integration
 

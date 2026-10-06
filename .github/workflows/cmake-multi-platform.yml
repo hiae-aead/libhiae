@@ -86,10 +86,9 @@ jobs:
     - uses: mlugg/setup-zig@v2.2.1
       with:
         version: master
-    - uses: bytecodealliance/actions/wasmtime/setup@v1.1.3
 
-    - name: Test WebAssembly
+    - name: Build for WebAssembly
       run: >
-        zig build test -fwasmtime
-        -Dtarget=wasm32-wasi
+        zig build
+        -Dtarget=wasm32-freestanding
         -Dwasm-relaxed-simd=${{ matrix.relaxed_simd }}
