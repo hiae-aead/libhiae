@@ -616,6 +616,16 @@ HiAEx2_dec_partial_noupdate_software(HiAEx2_state_t *state_opaque,
 }
 
 static int
+HiAEx2_verify_software(HiAEx2_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag)
+{
+    uint8_t computed_tag[HIAEX2_MACBYTES];
+
+    HiAEx2_finalize_software(state, ad_len, msg_len, computed_tag);
+
+    return hiaex2_constant_time_compare(computed_tag, tag, HIAEX2_MACBYTES);
+}
+
+static int
 HiAEx2_encrypt_software(const uint8_t *key,
                         const uint8_t *nonce,
                         const uint8_t *msg,
@@ -671,6 +681,7 @@ const HiAEx2_impl_t hiaex2_software_impl = { .name         = "Software",
                                              .absorb       = HiAEx2_absorb_software,
                                              .finalize     = HiAEx2_finalize_software,
                                              .finalize_mac = HiAEx2_finalize_mac_software,
+                                             .verify       = HiAEx2_verify_software,
                                              .enc          = HiAEx2_enc_software,
                                              .dec          = HiAEx2_dec_software,
                                              .enc_partial_noupdate =

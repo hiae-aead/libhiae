@@ -292,6 +292,37 @@ static uint8_t key[HIAEX4_KEYBYTES], nonce[HIAEX4_NONCEBYTES], tag[HIAEX4_MACBYT
 static uint8_t out_tag[HIAEX4_MACBYTES], ad[MAX_LEN], pt[MAX_LEN], ct[MAX_LEN], out[MAX_LEN];
 
 static int
+stream_verify(const uint8_t *expected_tag, size_t len, size_t ad_len)
+{
+    HiAEx4_stream_state_t stream;
+
+    HiAEx4_stream_init(&stream, key, nonce);
+    HiAEx4_stream_absorb(&stream, ad, ad_len);
+    HiAEx4_stream_decrypt(&stream, out, ct, len);
+
+    return HiAEx4_stream_verify(&stream, expected_tag);
+}
+
+// The genuine tag must be accepted, and every single-bit corruption of it rejected
+static int
+check_stream_verify(size_t len, size_t ad_len)
+{
+    uint8_t bad_tag[HIAEX4_MACBYTES];
+
+    if (stream_verify(tag, len, ad_len) != 0 || memcmp(out, pt, len) != 0) {
+        return 0;
+    }
+    for (size_t bit = 0; bit < 8 * sizeof tag; bit++) {
+        memcpy(bad_tag, tag, sizeof tag);
+        bad_tag[bit / 8] ^= (uint8_t) (1U << (bit % 8));
+        if (stream_verify(bad_tag, len, ad_len) != -1) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int
 check_aead(const TestVector *tv)
 {
     unhex(key, tv->key);
@@ -305,8 +336,11 @@ check_aead(const TestVector *tv)
     if (memcmp(out, ct, len) != 0 || memcmp(out_tag, tag, sizeof tag) != 0) {
         return 0;
     }
-    return HiAEx4_decrypt(key, nonce, out, ct, len, ad, ad_len, tag) == 0 &&
-           memcmp(out, pt, len) == 0;
+    if (HiAEx4_decrypt(key, nonce, out, ct, len, ad, ad_len, tag) != 0 ||
+        memcmp(out, pt, len) != 0) {
+        return 0;
+    }
+    return check_stream_verify(len, ad_len);
 }
 
 static int

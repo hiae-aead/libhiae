@@ -538,6 +538,16 @@ HiAE_dec_partial_noupdate_arm_sha3(HiAE_state_t  *state_opaque,
 }
 
 static int
+HiAE_verify_arm_sha3(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag)
+{
+    uint8_t computed_tag[HIAE_MACBYTES];
+
+    HiAE_finalize_arm_sha3(state, ad_len, msg_len, computed_tag);
+
+    return hiae_constant_time_compare(computed_tag, tag, HIAE_MACBYTES);
+}
+
+static int
 HiAE_encrypt_arm_sha3(const uint8_t *key,
                       const uint8_t *nonce,
                       const uint8_t *msg,
@@ -592,6 +602,7 @@ const HiAE_impl_t hiae_arm_sha3_impl = { .name                 = "ARM SHA3",
                                          .init                 = HiAE_init_arm_sha3,
                                          .absorb               = HiAE_absorb_arm_sha3,
                                          .finalize             = HiAE_finalize_arm_sha3,
+                                         .verify               = HiAE_verify_arm_sha3,
                                          .enc                  = HiAE_enc_arm_sha3,
                                          .dec                  = HiAE_dec_arm_sha3,
                                          .enc_partial_noupdate = HiAE_enc_partial_noupdate_arm_sha3,
@@ -610,6 +621,7 @@ const HiAE_impl_t hiae_arm_sha3_impl = { .name                 = NULL,
                                          .init                 = NULL,
                                          .absorb               = NULL,
                                          .finalize             = NULL,
+                                         .verify               = NULL,
                                          .enc                  = NULL,
                                          .dec                  = NULL,
                                          .enc_partial_noupdate = NULL,

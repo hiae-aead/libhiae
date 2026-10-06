@@ -532,6 +532,16 @@ HiAE_dec_partial_noupdate_aesni(HiAE_state_t  *state_opaque,
 }
 
 static int
+HiAE_verify_aesni(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag)
+{
+    uint8_t computed_tag[HIAE_MACBYTES];
+
+    HiAE_finalize_aesni(state, ad_len, msg_len, computed_tag);
+
+    return hiae_constant_time_compare(computed_tag, tag, HIAE_MACBYTES);
+}
+
+static int
 HiAE_encrypt_aesni(const uint8_t *key,
                    const uint8_t *nonce,
                    const uint8_t *msg,
@@ -586,6 +596,7 @@ const HiAE_impl_t hiae_aesni_impl = { .name                 = "AES-NI",
                                       .init                 = HiAE_init_aesni,
                                       .absorb               = HiAE_absorb_aesni,
                                       .finalize             = HiAE_finalize_aesni,
+                                      .verify               = HiAE_verify_aesni,
                                       .enc                  = HiAE_enc_aesni,
                                       .dec                  = HiAE_dec_aesni,
                                       .enc_partial_noupdate = HiAE_enc_partial_noupdate_aesni,
@@ -604,6 +615,7 @@ const HiAE_impl_t hiae_aesni_impl = { .name                 = NULL,
                                       .init                 = NULL,
                                       .absorb               = NULL,
                                       .finalize             = NULL,
+                                      .verify               = NULL,
                                       .enc                  = NULL,
                                       .dec                  = NULL,
                                       .enc_partial_noupdate = NULL,

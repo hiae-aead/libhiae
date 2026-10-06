@@ -81,10 +81,6 @@
 #    undef HAVE_AVX512FINTRIN_H
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
-typedef uint64_t hiae_unaligned_u64 __attribute__((aligned(1), may_alias));
-#endif
-
 /* The C0 and C1 constants from the specification, which the parallel variants use in every lane */
 #define HIAE_C0_BYTES \
     0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34

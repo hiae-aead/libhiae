@@ -12,6 +12,7 @@ typedef struct {
     void (*init)(HiAE_state_t *state, const uint8_t *key, const uint8_t *nonce);
     void (*absorb)(HiAE_state_t *state, const uint8_t *ad, size_t len);
     void (*finalize)(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *tag);
+    int (*verify)(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag);
     void (*enc)(HiAE_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size);
     void (*dec)(HiAE_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size);
     void (*enc_partial_noupdate)(HiAE_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size);
@@ -64,24 +65,25 @@ static const uint8_t C0[BLOCK_SIZE] = { 0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30
 static const uint8_t C1[BLOCK_SIZE] = { 0x4a, 0x40, 0x93, 0x82, 0x22, 0x99, 0xf3, 0x1d,
                                         0x00, 0x82, 0xef, 0xa9, 0x8e, 0xc4, 0xe6, 0xc8 };
 
+/* Finalizes the state and checks the tag without exposing the computed one */
+int hiae_verify(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag);
+
 /* Internal helper functions */
 static inline int
 hiae_constant_time_compare(const uint8_t *a, const uint8_t *b, size_t len)
 {
-    volatile uint16_t result;
-    uint16_t          acc = 0U;
-    size_t            i   = 0U;
+    uint16_t acc = 0U;
+    size_t   i   = 0U;
 
 #if defined(__GNUC__) || defined(__clang__)
     {
-        const volatile hiae_unaligned_u64 *volatile a64 =
-            (const volatile hiae_unaligned_u64 *volatile) (const void *) a;
-        const volatile hiae_unaligned_u64 *volatile b64 =
-            (const volatile hiae_unaligned_u64 *volatile) (const void *) b;
         uint64_t acc64 = 0U;
+        uint64_t a64, b64;
 
         for (; i + 8U <= len; i += 8U) {
-            acc64 |= a64[i / 8U] ^ b64[i / 8U];
+            memcpy(&a64, a + i, sizeof a64);
+            memcpy(&b64, b + i, sizeof b64);
+            acc64 |= a64 ^ b64;
         }
         acc64 |= acc64 >> 32;
         acc64 |= acc64 >> 16;
@@ -92,11 +94,19 @@ hiae_constant_time_compare(const uint8_t *a, const uint8_t *b, size_t len)
     for (; i < len; i++) {
         acc |= a[i] ^ b[i];
     }
-    result = acc;
 #if defined(__GNUC__) || defined(__clang__)
-    __asm__("" : "+r"(result) :);
+    __asm__("" : "+r"(acc) :);
+    acc--;
+    acc >>= 15;
+
+    return (int) acc - 1;
+#else
+    {
+        volatile uint16_t result = acc;
+
+        return -(result != 0);
+    }
 #endif
-    return -(result != 0);
 }
 
 #endif /* HIAE_INTERNAL_H */

@@ -468,6 +468,13 @@ HiAE_finalize(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *t
     hiae_impl->finalize(state, ad_len, msg_len, tag);
 }
 
+int
+hiae_verify(HiAE_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag)
+{
+    hiae_init_dispatch();
+    return hiae_impl->verify(state, ad_len, msg_len, tag);
+}
+
 void
 HiAE_enc(HiAE_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size)
 {

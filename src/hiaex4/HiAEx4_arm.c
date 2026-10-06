@@ -683,6 +683,16 @@ HiAEx4_dec_arm(HiAEx4_state_t *state_opaque, uint8_t *mi, const uint8_t *ci, siz
 }
 
 static int
+HiAEx4_verify_arm(HiAEx4_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag)
+{
+    uint8_t computed_tag[HIAEX4_MACBYTES];
+
+    HiAEx4_finalize_arm(state, ad_len, msg_len, computed_tag);
+
+    return hiaex4_constant_time_compare(computed_tag, tag, HIAEX4_MACBYTES);
+}
+
+static int
 HiAEx4_encrypt_arm(const uint8_t *key,
                    const uint8_t *nonce,
                    const uint8_t *msg,
@@ -738,6 +748,7 @@ const HiAEx4_impl_t hiaex4_arm_impl = { .name                 = "ARM NEON",
                                         .absorb               = HiAEx4_absorb_arm,
                                         .finalize             = HiAEx4_finalize_arm,
                                         .finalize_mac         = HiAEx4_finalize_mac_arm,
+                                        .verify               = HiAEx4_verify_arm,
                                         .enc                  = HiAEx4_enc_arm,
                                         .dec                  = HiAEx4_dec_arm,
                                         .enc_partial_noupdate = HiAEx4_enc_partial_noupdate_arm,
@@ -757,6 +768,7 @@ const HiAEx4_impl_t hiaex4_arm_impl = { .name                 = NULL,
                                         .absorb               = NULL,
                                         .finalize             = NULL,
                                         .finalize_mac         = NULL,
+                                        .verify               = NULL,
                                         .enc                  = NULL,
                                         .dec                  = NULL,
                                         .enc_partial_noupdate = NULL,

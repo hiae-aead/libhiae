@@ -17,6 +17,43 @@ print_hex(const char *label, const uint8_t *data, size_t len)
     printf("\n");
 }
 
+// Decrypts in chunks, and returns what the tag verification returned
+static int
+stream_decrypt(uint8_t *pt, const uint8_t *tag, const uint8_t *key, const uint8_t *nonce,
+               const uint8_t *ad, size_t ad_len, const uint8_t *ct, size_t ct_len,
+               const size_t *ad_chunks, size_t ad_chunk_count, const size_t *msg_chunks,
+               size_t msg_chunk_count)
+{
+    HiAE_stream_state_t stream;
+    HiAE_stream_init(&stream, key, nonce);
+
+    size_t ad_pos = 0;
+    for (size_t i = 0; i < ad_chunk_count; i++) {
+        size_t chunk_size = ad_chunks[i];
+        if (ad_pos + chunk_size > ad_len) {
+            chunk_size = ad_len - ad_pos;
+        }
+        if (chunk_size > 0) {
+            HiAE_stream_absorb(&stream, ad + ad_pos, chunk_size);
+            ad_pos += chunk_size;
+        }
+    }
+
+    size_t msg_pos = 0;
+    for (size_t i = 0; i < msg_chunk_count; i++) {
+        size_t chunk_size = msg_chunks[i];
+        if (msg_pos + chunk_size > ct_len) {
+            chunk_size = ct_len - msg_pos;
+        }
+        if (chunk_size > 0) {
+            HiAE_stream_decrypt(&stream, pt + msg_pos, ct + msg_pos, chunk_size);
+            msg_pos += chunk_size;
+        }
+    }
+
+    return HiAE_stream_verify(&stream, tag);
+}
+
 static int
 test_case(const char *test_name, const uint8_t *key, const uint8_t *nonce, const uint8_t *ad,
           size_t ad_len, const uint8_t *pt, size_t pt_len, const size_t *ad_chunks,
@@ -77,37 +114,25 @@ test_case(const char *test_name, const uint8_t *key, const uint8_t *nonce, const
         return 1;
     }
 
-    HiAE_stream_init(&stream, key, nonce);
-
-    ad_pos = 0;
-    for (size_t i = 0; i < ad_chunk_count; i++) {
-        size_t chunk_size = ad_chunks[i];
-        if (ad_pos + chunk_size > ad_len) {
-            chunk_size = ad_len - ad_pos;
-        }
-        if (chunk_size > 0) {
-            HiAE_stream_absorb(&stream, ad + ad_pos, chunk_size);
-            ad_pos += chunk_size;
-        }
+    if (stream_decrypt(pt_decrypted, tag_regular, key, nonce, ad, ad_len, ct_stream, pt_len,
+                       ad_chunks, ad_chunk_count, msg_chunks, msg_chunk_count) != 0) {
+        printf("FAIL: Valid tag rejected\n");
+        return 1;
     }
-
-    msg_pos = 0;
-    for (size_t i = 0; i < msg_chunk_count; i++) {
-        size_t chunk_size = msg_chunks[i];
-        if (msg_pos + chunk_size > pt_len) {
-            chunk_size = pt_len - msg_pos;
-        }
-        if (chunk_size > 0) {
-            HiAE_stream_decrypt(&stream, pt_decrypted + msg_pos, ct_stream + msg_pos, chunk_size);
-            msg_pos += chunk_size;
-        }
-    }
-
-    HiAE_stream_finalize(&stream, tag_stream);
 
     if (memcmp(pt_decrypted, pt, pt_len) != 0) {
         printf("FAIL: Decrypted plaintext mismatch\n");
         return 1;
+    }
+
+    for (size_t bit = 0; bit < 8 * sizeof tag_regular; bit++) {
+        memcpy(tag_stream, tag_regular, sizeof tag_stream);
+        tag_stream[bit / 8] ^= (uint8_t) (1U << (bit % 8));
+        if (stream_decrypt(pt_decrypted, tag_stream, key, nonce, ad, ad_len, ct_stream, pt_len,
+                           ad_chunks, ad_chunk_count, msg_chunks, msg_chunk_count) != -1) {
+            printf("FAIL: Tag with bit %zu flipped was not rejected\n", bit);
+            return 1;
+        }
     }
 
     printf("PASS\n");

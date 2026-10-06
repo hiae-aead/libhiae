@@ -101,6 +101,20 @@ static const TestVector test_vectors[] = {
 
 static const size_t num_test_vectors = sizeof(test_vectors) / sizeof(test_vectors[0]);
 
+// Decrypt with the streaming API, and return what the tag verification returned
+static int
+stream_verify(uint8_t *pt, const uint8_t *tag, const uint8_t *key, const uint8_t *nonce,
+              const uint8_t *ad, size_t ad_len, const uint8_t *ct, size_t ct_len)
+{
+    HiAEx2_stream_state_t stream;
+
+    HiAEx2_stream_init(&stream, key, nonce);
+    HiAEx2_stream_absorb(&stream, ad, ad_len);
+    HiAEx2_stream_decrypt(&stream, pt, ct, ct_len);
+
+    return HiAEx2_stream_verify(&stream, tag);
+}
+
 // Run a single test vector
 static int
 run_test_vector(const TestVector *tv)
@@ -180,6 +194,24 @@ run_test_vector(const TestVector *tv)
     if (memcmp(decrypted, plaintext, pt_len) != 0) {
         printf("  ERROR: Decrypted plaintext mismatch\n");
         return 0;
+    }
+
+    // Test streamed decryption, with the genuine tag and with every single-bit corruption of it
+    if (stream_verify(decrypted, tag, key, nonce, ad, ad_len, ciphertext, ct_len) != 0 ||
+        memcmp(decrypted, plaintext, pt_len) != 0) {
+        printf("  ERROR: Streamed decryption failed\n");
+        return 0;
+    }
+
+    for (size_t bit = 0; bit < 8 * sizeof(tag); bit++) {
+        uint8_t bad_tag[HIAEX2_MACBYTES];
+
+        memcpy(bad_tag, tag, sizeof(bad_tag));
+        bad_tag[bit / 8] ^= (uint8_t) (1U << (bit % 8));
+        if (stream_verify(decrypted, bad_tag, key, nonce, ad, ad_len, ciphertext, ct_len) != -1) {
+            printf("  ERROR: Tag with bit %zu flipped was not rejected\n", bit);
+            return 0;
+        }
     }
 
     return 1;

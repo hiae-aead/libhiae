@@ -13,6 +13,7 @@ typedef struct {
     void (*absorb)(HiAEx4_state_t *state, const uint8_t *ad, size_t len);
     void (*finalize)(HiAEx4_state_t *state, uint64_t ad_len, uint64_t msg_len, uint8_t *tag);
     void (*finalize_mac)(HiAEx4_state_t *state, uint64_t data_len, uint8_t *tag);
+    int (*verify)(HiAEx4_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag);
     void (*enc)(HiAEx4_state_t *state, uint8_t *ci, const uint8_t *mi, size_t size);
     void (*dec)(HiAEx4_state_t *state, uint8_t *mi, const uint8_t *ci, size_t size);
     void (*enc_partial_noupdate)(HiAEx4_state_t *state, uint8_t *ci, const uint8_t *mi,
@@ -64,24 +65,25 @@ static const uint8_t C0[BLOCK_SIZE] = { HIAE_C0_BYTES, HIAE_C0_BYTES, HIAE_C0_BY
 static const uint8_t C1[BLOCK_SIZE] = { HIAE_C1_BYTES, HIAE_C1_BYTES, HIAE_C1_BYTES,
                                         HIAE_C1_BYTES };
 
+/* Finalizes the state and checks the tag without exposing the computed one */
+int hiaex4_verify(HiAEx4_state_t *state, uint64_t ad_len, uint64_t msg_len, const uint8_t *tag);
+
 /* Internal helper functions */
 static inline int
 hiaex4_constant_time_compare(const uint8_t *a, const uint8_t *b, size_t len)
 {
-    volatile uint16_t result;
-    uint16_t          acc = 0U;
-    size_t            i   = 0U;
+    uint16_t acc = 0U;
+    size_t   i   = 0U;
 
 #if defined(__GNUC__) || defined(__clang__)
     {
-        const volatile hiae_unaligned_u64 *volatile a64 =
-            (const volatile hiae_unaligned_u64 *volatile) (const void *) a;
-        const volatile hiae_unaligned_u64 *volatile b64 =
-            (const volatile hiae_unaligned_u64 *volatile) (const void *) b;
         uint64_t acc64 = 0U;
+        uint64_t a64, b64;
 
         for (; i + 8U <= len; i += 8U) {
-            acc64 |= a64[i / 8U] ^ b64[i / 8U];
+            memcpy(&a64, a + i, sizeof a64);
+            memcpy(&b64, b + i, sizeof b64);
+            acc64 |= a64 ^ b64;
         }
         acc64 |= acc64 >> 32;
         acc64 |= acc64 >> 16;
@@ -92,11 +94,19 @@ hiaex4_constant_time_compare(const uint8_t *a, const uint8_t *b, size_t len)
     for (; i < len; i++) {
         acc |= a[i] ^ b[i];
     }
-    result = acc;
 #if defined(__GNUC__) || defined(__clang__)
-    __asm__("" : "+r"(result) :);
+    __asm__("" : "+r"(acc) :);
+    acc--;
+    acc >>= 15;
+
+    return (int) acc - 1;
+#else
+    {
+        volatile uint16_t result = acc;
+
+        return -(result != 0);
+    }
 #endif
-    return -(result != 0);
 }
 
 #endif /* HiAEx4_INTERNAL_H */

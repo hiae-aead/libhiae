@@ -220,9 +220,7 @@ HiAE_stream_verify(HiAE_stream_state_t *stream, const uint8_t *expected_tag)
         stream->offset = 0;
     }
 
-    uint8_t computed_tag[HIAE_MACBYTES];
-    HiAE_finalize(&stream->state, stream->ad_len, stream->msg_len, computed_tag);
     stream->phase = HIAE_STREAM_FINAL;
 
-    return hiae_constant_time_compare(expected_tag, computed_tag, HIAE_MACBYTES);
+    return hiae_verify(&stream->state, stream->ad_len, stream->msg_len, expected_tag);
 }

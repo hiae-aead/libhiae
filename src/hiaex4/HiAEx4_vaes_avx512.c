@@ -1047,6 +1047,17 @@ HiAEx4_dec_partial_noupdate_vaes_avx512(HiAEx4_state_t *state_opaque,
 }
 
 static int
+HiAEx4_verify_vaes_avx512(HiAEx4_state_t *state, uint64_t ad_len, uint64_t msg_len,
+                          const uint8_t *tag)
+{
+    uint8_t computed_tag[HIAEX4_MACBYTES];
+
+    HiAEx4_finalize_vaes_avx512(state, ad_len, msg_len, computed_tag);
+
+    return hiaex4_constant_time_compare(computed_tag, tag, HIAEX4_MACBYTES);
+}
+
+static int
 HiAEx4_encrypt_vaes_avx512(const uint8_t *key,
                            const uint8_t *nonce,
                            const uint8_t *msg,
@@ -1102,6 +1113,7 @@ const HiAEx4_impl_t hiaex4_vaes_avx512_impl = { .name         = "VAES-AVX512",
                                                 .absorb       = HiAEx4_absorb_vaes_avx512,
                                                 .finalize     = HiAEx4_finalize_vaes_avx512,
                                                 .finalize_mac = HiAEx4_finalize_mac_vaes_avx512,
+                                                .verify       = HiAEx4_verify_vaes_avx512,
                                                 .enc          = HiAEx4_enc_vaes_avx512,
                                                 .dec          = HiAEx4_dec_vaes_avx512,
                                                 .enc_partial_noupdate =
@@ -1122,6 +1134,7 @@ const HiAEx4_impl_t hiaex4_vaes_avx512_impl = { .name                 = NULL,
                                                 .absorb               = NULL,
                                                 .finalize             = NULL,
                                                 .finalize_mac         = NULL,
+                                                .verify               = NULL,
                                                 .enc                  = NULL,
                                                 .dec                  = NULL,
                                                 .enc_partial_noupdate = NULL,
