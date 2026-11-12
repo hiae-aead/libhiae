@@ -6,7 +6,7 @@ pub fn build(b: *std.Build) void {
         .preferred_optimize_mode = .fast,
     });
 
-    const version = std.SemanticVersion.parse("0.2.4") catch unreachable;
+    const version = std.SemanticVersion.parse("0.2.5") catch unreachable;
 
     // Use -Dwasm-relaxed-simd=false to keep baseline SIMD128 only.
     const wasm_relaxed = b.option(
