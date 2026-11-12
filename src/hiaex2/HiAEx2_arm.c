@@ -13,7 +13,7 @@
 #    include <arm_neon.h>
 
 #    ifdef __clang__
-#        pragma clang attribute push(__attribute__((target("neon,crypto,aes"))), \
+#        pragma clang attribute push(__attribute__((target("neon,crypto,aes,fuse-aes"))), \
                                      apply_to = function)
 #    elif defined(__GNUC__)
 #        pragma GCC target("+simd+crypto")
@@ -115,7 +115,18 @@ XAESL(const DATA256b x, const DATA256b y)
     return result;
 }
 
-#    define AESL(x) XAESL(x, SIMD_ZERO_256())
+#    ifdef HIAE_NEON_ZERO
+static inline DATA256b
+AESL(const DATA256b x)
+{
+    DATA256b result;
+    result.data[0] = vaesmcq_u8(vaeseq_u8(HIAE_NEON_ZERO(), x.data[0]));
+    result.data[1] = vaesmcq_u8(vaeseq_u8(HIAE_NEON_ZERO(), x.data[1]));
+    return result;
+}
+#    else
+#        define AESL(x) XAESL(x, SIMD_ZERO_256())
+#    endif
 
 static inline void
 update_state_offset(DATA256b *state, DATA256b M, int offset)

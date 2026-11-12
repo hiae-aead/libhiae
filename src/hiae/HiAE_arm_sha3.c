@@ -16,7 +16,7 @@
 #    include <arm_neon.h>
 
 #    ifdef __clang__
-#        pragma clang attribute push(__attribute__((target("neon,crypto,aes,sha3"))), \
+#        pragma clang attribute push(__attribute__((target("neon,crypto,aes,sha3,fuse-aes"))), \
                                      apply_to = function)
 #    elif defined(__GNUC__)
 #        if __GNUC__ < 14
@@ -50,7 +50,11 @@ typedef uint8x16_t DATA128b;
 #    define SIMD_XOR3(a, b, c) veor3q_u8(a, b, c)
 #    define SIMD_ZERO_128()    vmovq_n_u8(0)
 #    define XAESL(x, y)        vaesmcq_u8(vaeseq_u8(x, y))
-#    define AESL(x)            XAESL(x, SIMD_ZERO_128())
+#    ifdef HIAE_NEON_ZERO
+#        define AESL(x) XAESL(HIAE_NEON_ZERO(), x)
+#    else
+#        define AESL(x) XAESL(x, SIMD_ZERO_128())
+#    endif
 
 static inline void
 update_state_offset(DATA128b *state, DATA128b *tmp, DATA128b M, int offset)

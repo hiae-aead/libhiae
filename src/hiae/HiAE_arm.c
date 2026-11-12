@@ -13,7 +13,7 @@
 #    include <arm_neon.h>
 
 #    ifdef __clang__
-#        pragma clang attribute push(__attribute__((target("neon,crypto,aes"))), \
+#        pragma clang attribute push(__attribute__((target("neon,crypto,aes,fuse-aes"))), \
                                      apply_to = function)
 #    elif defined(__GNUC__)
 #        pragma GCC target("+simd+crypto")
@@ -42,7 +42,11 @@ typedef uint8x16_t DATA128b;
 #    define SIMD_AND(a, b)     vandq_u8(a, b)
 #    define SIMD_ZERO_128()    vmovq_n_u8(0)
 #    define XAESL(x, y)        vaesmcq_u8(vaeseq_u8(x, y))
-#    define AESL(x)            XAESL(x, SIMD_ZERO_128())
+#    ifdef HIAE_NEON_ZERO
+#        define AESL(x) XAESL(HIAE_NEON_ZERO(), x)
+#    else
+#        define AESL(x) XAESL(x, SIMD_ZERO_128())
+#    endif
 
 static inline void
 update_state_offset(DATA128b *state, DATA128b M, int offset)
@@ -79,7 +83,9 @@ dec_offset(DATA128b *state, DATA128b *tmp, DATA128b C, int offset)
 {
     tmp[offset] = XAESL(state[(P_0 + offset) % STATE], state[(P_1 + offset) % STATE]);
     DATA128b M  = SIMD_XOR(state[(P_7 + offset) % STATE], C);
-    state[(0 + offset) % STATE]   = SIMD_XOR(M, AESL(state[(P_4 + offset) % STATE]));
+    // Not AESL(): with GCC, a fresh zero makes this loop slower on Neoverse N1.
+    state[(0 + offset) % STATE] =
+        SIMD_XOR(M, XAESL(state[(P_4 + offset) % STATE], SIMD_ZERO_128()));
     M                             = SIMD_XOR(M, tmp[offset]);
     state[(I_1 + offset) % STATE] = SIMD_XOR(state[(I_1 + offset) % STATE], M);
     state[(I_2 + offset) % STATE] = SIMD_XOR(state[(I_2 + offset) % STATE], M);
