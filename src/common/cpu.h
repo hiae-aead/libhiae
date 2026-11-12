@@ -31,4 +31,8 @@
 #    endif
 #endif
 
+#if defined(__ARM_FEATURE_SHA3)
+#    define HIAE_HAS_HW_SHA3
+#endif
+
 #endif /* hiae_cpu_H */

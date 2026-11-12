@@ -256,7 +256,7 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
         return 0;
     }
 
-#if __ARM_FEATURE_CRYPTO || __ARM_FEATURE_AES
+#if defined(HIAEX4_HAS_HW_AES)
     cpu_features->has_neon_aes = 1;
 #elif defined(_M_ARM64)
     // Assuming all CPUs supported by Arm Windows have the crypto extensions.
@@ -276,7 +276,7 @@ _runtime_arm_cpu_features(CPUFeatures *const cpu_features)
         return 0;
     }
 
-#if __ARM_FEATURE_SHA3
+#if defined(HIAE_HAS_HW_SHA3)
     cpu_features->has_neon_sha3 = 1;
 #elif defined(__APPLE__) && defined(CPU_TYPE_ARM64) && defined(CPU_SUBTYPE_ARM64E)
     cpu_features->has_neon_sha3 = _have_feature("hw.optional.arm.FEAT_SHA3");
